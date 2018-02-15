@@ -1,0 +1,35 @@
+{
+  "name": "s4a-detector-client",
+  "version": "0.1.46",
+  "description": "s4a detector",
+  "license": "MIT",
+  "private": true,
+  "config": {
+    "nuxt": {
+      "host": "127.0.0.1",
+      "port": "4001"
+    }
+  },
+  "scripts": {
+    "verup": "npm version patch --no-git-tag-version",
+    "dev": "API_URL=http://localhost:4000/api API_URL_BROWSER=http://localhost:4000/api nuxt",
+    "build": "nuxt build",
+    "start": "nuxt start",
+    "generate": "nuxt generate",
+    "testenv": "yarn build && yarn dev",
+    "prodenv": "yarn build && yarn start"
+  },
+  "dependencies": {
+    "@nuxtjs/axios": "^5.x.x",
+    "highlight.js": "^9.12.0",
+    "nsp": "^3.1.0",
+    "nuxt": "^1.0.0-rc11",
+    "stylus": "^0.54.5",
+    "stylus-loader": "^3.0.1",
+    "vue-highlight-component": "^1.0.0",
+    "vue-i18n": "^7.3.0",
+    "vue-moment": "^2.x.x",
+    "vuetify": "0.15.7"
+  },
+  "devDependencies": {}
+}

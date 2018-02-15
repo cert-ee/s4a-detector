@@ -1,0 +1,29 @@
+{
+  "no_api_token": "No API token",
+  "not_approved": "Your registration has been approved yet",
+  "worker_busy": "Worker already busy, please wait",
+  "no_changes": "No changes",
+  "no_data_found": "No data found",
+  "save_failed": "Failed to save info to database",
+  "load_failed": "Failed to load info from database",
+  "delete_failed": "Failed to remove info from database",
+
+  "done": "Done",
+
+  "network_interfaces_no_interfaces_enabled": "Failed to find enabled components to restart",
+  "network_interfaces_failed_to_restart_components": "Failed to restart components",
+
+  "central_token_update_failed": "Failed to update API key / token",
+
+  "registration_save_failed": "Failed to save registration info to database",
+  "registration_csr_read_failed": "Failed to read CSR file",
+  "registration_csr_save_failed": "Failed to save CSR file",
+
+  "salt_failed": "Failed to apply salt state successfully",
+  "component_restart_failed" : "Failed to restart component",
+  "component_install_failed" : "Failed to install component",
+  "component_install_save_failed" : "Failed to save component info to database",
+
+  "alerts_pointer_failed": "Failed to load alert pointer",
+  "alerts_pointer_save_failed": "Failed to save alert pointer"
+}

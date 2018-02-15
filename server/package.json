@@ -1,0 +1,52 @@
+{
+  "name": "s4a-detector-lb_server",
+  "version": "0.1.44",
+  "description": "s4a detector loopback server",
+  "license": "MIT",
+  "private": true,
+  "main": "server/server.js",
+  "engines": {
+    "node": ">=4"
+  },
+  "scripts": {
+    "verup": "npm version patch --no-git-tag-version",
+    "lint": "eslint .",
+    "start": "node .",
+    "dev": "nodemon .",
+    "testenv": "node .",
+    "prodenv": "node .",
+    "posttest": "npm run lint && nsp check"
+  },
+  "dependencies": {
+    "axios": "^0.17.1",
+    "bunyan-mongodb-logger": "^0.0.2",
+    "compression": "^1.0.3",
+    "cookie-parser": "^1.4.3",
+    "cors": "^2.5.2",
+    "elasticsearch": "^14.1.0",
+    "helmet": "^3.6.1",
+    "i18n-node": "^2.1.5",
+    "loopback": "^3.0.0",
+    "loopback-boot": "^2.0.0",
+    "loopback-cli": "^4.0.0",
+    "loopback-connector-mongodb": "^3.1.0",
+    "node-machine-id": "^1.1.9",
+    "nodemon": "^1.12.0",
+    "passport": "^0.4.0",
+    "randomstring": "^1.1.5",
+    "serve-favicon": "^2.0.1",
+    "ssl-utils": "^0.3.0",
+    "strong-error-handler": "^2.0.0",
+    "sudo": "^1.0.3"
+  },
+  "devDependencies": {
+    "eslint": "^4.1.1",
+    "eslint-config-loopback": "^10.0.0",
+    "loopback-component-explorer": "^5.1.0",
+    "nsp": "^3.1.0"
+  },
+  "repository": {
+    "type": "",
+    "url": ""
+  }
+}
