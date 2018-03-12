@@ -35,11 +35,6 @@ export default {
     },
 
     computed: {
-        drawer: {
-            get() { return this.$store.state.drawer; },
-            set() {}
-        },
-
         interfacesChanged() {
             if (!this.interfaces.some(i => i.enabled)) return false;
 

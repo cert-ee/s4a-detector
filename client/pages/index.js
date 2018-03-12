@@ -1,5 +1,4 @@
 import DashboardCard from '~/components/DashboardCard';
-import Vue from 'vue';
 
 export default {
     components: {
@@ -26,13 +25,6 @@ export default {
             componentProblems: 0,
             rule_drafts: {},
             centralTokenVisible: false
-        }
-    },
-
-    computed: {
-        drawer: {
-            get() { return this.$store.state.drawer; },
-            set() {}
         }
     },
 

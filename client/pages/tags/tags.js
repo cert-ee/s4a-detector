@@ -24,11 +24,6 @@ export default {
     },
 
     computed: {
-        drawer: {
-            get() { return this.$store.state.drawer; },
-            set() {}
-        },
-
         search: {
             get() { return this.$store.state.tags.search; },
             set(value) { this.$store.commit('tags/setSearch', value); }

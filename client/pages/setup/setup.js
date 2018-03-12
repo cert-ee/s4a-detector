@@ -205,7 +205,7 @@ export default {
                     if (component_result.data.logs_error.length > 2) this.components_all[i].logs_error = component_result.data.logs_error;
 
                     console.log( current.name, "component install result");
-                    console.log( current.name, component.result);
+                    console.log( current.name, component_result );
 
                 } // components for loop
 
@@ -273,6 +273,7 @@ export default {
 
                 let update_input, update_result, has_interfaces = false;
                 for (const inter of this.interfaces) {
+                    console.log( "network interface:" );
                     console.log(inter);
                     if (inter.install) {
                         update_input = {enabled: inter.install};

@@ -40,13 +40,14 @@ module.exports = function (settings) {
           if (name == "auto_upgrade") {
             hell.o("auto_upgrade", "updateSetting", "info");
 
-            let salt_input = {name: "auto_upgrade", state: "enabled"};
+            let state = "enabled";
             if (!value) {
-              salt_input.state = "disabled";
+              state = "disabled";
             }
 
-            hell.o([name + " run salt", salt_input], "updateSetting", "info");
-            let salt_result = await settings.app.models.component.stateApply(salt_input);
+            hell.o([name + " run salt state:", state], "updateSetting", "info");
+
+            let salt_result = await settings.app.models.component.stateApply( "autoupgrade", state );
             if (!salt_result) throw new Error("salt_failed");
 
           }

@@ -1,8 +1,8 @@
 <template>
-  <v-app toolbar>
-    <v-navigation-drawer persistent dark overflow v-model="drawer">
+  <v-app>
+    <v-navigation-drawer app overflow dark width="250" v-model="drawer">
       <v-list class="pa-0" dark>
-        <v-list-tile avatar tag="div" ripple>
+        <v-list-tile avatar ripple>
           <v-list-tile-avatar>
             <v-icon dark>account_circle</v-icon>
           </v-list-tile-avatar>
@@ -59,19 +59,14 @@
           </v-list-tile-content>
         </v-list-tile>
 
-        <v-list-group v-if="$store.state.rulesReview" v-model="rulesExpanded" group="/rules">
-          <v-list-tile slot="item" to="/rules" exact ripple>
+        <v-list-group v-if="$store.state.rulesReview" v-model="rulesExpanded" group="/rules" no-action>
+          <v-list-tile slot="activator" to="/rules" exact ripple>
             <v-list-tile-action>
               <v-icon dark>track_changes</v-icon>
             </v-list-tile-action>
             <v-list-tile-content>
               <v-list-tile-title>{{ $t('menu.rules') }}</v-list-tile-title>
             </v-list-tile-content>
-            <v-list-tile-action @click.stop.prevent="rulesExpanded = !rulesExpanded">
-              <v-btn icon>
-                <v-icon dark>keyboard_arrow_down</v-icon>
-              </v-btn>
-            </v-list-tile-action>
           </v-list-tile>
           <v-list-tile to="/rules/review" exact ripple>
             <v-list-tile-content>
@@ -153,8 +148,9 @@
 
     <nuxt />
 
-    <v-snackbar top :timeout="5000" :error="$store.state.snackBar.type === 'error'"
-                :success="$store.state.snackBar.type === 'success'"
+    <v-snackbar top :timeout="5000"
+                :color="$store.state.snackBar.type === 'error' ? 'error' :
+                  $store.state.snackBar.type === 'success' ? 'success' : ''"
                 v-model="snackBar"
     >
       {{ $store.state.snackBar.text }}
@@ -163,7 +159,7 @@
 
     <v-dialog v-model="sendFeedbackDialog" width="50%" lazy persistent>
       <v-card>
-        <v-form @submit.prevent="sendFeedback">
+        <v-form v-model="formValid" ref="sendFeedbackForm" @submit.prevent="sendFeedback">
           <v-card-title>
             <span class="headline">{{ $t('menu.send_feedback') }}</span>
           </v-card-title>
@@ -171,7 +167,9 @@
             <v-container fluid grid-list-lg>
               <v-layout row wrap>
                 <v-flex xs6>
-                  <v-text-field :label="$t('message')" v-model="feedback.message" multi-line required></v-text-field>
+                  <v-text-field :label="$t('message')" v-model="feedback.message" multi-line required
+                                :rules="[rules.required]">
+                  </v-text-field>
                 </v-flex>
                 <v-flex xs6>
                   <v-text-field :label="$t('comment')" v-model="feedback.comment" multi-line></v-text-field>
@@ -186,7 +184,7 @@
             <v-btn type="button" flat @click="clearFeedbackForm">{{ $t('clear_form') }}</v-btn>
             <v-spacer></v-spacer>
             <v-btn type="button" flat @click="sendFeedbackDialog = false">{{ $t('cancel') }}</v-btn>
-            <v-btn type="submit" flat primary :loading="feedbackLoading">{{ $t('menu.send_feedback') }}</v-btn>
+            <v-btn type="submit" flat color="primary" :loading="feedbackLoading">{{ $t('menu.send_feedback') }}</v-btn>
           </v-card-actions>
         </v-form>
       </v-card>

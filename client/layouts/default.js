@@ -1,12 +1,15 @@
 export default {
     data () {
         return {
-            rulesExpanded: false,
             sendFeedbackDialog: false,
             feedback: {
                 message: '',
                 comment: '',
                 logs: {data: ''}
+            },
+            formValid: false,
+            rules: {
+                required: (value) => !!value || this.$t("required")
             },
             feedbackLoading: false
         }
@@ -21,6 +24,11 @@ export default {
         snackBar: {
             get() { return this.$store.state.snackBar.open; },
             set() { this.$store.commit('closeSnackbar'); }
+        },
+
+        rulesExpanded: {
+            get() { return this.$store.state.rulesExpanded; },
+            set(value) { this.$store.commit('setRulesExpanded', value) }
         }
     },
 
@@ -31,6 +39,8 @@ export default {
 
         async sendFeedback() {
             try {
+                this.$refs.sendFeedbackForm.validate();
+                if (!this.formValid) return;
                 this.feedbackLoading = true;
 
                 const [

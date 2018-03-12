@@ -16,11 +16,6 @@ export default {
     },
 
     computed: {
-        drawer: {
-            get() { return this.$store.state.drawer; },
-            set() {}
-        },
-
         search: {
             get() { return this.$store.state.components.search; },
             set(value) { this.$store.commit('components/setSearch', value); }

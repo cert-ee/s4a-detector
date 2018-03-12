@@ -11,7 +11,7 @@ module.exports = function (app) {
     /*
     AUTH CHECKS
      */
-    hell.o("start", "login", "info");
+    // hell.o("start", "login", "info");
 
     //Token auth
     let header_token = "";
@@ -26,7 +26,7 @@ module.exports = function (app) {
     }
 
     let remote_user = req.headers['x-remote-user'];
-    hell.o(remote_user, "login", "info");
+    // hell.o(remote_user, "login", "info");
 
     let User = app.models.User;
     let AccessToken = app.models.AccessToken;
@@ -49,7 +49,7 @@ module.exports = function (app) {
         req.logIn(user, {session: false}, (err) => {
           if (err) return next(err);
           req.accessToken = token;
-          hell.o([remote_user, "auth ok"], "login", "info");
+          // hell.o([remote_user, "auth ok"], "login", "info");
           return next();
         });
 
