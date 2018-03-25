@@ -30,6 +30,12 @@
       "required": false,
       "description": "Component health check url"
     },
+    "install_order": {
+      "type": "number",
+      "required": true,
+      "description": "Component install order",
+      "default": 10
+    },
     "network_interface_changes": {
       "type": "boolean",
       "required": true,
