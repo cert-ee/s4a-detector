@@ -4,6 +4,7 @@ export function state() {
         drawer: true,
         user: {},
         rulesReview: false,
+        rulesExpanded: false,
         unauthorized: 'You are not authorized to view this page.',
         versions: {},
         snackBar: {
@@ -23,6 +24,10 @@ export const mutations = {
 
     setRulesReview(state, value) {
         state.rulesReview = value;
+    },
+
+    setRulesExpanded(state, value) {
+        state.rulesExpanded = value;
     },
 
     changeRegStatus(state, status) {

@@ -23,6 +23,7 @@
   "actions": "Actions",
   "comment": "Comment",
   "clear_form": "Clear Form",
+  "required": "Required",
   "menu": {
     "dashboard": "Dashboard",
     "components": "Components",

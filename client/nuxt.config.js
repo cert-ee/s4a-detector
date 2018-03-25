@@ -37,5 +37,8 @@ module.exports = {
     },
     router: {
         middleware: 'setup'
+    },
+    env: {
+        API_URL: process.env.API_URL || '____API_URL_ERROR____CHECK_ENV____'
     }
 }

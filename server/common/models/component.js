@@ -756,7 +756,7 @@ module.exports = function (component) {
           }
 
           /**
-           * /DEV MODE
+           * / end of DEV MODE
            * =========================================================
            */
 
@@ -774,6 +774,8 @@ module.exports = function (component) {
 
           //evebox-agent, evebox is restarting both
           if ( comp.name == "evebox-agent" && state == "restart") salt_input.name = "evebox";
+
+          hell.o([ comp.name, "about to call salt.apply"], "stateApply", "info");
 
           salt_result = await component.app.models.salt.apply(salt_input);
 

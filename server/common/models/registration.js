@@ -423,11 +423,11 @@ module.exports = function (registration) {
   registration.resetDetector = function (options, cb) {
     hell.o("start", "resetDetector", "warn");
 
-    if( process.env.NODE_ENV !== "dev" ) {
-      hell.o("ENV is not DEV, fail", "resetDetector", "warn");
-      cb("error");
-      return false;
-    }
+    // if( process.env.NODE_ENV !== "dev" ) {
+    //   hell.o("ENV is not DEV, fail", "resetDetector", "warn");
+    //   cb("error");
+    //   return false;
+    // }
 
     (async function () {
       try {
