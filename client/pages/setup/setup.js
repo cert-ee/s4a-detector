@@ -151,6 +151,10 @@ export default {
             try {
                 console.log("installComponents");
 
+                this.components_all.sort(function (a, b) {
+                    return a.install_order - b.install_order;
+                });
+
                 let current, comp_input, component_result;
                 for (let i = 0, l = this.components_all.length; i < l; i++) {
                     current = this.components_all[i];
@@ -345,7 +349,7 @@ export default {
                 components_all[i].logs = false;
                 components_all[i].logs_error = false;
             }
-            //console.log( components_all );
+
             return {interfaces, system_info, components_all};
         } catch (err) {
             if (err.response && err.response.status === 401) {

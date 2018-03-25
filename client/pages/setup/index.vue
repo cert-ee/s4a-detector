@@ -147,8 +147,8 @@
                   <td>{{ props.item.friendly_name }}</td>
                   <td>{{ props.item.message }}</td>
                   <td>
-                    <v-checkbox color="primary" :disabled="props.item.preset === true || props.item.installed === true"
-                                v-model="props.item.going_to_install"></v-checkbox>
+                    <v-checkbox color="primary" :disabled="props.item.preset === true || props.item.installed === true || props.item.after_approval === true"
+                                v-model="props.item.going_to_install === true"></v-checkbox>
                   </td>
                 </template>
               </v-data-table>
