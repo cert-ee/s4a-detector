@@ -276,6 +276,11 @@ module.exports = function (report) {
 
           for (var id = 0,l = hits.length; id < l; id++) {
             result = hits[id]._source;
+            //if alert info level is limited, but fill ip fields for evebox
+            if (!settings.alerts_info_level_all) {
+              hits[id]._source['src_ip'] = "0.0.0.0";
+              hits[id]._source['dest_ip'] = "0.0.0.0";
+            }
             //console.log("alerts: " + id );
             //console.log( hits[id] );
             //console.log( result['timestamp'] );
