@@ -4,7 +4,7 @@ module.exports = function(app) {
   const mongoURL = app.datasources.db.settings.url;
 
   const logger = bunyanMongoDbLogger({
-    name: 'Hosts List API',
+    name: 'S4a detector API log',
     stream: 'mongodb',
     url: mongoURL,
     collections: 'log'

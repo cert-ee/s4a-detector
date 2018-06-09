@@ -53,6 +53,20 @@
       "principalType": "ROLE",
       "principalId": "admin",
       "permission": "ALLOW"
+    },
+    {
+      "property" : "createUser",
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "admin",
+      "permission": "ALLOW"
+    },
+    {
+      "property" : "deleteUser",
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "admin",
+      "permission": "ALLOW"
     }
   ],
   "methods": {}
