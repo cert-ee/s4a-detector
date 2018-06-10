@@ -701,6 +701,12 @@ module.exports = function (component) {
             if (!approved_check) throw new Error("not_approved");
           }
 
+
+          comp = await component.findOne({where: {name: name}});
+          if (!comp) throw new Error("no_data_found");
+
+          await component.update({name: comp.name}, {"loading": true});
+
           /**
            * =========================================================
            * DEV MODE
@@ -709,8 +715,6 @@ module.exports = function (component) {
            */
           if (process.env.NODE_ENV == "dev" || debug == true) {
             hell.o([name + " " + state, "DEV no actual salt state is called"], "stateApply", "info");
-
-            let comp = await component.findOne({where: {name: name}});
 
             switch (state) {
               case "install":
@@ -749,9 +753,10 @@ module.exports = function (component) {
             let output = {logs: comp.name + ": OK LOGS " + new Date(), logs_error: log_err, exit_code: 0};
             setTimeout(function () {
               component.state_busy = false;
+              component.update({name: comp.name}, {loading: false});
               if (cb) return cb(null, output);
               return success(output);
-            }, 500);
+            }, 2500);
 
             return;
           }
@@ -760,10 +765,6 @@ module.exports = function (component) {
            * / end of DEV MODE
            * =========================================================
            */
-
-
-          comp = await component.findOne({where: {name: name}});
-          if (!comp) throw new Error("no_data_found");
 
           salt_input = {
             name: comp.name,
@@ -815,6 +816,7 @@ module.exports = function (component) {
           }
 
           component.state_busy = false;
+          await component.update({name: comp.name}, {loading: false});
 
           hell.o([name + " " + state, "done"], "stateApply", "info");
 
@@ -824,6 +826,7 @@ module.exports = function (component) {
         } catch (err) {
           hell.o(err, "stateApply", "error");
           component.state_busy = false;
+          await component.update({name: name}, {loading: false});
           if (cb) return cb({name: "Error", status: 400, message: err.message, data: err});
           return reject(err);
         }

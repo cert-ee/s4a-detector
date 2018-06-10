@@ -36,6 +36,12 @@
       "description": "Component install order",
       "default": 10
     },
+    "loading": {
+      "type": "boolean",
+      "required": true,
+      "description": "Component busy",
+      "default": false
+    },
     "network_interface_changes": {
       "type": "boolean",
       "required": true,
