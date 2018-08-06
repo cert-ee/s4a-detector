@@ -52,7 +52,7 @@ export default {
 
         async addUser() {
             try {
-                const user = await this.$axios.$post('users', {username: this.newUser});
+                const user = await this.$axios.$post('users/createUser', {username: this.newUser});
                 this.users.push(user);
                 this.addUserDialog = false;
             } catch (err) {
@@ -69,7 +69,8 @@ export default {
             this.deleteUserDialog = false;
 
             try {
-                await this.$axios.delete(`users/${this.selectedDeleteUser.id}`);
+                //await this.$axios.delete(`users/${this.selectedDeleteUser.id}`);
+                await this.$axios.$post('users/deleteUser', {username: this.selectedDeleteUser.username});
                 this.users.splice(this.users.findIndex(u => u.id === this.selectedDeleteUser.id), 1);
             } catch (err) {
                 this.$store.dispatch('handleError', err);

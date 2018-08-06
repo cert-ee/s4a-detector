@@ -76,7 +76,7 @@ export default {
 
             for (let component of componentsAll) {
                 component.statusStr = component.status === true ? i18n.t('ok') : i18n.t('fail');
-                component.loading = false;
+                // component.loading = false;
                 component.logs = false;
                 component.logs_error = false;
             }
