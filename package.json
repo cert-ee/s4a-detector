@@ -1,6 +1,6 @@
 {
   "name": "s4a-detector",
-  "version": "0.1.69",
+  "version": "0.1.85",
   "description": "s4a",
   "license": "MIT",
   "private": true,
@@ -26,6 +26,6 @@
     }
   },
   "dependencies": {
-    "pm2": "^2.7.0"
+    "pm2": "^3.0.0"
   }
 }

@@ -17,7 +17,7 @@
                 </v-layout>
               </v-card-title>
               <v-card-text>
-                <v-data-table :headers="headers" :items="componentsAll" :rows-per-page-items="rowsPerPage" :search="search"
+                <v-data-table :headers="headers" :items="components" :rows-per-page-items="rowsPerPage" :search="search"
                               :pagination.sync="pagination"
                 >
                   <template slot="items" slot-scope="props">

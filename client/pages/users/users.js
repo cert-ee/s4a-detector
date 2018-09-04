@@ -69,8 +69,8 @@ export default {
             this.deleteUserDialog = false;
 
             try {
-                //await this.$axios.delete(`users/${this.selectedDeleteUser.id}`);
-                await this.$axios.$post('users/deleteUser', {username: this.selectedDeleteUser.username});
+                await this.$axios.delete(`users/${this.selectedDeleteUser.id}`);
+                // await this.$axios.$post('users/deleteUser', {username: this.selectedDeleteUser.username});
                 this.users.splice(this.users.findIndex(u => u.id === this.selectedDeleteUser.id), 1);
             } catch (err) {
                 this.$store.dispatch('handleError', err);

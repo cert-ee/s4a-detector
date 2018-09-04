@@ -18,9 +18,14 @@ module.exports = {
 				API_HOST: process.env.API_HOST,
 				API_PORT: process.env.API_PORT,
 				API_REST_ROOT_URL: process.env.API_REST_ROOT_URL,
+                PATH_BASE: process.env.PATH_BASE,
                 PATH_CSR_SIGNED: process.env.PATH_CSR_SIGNED,
                 PATH_CSR_UNSIGNED: process.env.PATH_CSR_UNSIGNED,
                 PATH_SURICATA_RULES_OUT: process.env.PATH_SURICATA_RULES_OUT,
+                PATH_MOLOCH_YARA_OUT: process.env.PATH_MOLOCH_YARA_OUT,
+                PATH_MOLOCH_WISE_IP_OUT: process.env.PATH_MOLOCH_WISE_IP_OUT,
+                PATH_MOLOCH_WISE_URL_OUT: process.env.PATH_MOLOCH_WISE_URL_OUT,
+                PATH_MOLOCH_WISE_DOMAIN_OUT: process.env.PATH_MOLOCH_WISE_DOMAIN_OUT,
                 DEBUG_LEVEL: process.env.DEBUG_LEVEL,
                 DEBUG: process.env.DEBUG
 			}
