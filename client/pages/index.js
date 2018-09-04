@@ -18,7 +18,6 @@ export default {
             rulesAvailable: 0,
             syncing: false,
             refreshing: false,
-            rulesSyncing: false,
             components: [],
             installableComponents: 0,
             installedComponents: 0,

@@ -72,59 +72,6 @@ module.exports = function (user) {
     http: {path: '/createUser', verb: 'post', status: 200}
   });
 
-
-
-  /**
-   * DELETE USER
-   *
-   * remove from moloch
-   *
-   * @param username
-   * @param options
-   * @param cb
-   */
-  user.deleteUser = function (username, options, cb) {
-    hell.o("start", "deleteUser", "info");
-    hell.o(username, "deleteUser", "info");
-
-    (async function () {
-      try {
-        user.local_connection = axios.create({});
-
-        let user_find = await user.findOne({where: {username: username }});
-        if( !user_find ) throw new Error("no_data_found");
-
-        //let user_remove = await user.destroyById({ id: user_find.id });
-        //if (!user_remove) throw new Error("failed to remove user");
-
-        let comp = await user.app.models.component.findOne({where: { name: "moloch", installed: true, enabled: true}})
-        if ( comp && process.env.NODE_ENV != "dev") {
-            user.local_connection.delete( "http://localhost:9200/users/user/" + username);
-            user.local_connection = "";
-        }
-
-        hell.o("done", "deleteUser", "info");
-        cb(null, {message: "ok"});
-      } catch (err) {
-        hell.o(err, "deleteUser", "error");
-        cb({name: "Error", status: 400, message: err.message});
-      }
-
-    })(); // async
-
-  };
-
-  user.remoteMethod('deleteUser', {
-    accepts: [
-      {arg: 'username', type: 'string', required: true},
-      {arg: "options", type: "object", http: "optionsFromRequest"}
-    ],
-    returns: {type: 'object', root: true},
-    http: {path: '/deleteUser', verb: 'post', status: 200}
-  });
-
-
-
   user.observe('before delete', function (ctx, next) {
     hell.o("start", "delete", "info");
     // console.log('Going to delete %s matching %j', ctx.Model.pluralModelName, ctx.where );
@@ -137,6 +84,15 @@ module.exports = function (user) {
         hell.o("username", "delete", "info");
         let user_find = await user.findOne({where: {id: ctx.where.id.inq[0]}});
         hell.o(["user find", user_find], "delete", "info");
+
+        let comp = await user.app.models.component.findOne({where: {name: "moloch", installed: true, enabled: true}})
+        if (comp && process.env.NODE_ENV != "dev") {
+          hell.o("delete from moloch start", "deleteUser", "info");
+          user.local_connection = axios.create({});
+          user.local_connection.delete("http://localhost:9200/users/user/" + user_find.username);
+          user.local_connection = "";
+          hell.o("delete from moloch done", "deleteUser", "info");
+        }
 
         let change_input = "htpasswd -D /etc/nginx/.htpasswd " + user_find.username;
         shelljs.exec(change_input, {silent: true}, function (exit_code, stdout, stderr) {

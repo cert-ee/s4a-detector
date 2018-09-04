@@ -207,6 +207,9 @@ module.exports = function (component) {
 
     (async () => {
       try {
+
+        // await component.destroyAll();
+
         let component_result, update_component;
         for (const comp of input) {
           component_result = await component.findOrCreate({where: {name: comp.name}}, comp);
@@ -439,13 +442,13 @@ module.exports = function (component) {
         case "nfsen":
         case "suricata":
         case "evebox-agent":
-        case "openvpn":
         case "vpn":
         case "telegraf":
-          if (input.name == "vpn" || input.name == "openvpn") service_name = "'openvpn@detector'";
+          if (input.name == "vpn") service_name = "'openvpn@detector'";
 
           hell.o("run systemctl", "checkStatusSystemctl", "info");
           output = await component.shelljsCall("/bin/systemctl status " + service_name);
+
           success( output );
 
           break;
@@ -751,6 +754,7 @@ module.exports = function (component) {
             if (comp.name == "netdata") log_err = comp.name + ": test error for netdata... ";
 
             let output = {logs: comp.name + ": OK LOGS " + new Date(), logs_error: log_err, exit_code: 0};
+
             setTimeout(function () {
               component.state_busy = false;
               component.update({name: comp.name}, {loading: false});
@@ -771,9 +775,6 @@ module.exports = function (component) {
             state: state
           };
 
-          //vpn specific salt
-          if (( comp.name == "vpn" || comp.name == "openvpn" ) && state == "restart") salt_input.state = "vpn_enabled";
-
           //evebox-agent, evebox is restarting both
           if ( comp.name == "evebox-agent" && state == "restart") salt_input.name = "evebox";
 
@@ -791,16 +792,20 @@ module.exports = function (component) {
           switch (state) {
             case "install":
               comp_input.installed = true;
+              //ovpn is not enabled after install
               comp_input.enabled = true;
+              if (name == "vpn") comp_input.enabled = false;
               break;
             case "uninstall":
               comp_input.installed = false;
               comp_input.enabled = false;
               break;
             case "enabled":
+              comp_input.installed = true;
               comp_input.enabled = true;
               break;
             case "disabled":
+              comp_input.installed = true;
               comp_input.enabled = false;
               break;
             case "restart":

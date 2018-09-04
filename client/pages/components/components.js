@@ -10,8 +10,7 @@ export default {
                 {text: this.$t('components.last_message'), align: 'left', value: 'message'}
             ],
             logDialog: false,
-            log: {name: '', data: ''},
-            componentsAll: []
+            log: {name: '', data: ''}
         }
     },
 
@@ -24,64 +23,62 @@ export default {
         pagination: {
             get() { return this.$store.state.components.pagination; },
             set(value) { this.$store.commit('components/setPagination', value); }
+        },
+
+        components: {
+            get() { return this.$store.state.components.components; },
+            set(value) { return this.$store.commit('components/setComponents', value); }
         }
     },
 
     methods: {
         async applyStateToComponent(component, state) {
-            try {
-                component.loading = true;
-                let params = {name: component.name, state: state};
-                let salt_result = await this.$axios.post('components/stateApply', params);
-                component.logs = salt_result.data.logs;
-                component.logs_error = salt_result.data.logs_error;
-                let {data: comp} = await this.$axios.get(`components/${component.name}`);
-                component.status = comp.status;
-                component.statusStr = component.status === true ? this.$t('ok') : this.$t('fail');
+            let comp = Object.assign({}, component);
 
-                if (["install", "uninstall"].includes(state)) {
-                    component.installed = !component.installed;
-                    component.enabled = !component.enabled;
-                }
-                else if (["enabled", "disabled"].includes(state)) {
-                    component.enabled = !component.enabled;
-                }
+            try {
+                comp.loading = true;
+                this.$store.commit('components/updateComponent', comp);
+                let params = {name: comp.name, state: state};
+                let salt_result = await this.$axios.$post('components/stateApply', params);
+                comp = await this.$axios.$get(`components/${comp.name}`);
+                comp.logs = salt_result.logs;
+                comp.logs_error = salt_result.logs_error;
             } catch (err) {
                 this.$store.dispatch('handleError', err);
             } finally {
-                component.loading = false;
+                comp.loading = false;
+                this.$store.commit('components/updateComponent', comp);
             }
         },
         async recheckComponentStatus(component) {
+            let comp = Object.assign({}, component);
+
             try {
-                component.loading = true;
-                let params = {component_name: component.name};
-                console.log( component );
-                let run_check = await this.$axios.post('components/checkComponent', params);
-                console.log( run_check );
-                let {data: comp} = await this.$axios.get(`components/${component.name}`);
-                component.status = comp.status;
-                component.statusStr = component.status === true ? this.$t('ok') : this.$t('fail');
+                comp.loading = true;
+                this.$store.commit('components/updateComponent', comp);
+                let params = {component_name: comp.name};
+                await this.$axios.post('components/checkComponent', params);
+                comp = await this.$axios.$get(`components/${comp.name}`);
             } catch (err) {
                 this.$store.dispatch('handleError', err);
             } finally {
-                component.loading = false;
+                comp.loading = false;
+                this.$store.commit('components/updateComponent', comp);
             }
         }
     },
 
     async asyncData({store, error, app: {$axios, i18n}}) {
         try {
-            let {data: componentsAll} = await $axios.get('components');
+            let components = await $axios.$get('components');
 
-            for (let component of componentsAll) {
+            for (let component of components) {
                 component.statusStr = component.status === true ? i18n.t('ok') : i18n.t('fail');
-                // component.loading = false;
                 component.logs = false;
                 component.logs_error = false;
             }
 
-            return {componentsAll};
+            store.commit('components/setComponents', components);
         } catch (err) {
             if (err.response && err.response.status === 401) {
                 return error({statusCode: 401, message: store.state.unauthorized});

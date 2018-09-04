@@ -7,6 +7,12 @@ module.exports = function (app) {
   hell.o("start", "load", "info");
   (async () => {
     try {
+
+      await app.models.boot.initialize();
+      await app.models.wise.initialize();
+      await app.models.yara.initialize();
+
+
       const load_central = util.promisify(app.models.central.initialize);
       const load_components = util.promisify(app.models.component.initialize);
       const load_rulesets = util.promisify(app.models.ruleset.initialize);
@@ -40,7 +46,7 @@ module.exports = function (app) {
 
       hell.o("initialize the intervals for checks", "load", "info");
       /*
-      INTERVAL FORMATING
+      INTERVAL FORMAT
       */
       app.check_interval_format = function (minutes, job_name) {
         hell.o("check_interval_format", "load", "info");
@@ -49,6 +55,18 @@ module.exports = function (app) {
         let schedule_rule = minutes * 60000;
 
         if (process.env.NODE_ENV == "dev") { //dev, tick faster
+          schedule_rule = 30000;
+        }
+
+        if (job_name == "job_interval_rules_check") {
+          schedule_rule = 10000;
+        }
+
+        if (job_name == "job_interval_yara_check") {
+          schedule_rule = 30000;
+        }
+
+        if (job_name == "job_interval_wise_check") {
           schedule_rule = 30000;
         }
 
@@ -85,15 +103,44 @@ module.exports = function (app) {
       /*
       SCHEDULE RULES CHECKING
        */
-      hell.o("schedule rules checker", "init", "info");
+      //TODO turned off for testing
+      // hell.o("schedule rules checker", "init", "info");
+
+      // (function interval_rules() {
+      //   setTimeout(() => {
+      //       app.models.rule.checkRoutine(null, () => {
+      //         interval_rules();
+      //       });
+      //   }, app.check_interval_format(settings.job_interval_rules_check, "job_interval_rules_check"));
+      // })();
+      moloch yara and wise testing, some functions turned off
+
+      /*
+      SCHEDULE YARA CHECKING
+       */
+      hell.o("schedule yara checker", "init", "info");
 
       (function interval_rules() {
         setTimeout(() => {
-            app.models.rule.checkRoutine(null, () => {
-              interval_rules();
-            });
-        }, app.check_interval_format(settings.job_interval_rules_check, "job_interval_rules_check"));
+          app.models.yara.checkRoutine(null, () => {
+            interval_rules();
+          });
+        }, app.check_interval_format(5, "job_interval_yara_check"));
       })();
+
+      /*
+      SCHEDULE WISE CHECKING
+       */
+      hell.o("schedule wise checker", "init", "info");
+
+      (function interval_rules() {
+        setTimeout(() => {
+          app.models.wise.checkRoutine(null, () => {
+            interval_rules();
+          });
+        }, app.check_interval_format(5, "job_interval_wise_check"));
+      })();
+
 
       /*
       SCHEDULE ALERTS CHECKING

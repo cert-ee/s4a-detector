@@ -12,9 +12,14 @@
     "API_URL": "http://localhost:4000/api",
     "API_URL_BROWSER": "http://localhost:4000/api",
     "CENTRAL_API_URL": "http://localhost:5000/api",
+    "PATH_BASE": "/srv/s4a-detector/",
     "PATH_CSR_UNSIGNED": "/etc/openvpn/detector.csr",
     "PATH_CSR_SIGNED": "/etc/openvpn/detector.conf",
     "PATH_SURICATA_RULES_OUT": "/srv/data/suricata/all.rules",
+    "PATH_MOLOCH_YARA_OUT": "/srv/s4a-detector/moloch/yara/yara.txt",
+    "PATH_MOLOCH_WISE_IP_OUT": "/srv/s4a-detector/moloch/wise/wise_ip.txt",
+    "PATH_MOLOCH_WISE_URL_OUT": "/srv/s4a-detector/moloch/wise/wise_url.txt",
+    "PATH_MOLOCH_WISE_DOMAIN_OUT": "/srv/s4a-detector/moloch/wise/wise_domain.txt",
     "DEBUG":"1",
     "DEBUG_LEVEL":"5"
   }
