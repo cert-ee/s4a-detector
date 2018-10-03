@@ -326,7 +326,7 @@ module.exports = function (report) {
     hell.o("start", "alertsRoutine", "info");
 
     if (!report.app.models.central.CENTRAL_ACTIVATED) {
-      hell.o("central is not activated yet, return", "checkRoutine", "warn");
+      hell.o("central is not activated yet, return", "alertsRoutine", "warn");
       return cb({name: "Error", status: 400, message: "not_approved"});
     }
 
