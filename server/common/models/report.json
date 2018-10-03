@@ -65,12 +65,6 @@
       "permission": "ALLOW"
     },
     {
-      "accessType": "READ",
-      "principalType": "ROLE",
-      "principalId": "read",
-      "permission": "ALLOW"
-    },
-    {
       "property": "statusRoutine",
       "accessType": "*",
       "principalType": "ROLE",

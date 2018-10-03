@@ -12,11 +12,13 @@ module.exports = function (app) {
       await app.models.wise.initialize();
       await app.models.yara.initialize();
 
+      await app.models.report.initialize;
 
       const load_central = util.promisify(app.models.central.initialize);
       const load_components = util.promisify(app.models.component.initialize);
       const load_rulesets = util.promisify(app.models.ruleset.initialize);
       const load_settings = util.promisify(app.models.settings.initialize);
+      const load_notify = util.promisify(app.models.notify.initialize);
       const load_report = util.promisify(app.models.report.initialize);
 
       hell.o("central", "load", "info");
@@ -35,6 +37,14 @@ module.exports = function (app) {
       let settings_result = await load_settings();
       if (!settings_result) throw new Error("failed to load settings");
       let settings = await app.models.settings;
+
+      hell.o("notify", "load", "info");
+      try {
+        let notify_result = await load_notify();
+        if (!notify_result) throw new Error("failed to load notify module");
+      } catch (e) {
+        hell.o("elastic failed", "load", "info");
+      }
 
       hell.o("report", "load", "info");
       try {
@@ -58,17 +68,17 @@ module.exports = function (app) {
           schedule_rule = 30000;
         }
 
-        if (job_name == "job_interval_rules_check") {
-          schedule_rule = 10000;
-        }
-
-        if (job_name == "job_interval_yara_check") {
-          schedule_rule = 30000;
-        }
-
-        if (job_name == "job_interval_wise_check") {
-          schedule_rule = 30000;
-        }
+        // if (job_name == "job_interval_rules_check") {
+        //   schedule_rule = 10000;
+        // }
+        //
+        // if (job_name == "job_interval_yara_check") {
+        //   schedule_rule = 30000;
+        // }
+        //
+        // if (job_name == "job_interval_wise_check") {
+        //   schedule_rule = 30000;
+        // }
 
         hell.o([job_name + " current ms:", schedule_rule], "load", "info");
         return schedule_rule;
@@ -103,17 +113,15 @@ module.exports = function (app) {
       /*
       SCHEDULE RULES CHECKING
        */
-      //TODO turned off for testing
-      // hell.o("schedule rules checker", "init", "info");
+      hell.o("schedule rules checker", "init", "info");
 
-      // (function interval_rules() {
-      //   setTimeout(() => {
-      //       app.models.rule.checkRoutine(null, () => {
-      //         interval_rules();
-      //       });
-      //   }, app.check_interval_format(settings.job_interval_rules_check, "job_interval_rules_check"));
-      // })();
-      moloch yara and wise testing, some functions turned off
+      (function interval_rules() {
+        setTimeout(() => {
+          app.models.rule.checkRoutine(null, () => {
+            interval_rules();
+          });
+        }, app.check_interval_format(settings.job_interval_rules_check, "job_interval_rules_check"));
+      })();
 
       /*
       SCHEDULE YARA CHECKING
@@ -125,7 +133,7 @@ module.exports = function (app) {
           app.models.yara.checkRoutine(null, () => {
             interval_rules();
           });
-        }, app.check_interval_format(5, "job_interval_yara_check"));
+        }, app.check_interval_format(1, "job_interval_yara_check"));
       })();
 
       /*
@@ -138,9 +146,8 @@ module.exports = function (app) {
           app.models.wise.checkRoutine(null, () => {
             interval_rules();
           });
-        }, app.check_interval_format(5, "job_interval_wise_check"));
+        }, app.check_interval_format(1, "job_interval_wise_check"));
       })();
-
 
       /*
       SCHEDULE ALERTS CHECKING
@@ -153,7 +160,7 @@ module.exports = function (app) {
             interval_alerts();
           });
         }, app.check_interval_format(settings.job_interval_alerts_check, "job_interval_alerts_check"));
-        //}, 1000);
+        // }, 1000);
       })();
 
     }

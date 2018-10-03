@@ -53,6 +53,10 @@
     "dataSource": "db",
     "public": true
   },
+  "notify": {
+    "dataSource": "db",
+    "public": true
+  },
   "central" : {
     "dataSource": "db",
     "public": true
