@@ -12,7 +12,7 @@ module.exports = function (rule) {
    * @param cb
    */
   rule.rules_routine_active = false;
-  rule.checkRoutine = function (options,cb) {
+  rule.checkRoutine = function (params, cb) {
     hell.o("start", "checkRoutine", "info");
 
     if (!rule.app.models.central.CENTRAL_ACTIVATED) {
@@ -34,10 +34,10 @@ module.exports = function (rule) {
 
         //console.log( "last_update_rules from db: " + central_info.last_rules_update );
         //let central_input = {last_update: "TIMESTAMP"};
-        let rules_test = await rule.find({ limit: 10 });
+        let rules_test = await rule.find({limit: 10});
 
         let central_input = {last_rules_update: "full"};
-        if (central_info.last_rules_update !== undefined && rules_test.length == 10) {
+        if (central_info.last_rules_update !== undefined && rules_test.length == 10 && params !== undefined && params.full_check !== true) {
           central_input = {last_rules_update: central_info.last_rules_update};
         }
 
@@ -64,16 +64,16 @@ module.exports = function (rule) {
 
         if (new_rule_count == 0) {
           hell.o("no new rules", "checkRoutine", "info");
-          rule.app.models.central.lastSeen(null,"rules",true);
+          rule.app.models.central.lastSeen(null, "rules", true);
           rule.rules_routine_active = false;
           cb(null, {message: "ok"});
           return;
         }
 
-        if (settings.auto_rules == false ) {
+        if (settings.auto_rules == false) {
           hell.o("new rules available, but automatic download disabled", "checkRoutine", "info");
-          rule.app.models.central.update({ id: "centralid"}, { rules_new_available: new_rule_count });
-          rule.app.models.central.lastSeen(null,"rules",true);
+          rule.app.models.central.update({id: "centralid"}, {rules_new_available: new_rule_count});
+          rule.app.models.central.lastSeen(null, "rules", true);
           rule.rules_routine_active = false;
           cb(null, {message: "ok"});
           return;
@@ -85,7 +85,7 @@ module.exports = function (rule) {
         let current_rule, sid, enabled, revision, found, inserted, updated, rule_info, latest_change_central = false;
         for (let i = 0, l = new_rule_count; i < l; i++) {
 
-          if ( i % 500 === 0 ){ //just to show activity in the logs for full sync
+          if (i % 500 === 0) { //just to show activity in the logs for full sync
             hell.o("looping new rules " + i + " / " + new_rule_count, "checkRoutine", "info");
           }
 
@@ -109,16 +109,16 @@ module.exports = function (rule) {
           let rule_found = await rule.findOne({where: {sid: sid}});
 
           //create ruleset if new
-          [ ruleset ] = await rule.app.models.ruleset.findOrCreate(
+          [ruleset] = await rule.app.models.ruleset.findOrCreate(
             {where: {name: rule_info.ruleset}, include: ['tags']}, {name: rule_info.ruleset});
           rs_tags = ruleset.tags;
-          if( rs_tags === undefined ) rs_tags = [];
+          if (rs_tags === undefined) rs_tags = [];
           //hell.o([current_rule.sid, "" + current_rule.ruleset ], "checkRoutine", "info");
 
           //create classtype if new
-          if( rule_info.classtype !== "" || rule_info.classtype !== undefined ) {
+          if (rule_info.classtype !== "" || rule_info.classtype !== undefined) {
             let classtype_found = await rule.app.models.rule_classtype.findOrCreate(
-              {where: {name: rule_info.classtype}}, { name: rule_info.classtype }
+              {where: {name: rule_info.classtype}}, {name: rule_info.classtype}
             );
           }
 
@@ -135,7 +135,7 @@ module.exports = function (rule) {
             if (!rule_create) throw new Error("failed to create rule");
 
             //add tags if needed
-            if ( rs_tags.length > 0) {
+            if (rs_tags.length > 0) {
               for (let i = 0, l = rs_tags.length; i < l; i++) {
                 tag_rule = await rule_create.tags.add(rs_tags[i]);
                 if (!tag_rule) throw new Error(sid + " failed to add new tag");
@@ -207,17 +207,18 @@ module.exports = function (rule) {
         hell.o(["latest change in central", latest_change_central], "checkRoutine", "info");
         hell.o(["New rules count: ", new_rule_count], "checkRoutine", "info");
 
-        rule.app.models.central.lastSeen(null,"rules",true);
+        rule.app.models.central.lastSeen(null, "rules", true);
 
         hell.o("done", "checkRoutine", "info");
         rule.rules_routine_active = false;
-        cb(null, {message: "ok"});
-
+        if (cb) cb(null, {message: "ok"});
+        return true;
       } catch (err) {
         hell.o(err, "checkRoutine", "error");
-        rule.app.models.central.lastSeen(null,"rules",false);
+        rule.app.models.central.lastSeen(null, "rules", false);
         rule.rules_routine_active = false;
-        cb({name: "error", status: 400, message: err.message});
+        if (cb) cb({name: "error", status: 400, message: err.message});
+        return false;
       }
 
     })(); // async
@@ -225,14 +226,48 @@ module.exports = function (rule) {
   };
 
   rule.remoteMethod('checkRoutine', {
-    accepts: [
-      {arg: "options", type: "object", http: "optionsFromRequest"}
-    ],
+    accepts: [],
     returns: {type: 'object', root: true},
     http: {path: '/checkRoutine', verb: 'get', status: 200}
   });
 
   // rule.checkRoutine();
+
+
+  /**
+   * REMOVE RULES / job_schedule
+   *
+   * and reload suricata
+   *
+   * @param cb
+   */
+  rule.removeRules = async function (rules_to_remove, cb) {
+    hell.o("start", "removeRules", "info");
+
+    try {
+
+      let found_rule;
+      rules_to_remove = rules_to_remove.rules;
+      for (let i = 0, l = rules_to_remove.length; i < l; i++) {
+        console.log(rules_to_remove[i].sid);
+        found_rule = await rule.findOne({where: {sid: rules_to_remove[i].sid}});
+        if (found_rule) await rule.destroyById(found_rule.id);
+        found_rule = await rule.app.models.rule_draft.findOne({where: {sid: rules_to_remove[i].sid}});
+        if (found_rule) await rule.app.models.rule_draft.destroyById(found_rule.id);
+
+      }
+
+      rule.checkRoutine({full_check: true});
+
+      if (cb) cb(null, {message: "ok"});
+      return true;
+    } catch (err) {
+      hell.o(err, "removeRules", "error");
+      if (cb) cb({name: "Error", status: 400, message: err.message});
+    }
+
+  };
+
 
   /**
    * APPLY NEW RULES
