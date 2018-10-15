@@ -161,6 +161,10 @@ module.exports = function (report) {
               result = await report.app.models.registration.registrationRejected();
               if (!result) throw new Error("registrationRejected failed");
               break;
+            case "removeRules":
+              result = await report.app.models.rule.removeRules(job.data);
+              if (!result) throw new Error("removeRules failed");
+              break;
             default:
               hell.o(["there was no matching job", job], "doJob", "error");
               reject(false);
