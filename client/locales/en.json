@@ -31,6 +31,7 @@
     "tags": "Tags",
     "rulesets": "Rulesets",
     "rules": "Rules",
+    "notify": "Notify",
     "rules_review": "Review Changes",
     "users": "User Management",
     "send_feedback": "Send Feedback",
@@ -134,6 +135,15 @@
     "description": "Description",
     "name": "Name",
     "required": "Required"
+  },
+  "notify": {
+    "enable": "Enable",
+    "disable": "Disable",
+    "query": "Notification query",
+    "subject": "Subject",
+    "actions": "Actions",
+    "email": "Email",
+    "saved": "Saved"
   },
   "rulesets": {
     "enable_all": "Enable All",

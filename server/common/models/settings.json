@@ -40,6 +40,12 @@
       "description": "Alerts info all",
       "default": true
     },
+    "job_interval_notify_check": {
+      "type": "number",
+      "required": true,
+      "description": "Notification check interval in minutes",
+      "default": 1
+    },
     "job_interval_alerts_check": {
       "type": "number",
       "required": true,

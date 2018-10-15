@@ -4,19 +4,41 @@
   "base": "PersistedModel",
   "idInjection": true,
   "properties": {
-    "id": {
+    "name": {
       "type": "string",
-      "id": true,
       "required": true,
       "index": true,
-      "description": "",
-      "isArray": false,
-      "default": "notifyid"
+      "description": "Notification name",
+      "isArray": false
     },
-    "notify_alerts_pointer": {
+    "query": {
       "type": "string",
       "required": true,
-      "description": "Notify Evebox agent alarm pointer",
+      "description": "Notification query",
+      "default": {}
+    },
+    "email": {
+      "type": "string",
+      "required": true,
+      "description": "Email to send notification",
+      "default": {}
+    },
+    "subject": {
+      "type": "string",
+      "required": true,
+      "description": "Email subject for notification",
+      "default": {}
+    },
+    "enabled": {
+      "type": "boolean",
+      "required": true,
+      "description": "Is rule enabled",
+      "default": {}
+    },
+    "alerts_pointer": {
+      "type": "string",
+      "required": true,
+      "description": "Last alarm notified ptr",
       "default": "empty"
     },
     "methods": {}
@@ -44,6 +66,13 @@
       "accessType": "READ",
       "principalType": "ROLE",
       "principalId": "read",
+      "permission": "ALLOW"
+    },
+    {
+      "property": "toggleEnable",
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "admin",
       "permission": "ALLOW"
     }
   ]

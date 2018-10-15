@@ -51,6 +51,15 @@
                     </v-list-tile-content>
                 </v-list-tile>
 
+                <v-list-tile to="/notify" exact ripple>
+                    <v-list-tile-action>
+                        <v-icon dark>bookmark</v-icon>
+                    </v-list-tile-action>
+                    <v-list-tile-content>
+                        <v-list-tile-title>{{ $t('menu.notify') }}</v-list-tile-title>
+                    </v-list-tile-content>
+                </v-list-tile>
+
                 <v-list-tile to="/rulesets" exact ripple>
                     <v-list-tile-action>
                         <v-icon dark>track_changes</v-icon>
