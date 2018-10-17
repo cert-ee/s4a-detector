@@ -53,7 +53,6 @@
     "rule_data": {
       "type": "string",
       "required": true,
-      "index": true,
       "description": "Rule itself"
     },
     "modified_time": {
