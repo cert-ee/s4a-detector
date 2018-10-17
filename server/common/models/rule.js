@@ -88,7 +88,7 @@ module.exports = function (rule) {
         let current_rule, sid, enabled, revision, found, inserted, updated, rule_info, latest_change_central = false;
         for (let i = 0, l = new_rule_count; i < l; i++) {
 
-          if (i % 500 === 0) { //just to show activity in the logs for full sync
+          if (i % 250 === 0) { //just to show activity in the logs for full sync
             hell.o("looping new rules " + i + " / " + new_rule_count, "checkRoutine", "info");
           }
 
@@ -171,7 +171,7 @@ module.exports = function (rule) {
           AUTOMATIC UPDATE ALLOWED FOR RULESET
            */
           if (ruleset.automatically_enable_new_rules) {
-            hell.o([sid, "new revision update"], "checkRuleLine", "info");
+            // hell.o([sid, "new revision update"], "checkRuleLine", "info");
             update_result = await rule.update({id: rule_found.id}, rule_info);
             if (!update_result) throw new Error(sid + " failed to update rule");
             hell.o([sid, "update ok"], "checkRuleLine", "info");
@@ -236,8 +236,18 @@ module.exports = function (rule) {
     http: {path: '/checkRoutine', verb: 'get', status: 200}
   });
 
-  // rule.checkRoutine();
-
+  //rewrite to taskers
+  rule.checkRoutinePromise = function (params) {
+    return new Promise((success, reject) => {
+      rule.checkRoutine(params, function (err, result) {
+        if (err) {
+          reject(err);
+        } else {
+          success(result);
+        }
+      });
+    });
+  };
 
   /**
    * REMOVE RULES / job_schedule
