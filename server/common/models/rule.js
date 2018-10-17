@@ -32,12 +32,14 @@ module.exports = function (rule) {
         let settings = await rule.app.models.settings.findOne();
         let central_info = await rule.app.models.central.findOne();
 
-        //console.log( "last_update_rules from db: " + central_info.last_rules_update );
+        // console.log( "last_update_rules from db: " + central_info.last_rules_update );
         //let central_input = {last_update: "TIMESTAMP"};
         let rules_test = await rule.find({limit: 10});
 
         let central_input = {last_rules_update: "full"};
-        if (central_info.last_rules_update !== undefined && rules_test.length == 10 && params !== undefined && params.full_check !== true) {
+        if (central_info.last_rules_update !== undefined && rules_test.length == 10 && (
+          params === undefined || params === null || params.full_check !== true)) {
+
           central_input = {last_rules_update: central_info.last_rules_update};
         }
 
@@ -66,8 +68,9 @@ module.exports = function (rule) {
           hell.o("no new rules", "checkRoutine", "info");
           rule.app.models.central.lastSeen(null, "rules", true);
           rule.rules_routine_active = false;
-          cb(null, {message: "ok"});
-          return;
+
+          if (cb) return cb(null, {message: "ok"});
+          return true;
         }
 
         if (settings.auto_rules == false) {
@@ -75,8 +78,8 @@ module.exports = function (rule) {
           rule.app.models.central.update({id: "centralid"}, {rules_new_available: new_rule_count});
           rule.app.models.central.lastSeen(null, "rules", true);
           rule.rules_routine_active = false;
-          cb(null, {message: "ok"});
-          return;
+          if (cb) return cb(null, {message: "ok"});
+          return true;
         }
 
         /**
@@ -211,13 +214,13 @@ module.exports = function (rule) {
 
         hell.o("done", "checkRoutine", "info");
         rule.rules_routine_active = false;
-        if (cb) cb(null, {message: "ok"});
+        if (cb) return cb(null, {message: "ok"});
         return true;
       } catch (err) {
         hell.o(err, "checkRoutine", "error");
         rule.app.models.central.lastSeen(null, "rules", false);
         rule.rules_routine_active = false;
-        if (cb) cb({name: "error", status: 400, message: err.message});
+        if (cb) return cb({name: "error", status: 400, message: err.message});
         return false;
       }
 
@@ -226,7 +229,9 @@ module.exports = function (rule) {
   };
 
   rule.remoteMethod('checkRoutine', {
-    accepts: [],
+    accepts: [
+      {arg: 'params', type: 'object', required: false},
+    ],
     returns: {type: 'object', root: true},
     http: {path: '/checkRoutine', verb: 'get', status: 200}
   });
@@ -257,7 +262,7 @@ module.exports = function (rule) {
 
       }
 
-      rule.checkRoutine({full_check: true});
+      // rule.checkRoutine({full_check: true});
 
       if (cb) cb(null, {message: "ok"});
       return true;

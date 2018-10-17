@@ -158,7 +158,8 @@
                     <td>{{ props.item.state }}</td>
                     <td>{{ props.item.ip }}</td>
                     <td>
-                      <v-checkbox color="primary" v-model="props.item.enabled"></v-checkbox>
+                        <v-checkbox color="primary" :disabled="props.item.ip != ''"
+                                    v-model="props.item.enabled"></v-checkbox>
                     </td>
                   </template>
                 </v-data-table>
@@ -277,19 +278,19 @@
               <v-container fluid grid-list-lg>
                 <v-layout row wrap>
                   <v-flex xs6>
-                    <v-text-field :label="$t('settings.nginx_ssl_cert')" v-model="nginx.configuration.ssl_cert"
-                                  multi-line required>
-                    </v-text-field>
+                    <v-textarea :label="$t('settings.nginx_ssl_cert')" v-model="nginx.configuration.ssl_cert"
+                                required>
+                    </v-textarea>
                   </v-flex>
                   <v-flex xs6>
-                    <v-text-field :label="$t('settings.nginx_ssl_chain')" v-model="nginx.configuration.ssl_chain"
-                                  multi-line required>
-                    </v-text-field>
+                    <v-textarea :label="$t('settings.nginx_ssl_chain')" v-model="nginx.configuration.ssl_chain"
+                                required>
+                    </v-textarea>
                   </v-flex>
                   <v-flex xs6>
-                    <v-text-field :label="$t('settings.nginx_ssl_key')" v-model="nginx.configuration.ssl_key"
-                                  multi-line required>
-                    </v-text-field>
+                    <v-textarea :label="$t('settings.nginx_ssl_key')" v-model="nginx.configuration.ssl_key"
+                                required>
+                    </v-textarea>
                   </v-flex>
                 </v-layout>
               </v-container>

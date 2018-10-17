@@ -70,13 +70,16 @@
             </v-flex>
             <v-flex xs12 class="mb-3">
               <v-data-table :headers="interface_headers" :items="interfaces"
-                            :pagination.sync="interface_pagination" hide-actions>
+                            :pagination.sync="interface_pagination" hide-actions
+
+              >
                 <template slot="items" slot-scope="props">
                   <td>{{ props.item.name }}</td>
                   <td>{{ props.item.state }}</td>
                   <td>{{ props.item.ip }}</td>
                   <td>
-                    <v-checkbox color="primary" :disabled="props.item.error === true" v-model="props.item.install"></v-checkbox>
+                    <v-checkbox color="primary" :disabled="props.item.ip != ''"
+                                v-model="props.item.install"></v-checkbox>
                   </td>
                 </template>
               </v-data-table>
@@ -284,7 +287,7 @@
             </v-flex>
 
               <v-flex xs12 class="mb-3">
-                <v-text-field label="Optional comment" v-model="feedback_comment" multi-line ></v-text-field>
+                <v-textarea label="Optional comment" v-model="feedback_comment"></v-textarea>
               </v-flex>
             <v-flex xs12 class="text-xs-right">
               <v-btn color="error" @click="sendFeedback" >{{ $t('setup.send_feedback') }}</v-btn>

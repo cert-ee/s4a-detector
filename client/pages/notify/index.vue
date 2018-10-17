@@ -130,10 +130,10 @@
                                                 </v-text-field>
                                             </v-flex>
                                             <v-flex xs12>
-                                                <v-text-field :label="$t('notify.query')" v-model="newNotify.query"
-                                                              required multi-line
-                                                              :rules="[formNotify.required]">
-                                                </v-text-field>
+                                                <v-textarea :label="$t('notify.query')" v-model="newNotify.query"
+                                                            required
+                                                            :rules="[formNotify.required]">
+                                                </v-textarea>
                                             </v-flex>
                                         </v-layout>
                                     </v-container>
