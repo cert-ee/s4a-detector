@@ -190,17 +190,15 @@
                         <v-container fluid grid-list-lg>
                             <v-layout row wrap>
                                 <v-flex xs6>
-                                    <v-text-field :label="$t('message')" v-model="feedback.message" multi-line required
-                                                  :rules="[rules.required]">
-                                    </v-text-field>
+                                    <v-textarea :label="$t('message')" v-model="feedback.message" required
+                                                :rules="[rules.required]">
+                                    </v-textarea>
                                 </v-flex>
                                 <v-flex xs6>
-                                    <v-text-field :label="$t('comment')" v-model="feedback.comment"
-                                                  multi-line></v-text-field>
+                                    <v-textarea :label="$t('comment')" v-model="feedback.comment"></v-textarea>
                                 </v-flex>
                                 <v-flex xs12>
-                                    <v-text-field :label="$t('logs')" v-model="feedback.logs.data"
-                                                  multi-line></v-text-field>
+                                    <v-textarea :label="$t('logs')" v-model="feedback.logs.data"></v-textarea>
                                 </v-flex>
                             </v-layout>
                         </v-container>

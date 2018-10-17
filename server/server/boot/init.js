@@ -128,10 +128,10 @@ module.exports = function (app) {
        */
       hell.o("schedule yara checker", "init", "info");
 
-      (function interval_rules() {
+      (function interval_yara() {
         setTimeout(() => {
           app.models.yara.checkRoutine(null, () => {
-            interval_rules();
+            interval_yara();
           });
         }, app.check_interval_format(1, "job_interval_yara_check"));
       })();
@@ -141,10 +141,10 @@ module.exports = function (app) {
        */
       hell.o("schedule wise checker", "init", "info");
 
-      (function interval_rules() {
+      (function interval_wise() {
         setTimeout(() => {
           app.models.wise.checkRoutine(null, () => {
-            interval_rules();
+            interval_wise();
           });
         }, app.check_interval_format(1, "job_interval_wise_check"));
       })();
