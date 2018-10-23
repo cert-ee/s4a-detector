@@ -62,7 +62,7 @@
                       </v-btn>
                     </td>
                     <td>
-                      <div v-if="props.item.logs != false">
+                        <div v-if="props.item.logs != false && props.item.logs != ' '">
                         <v-tooltip right>
                           <v-btn slot="activator" icon
                                  @click.stop="log = {name: props.item.friendly_name, data: props.item.logs }; logDialog = true"
@@ -72,7 +72,7 @@
                           <span>{{ $t('components.view_stdout_log') }}</span>
                         </v-tooltip>
                       </div>
-                      <div class="red--text" v-if="props.item.logs_error != false">
+                        <div class="red--text" v-if="props.item.logs_error != false && props.item.logs_error != ' '">
                         <v-tooltip right>
                           <v-btn slot="activator" class="red--text" icon
                                  @click.stop="log = {name: props.item.friendly_name + ' error ', data: props.item.logs_error }; logDialog = true"

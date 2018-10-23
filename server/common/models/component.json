@@ -59,6 +59,18 @@
       "required": false,
       "description": "Component last message"
     },
+    "logs": {
+      "type": "string",
+      "required": false,
+      "description": "Component last stdout",
+      "default": ""
+    },
+    "logs_error": {
+      "type": "string",
+      "required": false,
+      "description": "Component last stderr",
+      "default": ""
+    },
     "exit_code": {
       "type": "string",
       "required": false,

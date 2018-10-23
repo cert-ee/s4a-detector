@@ -38,17 +38,20 @@ export default {
     methods: {
         openAddEditTagDialog(tag) {
             this.$refs.addEditTagForm.reset();
-            this.tagId = undefined;
 
-            if (tag) {
-                this.tagId = tag.id;
-                this.name = tag.name;
-                this.description = tag.description;
-                this.tagRef = tag;
-            }
+            this.$nextTick(() => {
+                this.tagId = undefined;
 
-            this.addEditTagDialog.isEditDialog = !!tag;
-            this.addEditTagDialog.open = true;
+                if (tag) {
+                    this.tagId = tag.id;
+                    this.name = tag.name;
+                    this.description = tag.description;
+                    this.tagRef = tag;
+                }
+
+                this.addEditTagDialog.isEditDialog = !!tag;
+                this.addEditTagDialog.open = true;
+            });
         },
 
         async addEditTag() {

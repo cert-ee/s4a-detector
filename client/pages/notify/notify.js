@@ -73,16 +73,15 @@ export default {
         async openEditNotifyDialog(notify) {
             this.$refs.editNotifyForm.reset();
 
-            console.log("OPEN");
-            console.log(notify);
+            this.$nextTick(() => {
+                if (notify) {
+                    Object.assign(this.newNotify, notify);
+                    delete this.newNotify.created_time;
+                    delete this.newNotify.modified_time;
+                }
 
-            if (notify) {
-                Object.assign(this.newNotify, notify);
-                delete this.newNotify.created_time;
-                delete this.newNotify.modified_time;
-            }
-
-            this.editNotifyDialog.open = true;
+                this.editNotifyDialog.open = true;
+            });
         },
 
         async editNotify() {
