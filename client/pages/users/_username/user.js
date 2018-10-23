@@ -38,28 +38,10 @@ export default {
                     return;
                 }
 
-                let moloch_input = false;
                 let comp = await this.$axios.$get(`components/moloch`);
-                if (1 == 1) {
-                    if (active) {
-                        if (role.name == "admin") {
-                            moloch_input = {createEnabled: true}
-                        }
-                        if (role.name == "read") {
-                            moloch_input = {enabled: true}
-                        }
-                    } else {
-                        if (role.name == "admin") {
-                            moloch_input = {createEnabled: false}
-                        }
-                        if (role.name == "read") {
-                            moloch_input = {enabled: false}
-                        }
-                    }
-                    if (moloch_input !== false) {
-                        let params = {input: moloch_input, username: this.user.username};
-                        await this.$axios.post("users/editMolochUser", params);
-                    }
+                if (comp.installed && comp.enabled) {
+                    let params = {active: active, rolename: role.name, username: this.user.username};
+                    await this.$axios.post("users/editMolochUser", params);
                 }
 
                 if (active) {
