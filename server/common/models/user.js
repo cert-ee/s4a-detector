@@ -158,15 +158,6 @@ module.exports = function (user) {
         let user_find = await user.findOne({where: {id: ctx.where.id.inq[0]}});
         hell.o(["user find", user_find], "delete", "info");
 
-        let comp = await user.app.models.component.findOne({where: {name: "moloch", installed: true, enabled: true}})
-        if (comp && process.env.NODE_ENV != "dev") {
-          hell.o("delete from moloch start", "deleteUser", "info");
-          user.local_connection = axios.create({});
-          user.local_connection.delete("http://localhost:9200/users/user/" + user_find.username);
-          user.local_connection = "";
-          hell.o("delete from moloch done", "deleteUser", "info");
-        }
-
         let change_input = "htpasswd -D /etc/nginx/.htpasswd " + user_find.username;
         shelljs.exec(change_input, {silent: true}, function (exit_code, stdout, stderr) {
           hell.o(["shelljs result ", exit_code], "delete", "info");
@@ -175,6 +166,15 @@ module.exports = function (user) {
           hell.o("done", "updatePassword", "info");
           next();
         });
+
+        let comp = await user.app.models.component.findOne({where: {name: "moloch", installed: true, enabled: true}})
+        if (comp && process.env.NODE_ENV != "dev") {
+          hell.o("delete from moloch start", "deleteUser", "info");
+          user.local_connection = axios.create({});
+          user.local_connection.delete("http://localhost:9200/users/user/" + user_find.username);
+          user.local_connection = "";
+          hell.o("delete from moloch done", "deleteUser", "info");
+        }
 
       } catch (err) {
         hell.o(err, "updatePassword", "error");
