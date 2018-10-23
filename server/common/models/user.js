@@ -38,10 +38,10 @@ module.exports = function (user) {
                 "removeEnabled": false,
                 "userName": username,
                 "emailSearch": false,
-                "enabled": true,
+                "enabled": false,
                 "webEnabled": true,
                 "headerAuthEnabled": true,
-                "createEnabled": true,
+                "createEnabled": false,
                 "settings": {},
                 "passStore": "",
                 "userId": username
@@ -70,6 +70,53 @@ module.exports = function (user) {
     ],
     returns: {type: 'object', root: true},
     http: {path: '/createUser', verb: 'post', status: 200}
+  });
+
+  /**
+   * EDIT MOLOCH USER
+   *
+   * @param username
+   * @param input
+   * @param cb
+   */
+  user.editMolochUser = function (username, moloch_input, cb) {
+    hell.o("start", "editMolochUser", "info");
+    hell.o(username, "editMolochUser", "info");
+
+    (async function () {
+      try {
+        user.local_connection = axios.create({});
+
+        let user_find = await user.findOne({where: {username: username}});
+        if (!user_find) throw new Error("no_data");
+
+        let comp = await user.app.models.component.findOne({where: {name: "moloch", installed: true, enabled: true}})
+        if (comp && process.env.NODE_ENV != "dev") {
+          user.local_connection.post("http://localhost:9200/users/user/" + username + "/_update/", moloch_input);
+          user.local_connection = "";
+        }
+
+        user_find = await user.findOne({where: {username: username}});
+
+        hell.o("done", "editMolochUser", "info");
+        cb(null, user_find);
+      } catch (err) {
+        hell.o(err, "editMolochUser", "error");
+        cb({name: "Error", status: 400, message: err.message});
+      }
+
+    })(); // async
+
+  };
+
+
+  user.remoteMethod('editMolochUser', {
+    accepts: [
+      {arg: 'username', type: 'string', required: true},
+      {arg: 'input', type: 'object', required: true},
+    ],
+    returns: {type: 'object', root: true},
+    http: {path: '/editMolochUser', verb: 'post', status: 200}
   });
 
   user.observe('before delete', function (ctx, next) {

@@ -407,7 +407,7 @@ module.exports = function (component) {
               status = true;
               message = "OK";
             }
-            success({status: status, message: message, exit_code: exit_code});
+            success({status: status, message: message, exit_code: exit_code, logs: stdout, logs_error: stderr});
           });
 
         } catch (err) {
@@ -437,7 +437,7 @@ module.exports = function (component) {
         let output, service_name = input.name;
       switch (input.name) {
         case "autoupgrade":
-          success({status: true, message: "OK", exit_code: 0});
+          success({status: true, message: "OK", exit_code: 0, logs: false, logs_error: false});
           break;
         case "nfsen":
         case "suricata":
@@ -476,6 +476,8 @@ module.exports = function (component) {
               output.status = false;
               if( err.message !== undefined ) {
                 output.message += " " + err.message;
+                output.logs += " " + result;
+                output.logs_error += " " + JSON.stringify(err);
               }
               return success(output);
             }
@@ -521,7 +523,7 @@ module.exports = function (component) {
             last_message = result.statusText + " ";
           }
 
-          success({status: true, message: last_message});
+          success({status: true, message: last_message, logs: last_message, logs_error: ""});
 
         } catch (err) {
           hell.o(err, "checkStatusFromHealthUrl", "error");
@@ -534,7 +536,7 @@ module.exports = function (component) {
             last_message += " " + err.errno;
           }
 
-          success({status: false, message: last_message});
+          success({status: false, message: last_message, logs: "", logs_error: last_message});
         }
 
       })(); //async
@@ -585,15 +587,17 @@ module.exports = function (component) {
         update_input = {
           status: check_result.status,
           message: check_result.message,
-          exit_code: check_result.exit_code
+          exit_code: check_result.exit_code,
+          logs: check_result.logs,
+          logs_error: check_result.logs_error
         };
 
         hell.o([comp.name, "update component status"], "checkComponent", "info");
         update_result = await component.update({name: comp.name}, update_input);
         if (!update_result) throw new Error(comp.name + " failed to save component status");
 
-        if (cb) return cb(null, check_result.message );
-        return success( check_result.message );
+        if (cb) return cb(null, check_result);
+        return success(check_result);
 
       } catch (err) {
         hell.o(err, "checkComponent", "error");

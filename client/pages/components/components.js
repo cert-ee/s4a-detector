@@ -41,8 +41,8 @@ export default {
                 let params = {name: comp.name, state: state};
                 let salt_result = await this.$axios.$post('components/stateApply', params);
                 comp = await this.$axios.$get(`components/${comp.name}`);
-                comp.logs = salt_result.logs;
-                comp.logs_error = salt_result.logs_error;
+                // comp.logs = salt_result.logs;
+                // comp.logs_error = salt_result.logs_error;
             } catch (err) {
                 this.$store.dispatch('handleError', err);
             } finally {
@@ -74,8 +74,8 @@ export default {
 
             for (let component of components) {
                 component.statusStr = component.status === true ? i18n.t('ok') : i18n.t('fail');
-                component.logs = false;
-                component.logs_error = false;
+                // component.logs = false;
+                // component.logs_error = false;
             }
 
             store.commit('components/setComponents', components);
