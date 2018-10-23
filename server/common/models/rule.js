@@ -158,6 +158,13 @@ module.exports = function (rule) {
           }
 
           /*
+          IF REVISION OLDER
+           */
+          if (rule_found.revision > revision) {
+            continue;
+          }
+
+          /*
           SAME REVISION, CHECK IF ENABLED IS STILL UNCHANGED
            */
           if (rule_found.revision == revision) { //if same revision, only enable/disable changes for now
