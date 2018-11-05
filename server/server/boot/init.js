@@ -100,18 +100,18 @@ module.exports = function (app) {
         }, app.check_interval_format(settings.job_interval_status_check, "job_interval_status_check"));
       })();
 
-      // /*
-      // SCHEDULE COMPONENTS CHECKING
-      //  */
-      // hell.o("schedule components checker", "init", "info");
-      //
-      // (function interval_components() {
-      //   setTimeout(() => {
-      //     app.models.component.checkRoutine(null, () => {
-      //       interval_components();
-      //     });
-      //   }, app.check_interval_format(settings.job_interval_components_check, "job_interval_components_check"));
-      // })();
+      /*
+      SCHEDULE COMPONENTS CHECKING
+       */
+      hell.o("schedule components checker", "init", "info");
+
+      (function interval_components() {
+        setTimeout(() => {
+          app.models.component.checkRoutine(null, () => {
+            interval_components();
+          });
+        }, app.check_interval_format(settings.job_interval_components_check, "job_interval_components_check"));
+      })();
 
       /*
       SCHEDULE RULES CHECKING
@@ -126,46 +126,46 @@ module.exports = function (app) {
         }, app.check_interval_format(settings.job_interval_rules_check, "job_interval_rules_check"));
       })();
 
-      // /*
-      // SCHEDULE YARA CHECKING
-      //  */
-      // hell.o("schedule yara checker", "init", "info");
-      //
-      // (function interval_yara() {
-      //   setTimeout(() => {
-      //     app.models.yara.checkRoutine(null, () => {
-      //       interval_yara();
-      //     });
-      //   }, app.check_interval_format(1, "job_interval_yara_check"));
-      // })();
-      //
-      // /*
-      // SCHEDULE WISE CHECKING
-      //  */
-      // hell.o("schedule wise checker", "init", "info");
-      //
-      // (function interval_wise() {
-      //   setTimeout(() => {
-      //     app.models.wise.checkRoutine(null, () => {
-      //       interval_wise();
-      //     });
-      //   }, app.check_interval_format(1, "job_interval_wise_check"));
-      // })();
-      //
-      // /*
-      // SCHEDULE ALERTS CHECKING
-      //  */
-      // hell.o("schedule alerts checker", "init", "info");
-      //
-      // (function interval_alerts() {
-      //   setTimeout(() => {
-      //     app.models.report.alertsRoutine(null, () => {
-      //       interval_alerts();
-      //     });
-      //   }, app.check_interval_format(settings.job_interval_alerts_check, "job_interval_alerts_check"));
-      //   // }, 1000);
-      // })();
-      //
+      /*
+      SCHEDULE YARA CHECKING
+       */
+      hell.o("schedule yara checker", "init", "info");
+
+      (function interval_yara() {
+        setTimeout(() => {
+          app.models.yara.checkRoutine(null, () => {
+            interval_yara();
+          });
+        }, app.check_interval_format(settings.job_interval_rules_check, "job_interval_yara_check"));
+      })();
+
+      /*
+      SCHEDULE WISE CHECKING
+       */
+      hell.o("schedule wise checker", "init", "info");
+
+      (function interval_wise() {
+        setTimeout(() => {
+          app.models.wise.checkRoutine(null, () => {
+            interval_wise();
+          });
+        }, app.check_interval_format(settings.job_interval_rules_check, "job_interval_wise_check"));
+      })();
+
+      /*
+      SCHEDULE ALERTS CHECKING
+       */
+      hell.o("schedule alerts checker", "init", "info");
+
+      (function interval_alerts() {
+        setTimeout(() => {
+          app.models.report.alertsRoutine(null, () => {
+            interval_alerts();
+          });
+        }, app.check_interval_format(settings.job_interval_alerts_check, "job_interval_alerts_check"));
+        // }, 1000);
+      })();
+
       // /*
       // SCHEDULE NOTIFICATIONS
       //  */
