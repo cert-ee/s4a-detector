@@ -523,7 +523,7 @@ module.exports = function (component) {
             last_message = result.statusText + " ";
           }
 
-          success({status: true, message: last_message, logs: last_message, logs_error: ""});
+          success({status: true, message: last_message, logs: last_message, logs_error: "", exit_code: ""});
 
         } catch (err) {
           hell.o(err, "checkStatusFromHealthUrl", "error");
@@ -536,7 +536,7 @@ module.exports = function (component) {
             last_message += " " + err.errno;
           }
 
-          success({status: false, message: last_message, logs: "", logs_error: last_message});
+          success({status: false, message: last_message, logs: "", logs_error: last_message, exit_code: ""});
         }
 
       })(); //async
@@ -573,14 +573,13 @@ module.exports = function (component) {
           check_result = await component.checkStatusSystemctl(comp);
         }
 
-        if( check_result.exit_code === undefined ) check_result.exit_code = "";
-
         if (check_result.status) {
           hell.o([comp.name + " OK", check_result.message], "checkComponent", "info");
         } else {
           if( check_result.message == "" ){
             check_result.message = " exit code: " + check_result.exit_code;
           }
+          hell.o(["exit code", check_result.exit_code], "checkComponent", "error");
           hell.o([comp.name + " FAIL", check_result.message], "checkComponent", "error");
         }
 
