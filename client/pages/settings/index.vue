@@ -192,6 +192,39 @@
                   </v-layout>
                 </div>
 
+                <v-subheader>SMTP server settings</v-subheader>
+                <v-divider></v-divider>
+                <v-layout row wrap>
+                  <v-flex xs6>
+                            <v-text-field :label="$t('settings.smtp_server_host')" required v-model="settings.smtp_server_host" @change="updateSetting('smtp_server_host')"></v-text-field>
+                  </v-flex>
+                  <v-flex xs6>
+                            <v-text-field :label="$t('settings.smtp_server_port')" required v-model="settings.smtp_server_port" @change="updateSetting('smtp_server_port')"></v-text-field>
+                  </v-flex>
+                  <v-flex xs12>
+                            <v-text-field :label="$t('settings.smtp_server_from')" required v-model="settings.smtp_server_from" @change="updateSetting('smtp_server_from')"></v-text-field>
+                  </v-flex>
+
+                  <v-flex xs6>
+                            <v-text-field :label="$t('settings.smtp_server_username')" required v-model="settings.smtp_server_username" @change="updateSetting('smtp_server_username')"></v-text-field>
+                  </v-flex>
+                  <v-flex xs6>
+                            <v-text-field 
+                            	v-model="settings.smtp_server_password"
+                            	:append-icon="passwordVisible ? 'visibility_off' : 'visibility'"
+                            	:append-icon-cb="() => (passwordVisible = !passwordVisible)"
+                            	:type="passwordVisible ? 'text' : 'password'"
+                            	:label="$t('settings.smtp_server_password')" required @change="updateSetting('smtp_server_password')">
+                            </v-text-field>
+                  </v-flex>
+                  <v-flex xs4>
+                        <v-checkbox color="primary" :label="$t('settings.smtp_server_tls')" v-model="settings.smtp_server_tls" @click="resetSmtpPortValue" @change="updateSetting('smtp_server_tls')"></v-checkbox>
+                  </v-flex>
+                  <v-flex xs4>
+                        <v-checkbox color="primary" :label="$t('settings.smtp_server_force_notls')" v-model="settings.smtp_server_force_notls" @click="resetSmtpPortValueAndUpdateTLS" @change="updateSetting('smtp_server_force_notls')"></v-checkbox>
+                  </v-flex>
+                </v-layout>
+
                 <v-subheader>Nginx SSL</v-subheader>
                 <v-divider></v-divider>
                 <v-layout row wrap>
@@ -208,6 +241,7 @@
                     <v-btn color="primary" @click.stop="nginxConfDialog = true">{{ $t('settings.nginx_configuration') }}</v-btn>
                   </v-flex>
                 </v-layout>
+
               </v-card-text>
             </v-card>
           </v-flex>

@@ -7,7 +7,7 @@ export default {
                 {text: this.$t('enabled'), align: 'left', value: 'enabled'},
                 {text: this.$t('notify.subject'), align: 'left', value: 'subject'},
                 {text: this.$t('notify.email'), align: 'left', value: 'email'},
-                {text: this.$t('notify.query'), align: 'left', value: 'query'},
+                // {text: this.$t('notify.query'), align: 'left', value: 'query'},
                 {text: this.$t('notify.actions'), align: 'left', sortable: false},
             ],
             editNotifyDialog: {
@@ -24,10 +24,9 @@ export default {
                 query: '',
                 subject: ''
             }
-
         }
     },
-
+    
     computed: {
         search: {
             get() {
@@ -53,6 +52,10 @@ export default {
     },
 
     methods: {
+        onJsonChange (value) {
+          console.log('value:', value)
+        },
+
         async toggleEnable(enabled) {
             try {
                 let promises = [];
@@ -76,9 +79,11 @@ export default {
             this.$nextTick(() => {
                 if (notify) {
                     Object.assign(this.newNotify, notify);
+                    this.newNotify.query = JSON.stringify( this.newNotify.query, null, 4);
                     delete this.newNotify.created_time;
                     delete this.newNotify.modified_time;
                 }
+
 
                 this.editNotifyDialog.open = true;
             });
@@ -93,7 +98,7 @@ export default {
                         name: this.newNotify.name,
                         subject: this.newNotify.subject,
                         email: this.newNotify.email,
-                        query: this.newNotify.query
+                        query: JSON.parse(this.newNotify.query)
                     }
                 );
                 this.editNotifyDialog.open = false;

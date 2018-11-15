@@ -12,7 +12,7 @@
       "isArray": false
     },
     "query": {
-      "type": "string",
+      "type": "object",
       "required": true,
       "description": "Notification query",
       "default": {}
@@ -21,19 +21,19 @@
       "type": "string",
       "required": true,
       "description": "Email to send notification",
-      "default": {}
+      "default": ""
     },
     "subject": {
       "type": "string",
       "required": true,
       "description": "Email subject for notification",
-      "default": {}
+      "default": ""
     },
     "enabled": {
       "type": "boolean",
       "required": true,
       "description": "Is rule enabled",
-      "default": {}
+      "default": false
     },
     "alerts_pointer": {
       "type": "string",

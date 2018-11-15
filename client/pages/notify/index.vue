@@ -78,9 +78,9 @@
                                         <td>
                                             {{ props.item.email }}
                                         </td>
-                                        <td>
-                                            {{ props.item.query }}
-                                        </td>
+                                        <!--<td>-->
+                                        <!--{{ props.item.query }}-->
+                                        <!--</td>-->
 
                                         <td>
 
@@ -130,10 +130,9 @@
                                                 </v-text-field>
                                             </v-flex>
                                             <v-flex xs12>
-                                                <v-textarea :label="$t('notify.query')" v-model="newNotify.query"
-                                                            required
-                                                            :rules="[formNotify.required]">
-                                                </v-textarea>
+                                                <v-textarea 
+                                                    v-model="newNotify.query" 
+						    auto-grow ></v-textarea>
                                             </v-flex>
                                         </v-layout>
                                     </v-container>

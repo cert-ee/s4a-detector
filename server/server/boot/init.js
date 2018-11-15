@@ -166,19 +166,19 @@ module.exports = function (app) {
         // }, 1000);
       })();
 
-      // /*
-      // SCHEDULE NOTIFICATIONS
-      //  */
-      // hell.o("schedule notifier", "init", "info");
-      //
-      // (function interval_notify() {
-      //   setTimeout(() => {
-      //     app.models.notify.notifyRoutine(null, () => {
-      //       interval_notify();
-      //     });
-      //   }, app.check_interval_format(settings.job_interval_notify_check, "job_interval_notify_check"));
-      //   // }, 1000);
-      // })();
+      /*
+      SCHEDULE NOTIFICATIONS
+      */
+      hell.o("schedule notifier", "init", "info");
+
+      (function interval_notify() {
+        setTimeout(() => {
+          app.models.notify.notifyRoutine(null, () => {
+            interval_notify();
+          });
+        }, app.check_interval_format(settings.job_interval_notify_check, "job_interval_notify_check"));
+        // }, 1000);
+      })();
 
     }
     catch (err) {
