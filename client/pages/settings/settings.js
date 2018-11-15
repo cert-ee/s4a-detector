@@ -8,7 +8,14 @@ export default {
                 job_interval_rules_check: 1,
                 auto_rules: true,
                 job_interval_status_check: 1,
-                auto_upgrade: true
+                auto_upgrade: true,
+                smtp_server_host: 'hostname',
+                smtp_server_port: 465,
+                smtp_server_tls: true,
+                smtp_server_force_notls: false,
+                smtp_server_username: 's4a',
+                smtp_server_password: 's4a',
+                smtp_server_from: 's4a@localhost'
             },
             origInterfaces: [],
 			interfaces: [],
@@ -30,7 +37,8 @@ export default {
             nfsen_loading: false,
             nginx: {},
             nginx_loading: false,
-            nginxConfDialog: false
+            nginxConfDialog: false,
+            passwordVisible: false
         }
     },
 
@@ -124,7 +132,50 @@ export default {
             } finally {
                 this.nginx_loading = false;
             }
+        },
+
+        async resetSmtpPortValue() {
+
+            try {
+                if (this.settings['smtp_server_tls']) {
+                    if (this.settings['smtp_server_port'] != 465) {
+                        this.settings['smtp_server_port'] = 465;
+                        await this.updateSetting('smtp_server_port');
+                    }
+
+                    if (this.settings['smtp_server_force_notls']) {
+                        this.settings['smtp_server_force_notls'] = false;
+                        await this.updateSetting('smtp_server_force_notls');
+                    }
+                } else {
+                    if (this.settings['smtp_server_port'] != 587) {
+                        this.settings['smtp_server_port'] = 587;
+                        await this.updateSetting('smtp_server_port');
+                    }
+                }
+            } catch (err) {
+                this.$store.dispatch('handleError', err);
+            }
+        },
+
+        async resetSmtpPortValueAndUpdateTLS() {
+
+            try {
+                if (this.settings['smtp_server_force_notls']) {
+                    if (this.settings['smtp_server_port'] != 587) {
+                        this.settings['smtp_server_port'] = 587;
+                        await this.updateSetting('smtp_server_port');
+                    }
+                    if (this.settings['smtp_server_tls']) {
+                        this.settings['smtp_server_tls'] = false;
+                        await this.updateSetting('smtp_server_tls');
+                    }
+                }
+            } catch (err) {
+                this.$store.dispatch('handleError', err);
+            }
         }
+
     },
 
     async asyncData({ store, app: {$axios} }) {

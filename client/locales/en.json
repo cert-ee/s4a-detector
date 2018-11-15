@@ -127,7 +127,14 @@
     "nginx_configuration": "Configuration",
     "nginx_ssl_cert": "Certificate",
     "nginx_ssl_chain": "Certificate Chain",
-    "nginx_ssl_key": "Private Key"
+    "nginx_ssl_key": "Private Key",
+    "smtp_server_host": "Server",
+    "smtp_server_port": "Port",
+    "smtp_server_tls": "Enable native TLS",
+    "smtp_server_force_notls": "Force no-TLS",
+    "smtp_server_username": "Username",
+    "smtp_server_password": "Password",
+    "smtp_server_from": "Sender address"
   },
   "tags": {
     "add_tag": "Add Tag",
@@ -143,7 +150,9 @@
     "subject": "Subject",
     "actions": "Actions",
     "email": "Email",
-    "saved": "Saved"
+    "saved": "Saved",
+    "edit_notify": "Edit modal",
+    "required": "Required"
   },
   "rulesets": {
     "enable_all": "Enable All",

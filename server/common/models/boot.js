@@ -68,6 +68,9 @@ module.exports = function (boot) {
           await boot.app.models.system_info.create(
             {name: "update_version", friendly_name: "App version", description: "", data: server_numbers}
           );
+        } else if (server_numbers <= 2119) {
+          hell.o("remove current notify entries", "boot", "info");
+          await boot.app.models.notify.destroyAll();
         } else {
           hell.o("currently no updates", "boot", "info");
         }
