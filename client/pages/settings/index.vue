@@ -212,7 +212,7 @@
                             <v-text-field 
                             	v-model="settings.smtp_server_password"
                             	:append-icon="passwordVisible ? 'visibility_off' : 'visibility'"
-                            	:append-icon-cb="() => (passwordVisible = !passwordVisible)"
+                            	@click:append="() => (passwordVisible = !passwordVisible)"
                             	:type="passwordVisible ? 'text' : 'password'"
                             	:label="$t('settings.smtp_server_password')" required @change="updateSetting('smtp_server_password')">
                             </v-text-field>
