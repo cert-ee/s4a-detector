@@ -144,15 +144,23 @@
     "required": "Required"
   },
   "notify": {
+    "name": "Name",
+    "enabled": "Enabled",
     "enable": "Enable",
     "disable": "Disable",
-    "query": "Notification query",
+    "delete": "Delete",
+    "deleted": "Deleted",
+    "cancel": "Cancel",
+    "close": "Close",
+    "query": "ES query",
     "subject": "Subject",
     "actions": "Actions",
     "email": "Email",
     "saved": "Saved",
-    "edit_notify": "Edit modal",
-    "required": "Required"
+    "add_notify": "Add new notifier",
+    "edit_notify": "Edit notifier",
+    "required": "Required",
+    "query_not_valid_json": "Not valid JSON {}"
   },
   "rulesets": {
     "enable_all": "Enable All",
