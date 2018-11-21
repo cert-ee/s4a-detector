@@ -114,6 +114,7 @@ module.exports = function (notify) {
           port: settings['smtp_server_port'],
           secure: settings['smtp_server_tls'],
           ignoreTLS: settings['smtp_server_force_notls'],
+          authMethod: settings['smtp_server_auth_method'],
           auth: {
             user: settings['smtp_server_username'],
             pass: settings['smtp_server_password']

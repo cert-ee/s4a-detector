@@ -132,9 +132,13 @@
     "smtp_server_port": "Port",
     "smtp_server_tls": "Enable native TLS",
     "smtp_server_force_notls": "Force no-TLS",
+    "smtp_server_auth_method": "Auth method",
     "smtp_server_username": "Username",
     "smtp_server_password": "Password",
-    "smtp_server_from": "Sender address"
+    "smtp_server_from": "Sender address",
+    "moloch_settings": "Moloch Settings",
+    "moloch_yara_enabled": "Yara service",
+    "moloch_wise_enabled": "Wise service"
   },
   "tags": {
     "add_tag": "Add Tag",
