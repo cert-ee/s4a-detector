@@ -57,20 +57,35 @@ module.exports = function (boot) {
 
         if (server_numbers <= 178) {
           hell.o("need to destroy old feeds n settings", "boot", "info");
-          // await boot.app.models.feed.destroyAll();
-          // await boot.app.models.settings.destroyAll();
-          // await boot.app.models.tasker.destroyAll();
-          // await boot.app.models.feed.destroyAll();
-          // await boot.app.models.task.destroyAll();
           await boot.app.models.yara.destroyAll();
           await boot.app.models.wise.destroyAll();
           await boot.app.models.system_info.destroyAll();
           await boot.app.models.system_info.create(
             {name: "update_version", friendly_name: "App version", description: "", data: server_numbers}
           );
-        } else if (server_numbers <= 2120) {
+
+          hell.o("add default moloch configuration", "boot", "info");
+          await boot.app.models.component.update({name: 'moloch'}, {
+            configuration:
+              {
+                yara_enabled: false,
+                wise_enabled: false
+              }
+          });
+
+        } else if (server_numbers <= 2132) {
           hell.o("remove current notify entries", "boot", "info");
           await boot.app.models.notify.destroyAll();
+
+          hell.o("add default moloch configuration", "boot", "info");
+          await boot.app.models.component.update({name: 'moloch'}, {
+            configuration:
+              {
+                yara_enabled: false,
+                wise_enabled: false
+              }
+          });
+
         } else {
           hell.o("currently no updates", "boot", "info");
         }

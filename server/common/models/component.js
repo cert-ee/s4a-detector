@@ -143,7 +143,12 @@ module.exports = function (component) {
       enabled: false,
       toggleable: false,
       restartable: true,
-      status: false
+      status: false,
+      configuration:
+        {
+          yara_enabled: false,
+          wise_enabled: false
+        }
     },
     {
       name: "nfsen",

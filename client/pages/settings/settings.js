@@ -12,25 +12,27 @@ export default {
                 smtp_server_host: 'hostname',
                 smtp_server_port: 465,
                 smtp_server_tls: true,
+                smtp_server_auth_method: 'PLAIN',
                 smtp_server_force_notls: false,
                 smtp_server_username: 's4a',
                 smtp_server_password: 's4a',
                 smtp_server_from: 's4a@localhost'
             },
+            smtpAuthMethods: [ 'PLAIN', 'LOGIN', 'CRAM-MD5' ],
             origInterfaces: [],
-			interfaces: [],
+            interfaces: [],
             alerts_tooltips: {
                 all: "Report all alerts registered\n based on Suricata rules",
                 critical: "Limit reporting to only Critical\n alerts based on Suricata rules",
-                full : "Report details contain Suricata default dataset",
-                limited : "Reported alert contents is limited to:\n \"_id\", \"alert\", \"event_type\",\n \"flow_id\", \"in_iface\", \"proto\",\n \"timestamp\""
+                full: "Report details contain Suricata default dataset",
+                limited: "Reported alert contents is limited to:\n \"_id\", \"alert\", \"event_type\",\n \"flow_id\", \"in_iface\", \"proto\",\n \"timestamp\""
             },
-			interface_headers: [
-				{ text: this.$t('settings.name'), align: 'left', value: 'name' },
-				{ text: this.$t('settings.state'), align: 'left', value: 'state' },
-				{ text: this.$t('settings.ip'), align: 'left', value: 'ip' },
-				{ text: this.$t('settings.listening'), align: 'center', sortable: false }
-			],
+            interface_headers: [
+                {text: this.$t('settings.name'), align: 'left', value: 'name'},
+                {text: this.$t('settings.state'), align: 'left', value: 'state'},
+                {text: this.$t('settings.ip'), align: 'left', value: 'ip'},
+                {text: this.$t('settings.listening'), align: 'center', sortable: false}
+            ],
             interface_loading: false,
             nfsen: {},
             nfsenSamplingRate: -1000,
@@ -38,7 +40,9 @@ export default {
             nginx: {},
             nginx_loading: false,
             nginxConfDialog: false,
-            passwordVisible: false
+            passwordVisible: false,
+            moloch: {},
+            moloch_loading: false
         }
     },
 
@@ -88,6 +92,26 @@ export default {
             }
         },
 
+        async applyMolochChanges() {
+            this.moloch_loading = true;
+
+            let moloch_configuration = {
+                configuration: {
+                    yara_enabled: this.moloch.configuration.yara_enabled,
+                    wise_enabled: this.moloch.configuration.wise_enabled
+                }
+            };
+
+            try {
+                await this.$axios.patch('components/moloch', moloch_configuration);
+                await this.$axios.post('components/stateApply', {name: 'moloch', state: 'restart'});
+            } catch (err) {
+                this.$store.dispatch('handleError', err);
+            } finally {
+                this.moloch_loading = false;
+            }
+        },
+
         async applyNfsenChanges() {
             this.nfsen_loading = true;
 
@@ -106,8 +130,8 @@ export default {
             this.nginx_loading = true;
 
             try {
-                await this.$axios.post('components/sslCheck', this.nginx.configuration );
-                await this.$axios.patch('components/nginx', { configuration: this.nginx.configuration });
+                await this.$axios.post('components/sslCheck', this.nginx.configuration);
+                await this.$axios.patch('components/nginx', {configuration: this.nginx.configuration});
                 await this.$axios.post('components/stateApply', {name: 'nginx', state: 'restart'});
                 this.nginx.configuration.ssl_enabled = true;
                 this.nginxConfDialog = false;
@@ -178,15 +202,23 @@ export default {
 
     },
 
-    async asyncData({ store, app: {$axios} }) {
+    async asyncData({store, app: {$axios}}) {
         try {
-            let [ {data: settings}, {data: interfaces}, {data: nfsen}, {data: nginx} ] = await Promise.all([
+            let [{data: settings}, {data: interfaces}, {data: nfsen}, {data: nginx}, {data: moloch}] = await Promise.all([
                 $axios.get('settings/settingid'), $axios.get('network_interfaces/list'),
-                $axios.get('components/nfsen'), $axios.get('components/nginx')
+                $axios.get('components/nfsen'), $axios.get('components/nginx'), $axios.get('components/moloch')
             ]);
 
             const nfsenSamplingRate = nfsen.configuration && nfsen.configuration.sampling_rate;
-            return { settings, interfaces, origInterfaces: interfaces.map(i => ({...i})), nfsen, nfsenSamplingRate, nginx };
+            return {
+                settings,
+                interfaces,
+                origInterfaces: interfaces.map(i => ({...i})),
+                nfsen,
+                nfsenSamplingRate,
+                nginx,
+                moloch
+            };
         } catch (err) {
             if (err.response && err.response.status === 401) {
                 return error({statusCode: 401, message: store.state.unauthorized});

@@ -141,6 +141,63 @@
                     </v-radio-group>
                   </v-flex>
                 </v-layout>
+
+
+                <v-card-title primary-title>
+                  <div class="headline">{{ $t('settings.moloch_settings') }}</div>
+                </v-card-title>
+
+                <template v-if="!moloch_loading">
+
+                  <v-subheader>{{ $t('settings.moloch_yara_enabled') }}</v-subheader>
+                  <v-divider></v-divider>
+                  <v-layout row wrap>
+                    <v-flex xs6>
+                      <v-radio-group v-model="moloch.configuration.yara_enabled"
+                                     @change="applyMolochChanges"
+                      >
+                        <v-radio color="primary" :label="$t('enabled')" :value="true"></v-radio>
+                      </v-radio-group>
+                    </v-flex>
+                    <v-flex xs6>
+                      <v-radio-group v-model="moloch.configuration.yara_enabled"
+                                     @change="applyMolochChanges"
+                      >
+                        <v-radio color="primary" :label="$t('disabled')" :value="false"></v-radio>
+                      </v-radio-group>
+
+                    </v-flex>
+                  </v-layout>
+
+                  <v-subheader>{{ $t('settings.moloch_wise_enabled') }}</v-subheader>
+                  <v-divider></v-divider>
+                  <v-layout row wrap>
+                    <v-flex xs6>
+                      <v-radio-group v-model="moloch.configuration.wise_enabled"
+                                     @change="applyMolochChanges"
+                      >
+                        <v-radio color="primary" :label="$t('enabled')" :value="true"></v-radio>
+                      </v-radio-group>
+                    </v-flex>
+                    <v-flex xs6>
+                      <v-radio-group v-model="moloch.configuration.wise_enabled"
+                                     @change="applyMolochChanges"
+                      >
+                        <v-radio color="primary" :label="$t('disabled')" :value="false"></v-radio>
+                      </v-radio-group>
+
+                    </v-flex>
+                  </v-layout>
+                </template>
+
+                <template v-if="moloch_loading">
+                  <v-layout row wrap>
+                    <v-flex xs6 class="text-md-center">
+                      <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                    </v-flex>
+                  </v-layout>
+                </template>
+
               </v-card-text>
             </v-card>
           </v-flex>
@@ -209,13 +266,23 @@
                             <v-text-field :label="$t('settings.smtp_server_username')" required v-model="settings.smtp_server_username" @change="updateSetting('smtp_server_username')"></v-text-field>
                   </v-flex>
                   <v-flex xs6>
-                            <v-text-field 
-                            	v-model="settings.smtp_server_password"
-                            	:append-icon="passwordVisible ? 'visibility_off' : 'visibility'"
-                            	@click:append="() => (passwordVisible = !passwordVisible)"
-                            	:type="passwordVisible ? 'text' : 'password'"
-                            	:label="$t('settings.smtp_server_password')" required @change="updateSetting('smtp_server_password')">
+                            <v-text-field
+                                    v-model="settings.smtp_server_password"
+                                    :append-icon="passwordVisible ? 'visibility_off' : 'visibility'"
+                                    @click:append="() => (passwordVisible = !passwordVisible)"
+                                    :type="passwordVisible ? 'text' : 'password'"
+                                    :label="$t('settings.smtp_server_password')" required
+                                    @change="updateSetting('smtp_server_password')"
+                                    autocomplete="new-password">
                             </v-text-field>
+                  </v-flex>
+                  <v-flex xs4>
+			<v-select :label="$t('settings.smtp_server_auth_method')" 
+				  :items="smtpAuthMethods" 
+				  @change="updateSetting('smtp_server_auth_method')"
+				  v-model="settings.smtp_server_auth_method" required
+                                  item-text="name" item-value="name">
+			</v-select>
                   </v-flex>
                   <v-flex xs4>
                         <v-checkbox color="primary" :label="$t('settings.smtp_server_tls')" v-model="settings.smtp_server_tls" @click="resetSmtpPortValue" @change="updateSetting('smtp_server_tls')"></v-checkbox>

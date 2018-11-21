@@ -96,6 +96,12 @@
       "description": "SMTP server force no-TLS (even if supported)",
       "default": false
     },
+    "smtp_server_auth_method": {
+      "type": "string",
+      "required": true,
+      "description": "SMTP server auth method",
+      "default": "PLAIN"
+    },
     "smtp_server_username": {
       "type": "string",
       "required": true,

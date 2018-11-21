@@ -18,6 +18,7 @@ module.exports = {
 				API_HOST: process.env.API_HOST,
 				API_PORT: process.env.API_PORT,
 				API_REST_ROOT_URL: process.env.API_REST_ROOT_URL,
+                SHELL: process.SHELL,
                 PATH_BASE: process.env.PATH_BASE,
                 PATH_CSR_SIGNED: process.env.PATH_CSR_SIGNED,
                 PATH_CSR_UNSIGNED: process.env.PATH_CSR_UNSIGNED,
