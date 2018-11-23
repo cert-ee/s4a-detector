@@ -1,41 +1,47 @@
 {
-  "name": "system_info",
-  "plural": "system_info",
+  "name": "notify",
+  "plural": "notify",
   "base": "PersistedModel",
   "idInjection": true,
-  "options": {
-    "validateUpsert": true
-  },
   "properties": {
     "name": {
       "type": "string",
-      "id": true,
       "required": true,
       "index": true,
-      "description": "Sysinfo name",
+      "description": "Notification name",
       "isArray": false
     },
-    "friendly_name": {
+    "query": {
+      "type": "object",
+      "required": true,
+      "description": "Notification query",
+      "default": {}
+    },
+    "email": {
       "type": "string",
       "required": true,
-      "description": "Sysinfo name",
+      "description": "Email to send notification",
       "default": ""
     },
-    "description": {
-      "type": "string",
-      "required": false,
-      "description": "Sysinfo description",
-      "default": ""
-    },
-    "data": {
+    "subject": {
       "type": "string",
       "required": true,
-      "description": "Sysinfo value or data",
+      "description": "Email subject for notification",
       "default": ""
-    }
-  },
-  "validations": [],
-  "relations": {
+    },
+    "enabled": {
+      "type": "boolean",
+      "required": true,
+      "description": "Is rule enabled",
+      "default": false
+    },
+    "alerts_pointer": {
+      "type": "string",
+      "required": true,
+      "description": "Last alarm notified ptr",
+      "default": "empty"
+    },
+    "methods": {}
   },
   "acls": [
     {
@@ -63,19 +69,11 @@
       "permission": "ALLOW"
     },
     {
-      "property": "list",
+      "property": "toggleEnable",
       "accessType": "*",
       "principalType": "ROLE",
-      "principalId": "$everyone",
-      "permission": "ALLOW"
-    },
-    {
-      "property": "version",
-      "accessType": "*",
-      "principalType": "ROLE",
-      "principalId": "read",
+      "principalId": "admin",
       "permission": "ALLOW"
     }
-  ],
-  "methods": {}
+  ]
 }

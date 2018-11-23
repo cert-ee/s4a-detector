@@ -62,7 +62,7 @@
       "permission": "ALLOW"
     },
     {
-      "property" : "deleteUser",
+      "property": "editMolochUser",
       "accessType": "*",
       "principalType": "ROLE",
       "principalId": "admin",

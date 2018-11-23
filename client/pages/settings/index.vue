@@ -141,6 +141,63 @@
                     </v-radio-group>
                   </v-flex>
                 </v-layout>
+
+
+                <v-card-title primary-title>
+                  <div class="headline">{{ $t('settings.moloch_settings') }}</div>
+                </v-card-title>
+
+                <template v-if="!moloch_loading">
+
+                  <v-subheader>{{ $t('settings.moloch_yara_enabled') }}</v-subheader>
+                  <v-divider></v-divider>
+                  <v-layout row wrap>
+                    <v-flex xs6>
+                      <v-radio-group v-model="moloch.configuration.yara_enabled"
+                                     @change="applyMolochChanges"
+                      >
+                        <v-radio color="primary" :label="$t('enabled')" :value="true"></v-radio>
+                      </v-radio-group>
+                    </v-flex>
+                    <v-flex xs6>
+                      <v-radio-group v-model="moloch.configuration.yara_enabled"
+                                     @change="applyMolochChanges"
+                      >
+                        <v-radio color="primary" :label="$t('disabled')" :value="false"></v-radio>
+                      </v-radio-group>
+
+                    </v-flex>
+                  </v-layout>
+
+                  <v-subheader>{{ $t('settings.moloch_wise_enabled') }}</v-subheader>
+                  <v-divider></v-divider>
+                  <v-layout row wrap>
+                    <v-flex xs6>
+                      <v-radio-group v-model="moloch.configuration.wise_enabled"
+                                     @change="applyMolochChanges"
+                      >
+                        <v-radio color="primary" :label="$t('enabled')" :value="true"></v-radio>
+                      </v-radio-group>
+                    </v-flex>
+                    <v-flex xs6>
+                      <v-radio-group v-model="moloch.configuration.wise_enabled"
+                                     @change="applyMolochChanges"
+                      >
+                        <v-radio color="primary" :label="$t('disabled')" :value="false"></v-radio>
+                      </v-radio-group>
+
+                    </v-flex>
+                  </v-layout>
+                </template>
+
+                <template v-if="moloch_loading">
+                  <v-layout row wrap>
+                    <v-flex xs6 class="text-md-center">
+                      <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                    </v-flex>
+                  </v-layout>
+                </template>
+
               </v-card-text>
             </v-card>
           </v-flex>
@@ -158,7 +215,8 @@
                     <td>{{ props.item.state }}</td>
                     <td>{{ props.item.ip }}</td>
                     <td>
-                      <v-checkbox color="primary" v-model="props.item.enabled"></v-checkbox>
+                        <v-checkbox color="primary" :disabled="props.item.ip != ''"
+                                    v-model="props.item.enabled"></v-checkbox>
                     </td>
                   </template>
                 </v-data-table>
@@ -191,6 +249,49 @@
                   </v-layout>
                 </div>
 
+                <v-subheader>SMTP server settings</v-subheader>
+                <v-divider></v-divider>
+                <v-layout row wrap>
+                  <v-flex xs6>
+                            <v-text-field :label="$t('settings.smtp_server_host')" required v-model="settings.smtp_server_host" @change="updateSetting('smtp_server_host')"></v-text-field>
+                  </v-flex>
+                  <v-flex xs6>
+                            <v-text-field :label="$t('settings.smtp_server_port')" required v-model="settings.smtp_server_port" @change="updateSetting('smtp_server_port')"></v-text-field>
+                  </v-flex>
+                  <v-flex xs12>
+                            <v-text-field :label="$t('settings.smtp_server_from')" required v-model="settings.smtp_server_from" @change="updateSetting('smtp_server_from')"></v-text-field>
+                  </v-flex>
+
+                  <v-flex xs6>
+                            <v-text-field :label="$t('settings.smtp_server_username')" required v-model="settings.smtp_server_username" @change="updateSetting('smtp_server_username')"></v-text-field>
+                  </v-flex>
+                  <v-flex xs6>
+                            <v-text-field
+                                    v-model="settings.smtp_server_password"
+                                    :append-icon="passwordVisible ? 'visibility_off' : 'visibility'"
+                                    @click:append="() => (passwordVisible = !passwordVisible)"
+                                    :type="passwordVisible ? 'text' : 'password'"
+                                    :label="$t('settings.smtp_server_password')" required
+                                    @change="updateSetting('smtp_server_password')"
+                                    autocomplete="new-password">
+                            </v-text-field>
+                  </v-flex>
+                  <v-flex xs4>
+			<v-select :label="$t('settings.smtp_server_auth_method')" 
+				  :items="smtpAuthMethods" 
+				  @change="updateSetting('smtp_server_auth_method')"
+				  v-model="settings.smtp_server_auth_method" required
+                                  item-text="name" item-value="name">
+			</v-select>
+                  </v-flex>
+                  <v-flex xs4>
+                        <v-checkbox color="primary" :label="$t('settings.smtp_server_tls')" v-model="settings.smtp_server_tls" @click="resetSmtpPortValue" @change="updateSetting('smtp_server_tls')"></v-checkbox>
+                  </v-flex>
+                  <v-flex xs4>
+                        <v-checkbox color="primary" :label="$t('settings.smtp_server_force_notls')" v-model="settings.smtp_server_force_notls" @click="resetSmtpPortValueAndUpdateTLS" @change="updateSetting('smtp_server_force_notls')"></v-checkbox>
+                  </v-flex>
+                </v-layout>
+
                 <v-subheader>Nginx SSL</v-subheader>
                 <v-divider></v-divider>
                 <v-layout row wrap>
@@ -207,6 +308,7 @@
                     <v-btn color="primary" @click.stop="nginxConfDialog = true">{{ $t('settings.nginx_configuration') }}</v-btn>
                   </v-flex>
                 </v-layout>
+
               </v-card-text>
             </v-card>
           </v-flex>
@@ -277,19 +379,19 @@
               <v-container fluid grid-list-lg>
                 <v-layout row wrap>
                   <v-flex xs6>
-                    <v-text-field :label="$t('settings.nginx_ssl_cert')" v-model="nginx.configuration.ssl_cert"
-                                  multi-line required>
-                    </v-text-field>
+                    <v-textarea :label="$t('settings.nginx_ssl_cert')" v-model="nginx.configuration.ssl_cert"
+                                required>
+                    </v-textarea>
                   </v-flex>
                   <v-flex xs6>
-                    <v-text-field :label="$t('settings.nginx_ssl_chain')" v-model="nginx.configuration.ssl_chain"
-                                  multi-line required>
-                    </v-text-field>
+                    <v-textarea :label="$t('settings.nginx_ssl_chain')" v-model="nginx.configuration.ssl_chain"
+                                required>
+                    </v-textarea>
                   </v-flex>
                   <v-flex xs6>
-                    <v-text-field :label="$t('settings.nginx_ssl_key')" v-model="nginx.configuration.ssl_key"
-                                  multi-line required>
-                    </v-text-field>
+                    <v-textarea :label="$t('settings.nginx_ssl_key')" v-model="nginx.configuration.ssl_key"
+                                required>
+                    </v-textarea>
                   </v-flex>
                 </v-layout>
               </v-container>

@@ -25,35 +25,35 @@ module.exports = function (user) {
       try {
         user.local_connection = axios.create({});
 
-        let user_find = await user.findOne({where: {username: username }});
-        if( user_find ) throw new Error("duplicate_data");
+        let user_find = await user.findOne({where: {username: username}});
+        if (user_find) throw new Error("duplicate_data");
 
-        let user_create = await user.create({ username: username });
+        let user_create = await user.create({username: username});
         if (!user_create) throw new Error("failed to create user");
 
-        let comp = await user.app.models.component.findOne({where: { name: "moloch", installed: true, enabled: true}})
-        if ( comp && process.env.NODE_ENV != "dev") {
-          user.local_connection.post( "http://localhost:9200/users/user/" + username,
-              {
-                "removeEnabled": false,
-                "userName": username,
-                "emailSearch": false,
-                "enabled": true,
-                "webEnabled": true,
-                "headerAuthEnabled": true,
-                "createEnabled": true,
-                "settings": {},
-                "passStore": "",
-                "userId": username
-              }
+        let comp = await user.app.models.component.findOne({where: {name: "moloch", installed: true, enabled: true}})
+        if (comp && process.env.NODE_ENV != "dev") {
+          user.local_connection.post("http://localhost:9200/users/user/" + username,
+            {
+              "removeEnabled": false,
+              "userName": username,
+              "emailSearch": false,
+              "enabled": false,
+              "webEnabled": true,
+              "headerAuthEnabled": true,
+              "createEnabled": false,
+              "settings": {},
+              "passStore": "",
+              "userId": username
+            }
           );
           user.local_connection = "";
         }
 
-        user_find = await user.findOne({where: {username: username }});
+        user_find = await user.findOne({where: {username: username}});
 
         hell.o("done", "createUser", "info");
-        cb(null, user_find );
+        cb(null, user_find);
       } catch (err) {
         hell.o(err, "createUser", "error");
         cb({name: "Error", status: 400, message: err.message});
@@ -72,41 +72,58 @@ module.exports = function (user) {
     http: {path: '/createUser', verb: 'post', status: 200}
   });
 
-
-
   /**
-   * DELETE USER
-   *
-   * remove from moloch
+   * EDIT MOLOCH USER
    *
    * @param username
-   * @param options
+   * @param input
    * @param cb
    */
-  user.deleteUser = function (username, options, cb) {
-    hell.o("start", "deleteUser", "info");
-    hell.o(username, "deleteUser", "info");
+  user.editMolochUser = function (username, active, rolename, cb) {
+    hell.o("start", "editMolochUser", "info");
+    hell.o(username, "editMolochUser", "info");
 
     (async function () {
       try {
         user.local_connection = axios.create({});
 
-        let user_find = await user.findOne({where: {username: username }});
-        if( !user_find ) throw new Error("no_data_found");
+        let user_find = await user.findOne({where: {username: username}});
+        if (!user_find) throw new Error("no_data");
 
-        //let user_remove = await user.destroyById({ id: user_find.id });
-        //if (!user_remove) throw new Error("failed to remove user");
+        let comp = await user.app.models.component.findOne({where: {name: "moloch", installed: true, enabled: true}});
 
-        let comp = await user.app.models.component.findOne({where: { name: "moloch", installed: true, enabled: true}})
-        if ( comp && process.env.NODE_ENV != "dev") {
-            user.local_connection.delete( "http://localhost:9200/users/user/" + username);
-            user.local_connection = "";
+        if (comp && process.env.NODE_ENV != "dev") {
+
+          let moloch_input = false;
+          if (active) {
+            if (rolename == "admin") {
+              moloch_input = {createEnabled: true}
+            }
+            if (rolename == "read") {
+              moloch_input = {enabled: true}
+            }
+          } else {
+            if (rolename == "admin") {
+              moloch_input = {createEnabled: false}
+            }
+            if (rolename == "read") {
+              moloch_input = {enabled: false}
+            }
+          }
+          if (moloch_input !== false) {
+            moloch_input = {doc: moloch_input};
+          }
+          hell.o(["moloch input:", moloch_input], "editMolochUser", "info");
+          let moloch_update = await user.local_connection.post("http://localhost:9200/users/user/" + username + "/_update/", moloch_input);
+          user.local_connection = "";
         }
 
-        hell.o("done", "deleteUser", "info");
-        cb(null, {message: "ok"});
+        user_find = await user.findOne({where: {username: username}});
+
+        hell.o("done", "editMolochUser", "info");
+        cb(null, user_find);
       } catch (err) {
-        hell.o(err, "deleteUser", "error");
+        hell.o(err, "editMolochUser", "error");
         cb({name: "Error", status: 400, message: err.message});
       }
 
@@ -114,16 +131,17 @@ module.exports = function (user) {
 
   };
 
-  user.remoteMethod('deleteUser', {
+
+  user.remoteMethod('editMolochUser', {
     accepts: [
       {arg: 'username', type: 'string', required: true},
-      {arg: "options", type: "object", http: "optionsFromRequest"}
+      {arg: 'active', type: 'string', required: true},
+      {arg: 'rolename', type: 'string', required: true},
+      {arg: 'input', type: 'object', required: true},
     ],
     returns: {type: 'object', root: true},
-    http: {path: '/deleteUser', verb: 'post', status: 200}
+    http: {path: '/editMolochUser', verb: 'post', status: 200}
   });
-
-
 
   user.observe('before delete', function (ctx, next) {
     hell.o("start", "delete", "info");
@@ -132,7 +150,9 @@ module.exports = function (user) {
     (async function () {
       try {
 
-        if (process.env.NODE_ENV == "dev") { return next(); }
+        if (process.env.NODE_ENV == "dev") {
+          return next();
+        }
 
         hell.o("username", "delete", "info");
         let user_find = await user.findOne({where: {id: ctx.where.id.inq[0]}});
@@ -146,6 +166,15 @@ module.exports = function (user) {
           hell.o("done", "updatePassword", "info");
           next();
         });
+
+        let comp = await user.app.models.component.findOne({where: {name: "moloch", installed: true, enabled: true}})
+        if (comp && process.env.NODE_ENV != "dev") {
+          hell.o("delete from moloch start", "deleteUser", "info");
+          user.local_connection = axios.create({});
+          user.local_connection.delete("http://localhost:9200/users/user/" + user_find.username);
+          user.local_connection = "";
+          hell.o("delete from moloch done", "deleteUser", "info");
+        }
 
       } catch (err) {
         hell.o(err, "updatePassword", "error");
@@ -174,9 +203,11 @@ module.exports = function (user) {
     (async function () {
       try {
 
-        if (process.env.NODE_ENV == "dev") { return next(); }
+        if (process.env.NODE_ENV == "dev") {
+          return next();
+        }
 
-        let change_input = "htpasswd -b /etc/nginx/.htpasswd " + username + " " + password;
+        let change_input = "htpasswd -b /etc/nginx/.htpasswd " + username + " \"" + password + "\"";
         shelljs.exec(change_input, {silent: true}, function (exit_code, stdout, stderr) {
           hell.o(["shelljs result ", exit_code], "updatePassword", "info");
           //let message = stderr;

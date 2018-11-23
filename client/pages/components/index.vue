@@ -17,7 +17,7 @@
                 </v-layout>
               </v-card-title>
               <v-card-text>
-                <v-data-table :headers="headers" :items="componentsAll" :rows-per-page-items="rowsPerPage" :search="search"
+                <v-data-table :headers="headers" :items="components" :rows-per-page-items="rowsPerPage" :search="search"
                               :pagination.sync="pagination"
                 >
                   <template slot="items" slot-scope="props">
@@ -62,7 +62,7 @@
                       </v-btn>
                     </td>
                     <td>
-                      <div v-if="props.item.logs != false">
+                        <div v-if="props.item.logs != false && props.item.logs != ' '">
                         <v-tooltip right>
                           <v-btn slot="activator" icon
                                  @click.stop="log = {name: props.item.friendly_name, data: props.item.logs }; logDialog = true"
@@ -72,7 +72,7 @@
                           <span>{{ $t('components.view_stdout_log') }}</span>
                         </v-tooltip>
                       </div>
-                      <div class="red--text" v-if="props.item.logs_error != false">
+                        <div class="red--text" v-if="props.item.logs_error != false && props.item.logs_error != ' '">
                         <v-tooltip right>
                           <v-btn slot="activator" class="red--text" icon
                                  @click.stop="log = {name: props.item.friendly_name + ' error ', data: props.item.logs_error }; logDialog = true"

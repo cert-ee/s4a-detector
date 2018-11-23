@@ -53,6 +53,10 @@
     "dataSource": "db",
     "public": true
   },
+  "notify": {
+    "dataSource": "db",
+    "public": true
+  },
   "central" : {
     "dataSource": "db",
     "public": true
@@ -94,6 +98,18 @@
     "public": true
   },
   "system_info" : {
+    "dataSource": "db",
+    "public": true
+  },
+  "yara": {
+    "dataSource": "db",
+    "public": true
+  },
+  "wise": {
+    "dataSource": "db",
+    "public": true
+  },
+  "boot": {
     "dataSource": "db",
     "public": true
   }

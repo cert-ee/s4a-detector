@@ -161,6 +161,14 @@ module.exports = function (report) {
               result = await report.app.models.registration.registrationRejected();
               if (!result) throw new Error("registrationRejected failed");
               break;
+            case "rulesRemove":
+              result = await report.app.models.rule.removeRules(job.data);
+              if (!result) throw new Error("removeRules failed");
+              break;
+            case "rulesFullSync":
+              result = await report.app.models.rule.checkRoutinePromise({full_check: true});
+              if (!result) throw new Error("rulesFullSync failed");
+              break;
             default:
               hell.o(["there was no matching job", job], "doJob", "error");
               reject(false);
@@ -326,7 +334,7 @@ module.exports = function (report) {
     hell.o("start", "alertsRoutine", "info");
 
     if (!report.app.models.central.CENTRAL_ACTIVATED) {
-      hell.o("central is not activated yet, return", "checkRoutine", "warn");
+      hell.o("central is not activated yet, return", "alertsRoutine", "warn");
       return cb({name: "Error", status: 400, message: "not_approved"});
     }
 

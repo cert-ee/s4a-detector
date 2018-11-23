@@ -40,6 +40,12 @@
       "description": "Alerts info all",
       "default": true
     },
+    "job_interval_notify_check": {
+      "type": "number",
+      "required": true,
+      "description": "Notification check interval in minutes",
+      "default": 1
+    },
     "job_interval_alerts_check": {
       "type": "number",
       "required": true,
@@ -63,6 +69,56 @@
       "required": true,
       "description": "Central status report/check interval in minutes",
       "default": 1
+    },
+    "smtp_server_host": {
+      "type": "string",
+      "required": true,
+      "description": "SMTP server for email notifications",
+      "isArray": false,
+      "default": ""
+    },
+    "smtp_server_port": {
+      "type": "number",
+      "required": true,
+      "description": "SMTP server port for email notifications",
+      "isArray": false,
+      "default": "465"
+    },
+    "smtp_server_tls": {
+      "type": "boolean",
+      "required": true,
+      "description": "SMTP server TLS (native, default port 465), use false for STARTTLS (if supported, default port 587)",
+      "default": true
+    },
+    "smtp_server_force_notls": {
+      "type": "boolean",
+      "required": true,
+      "description": "SMTP server force no-TLS (even if supported)",
+      "default": false
+    },
+    "smtp_server_auth_method": {
+      "type": "string",
+      "required": true,
+      "description": "SMTP server auth method",
+      "default": "PLAIN"
+    },
+    "smtp_server_username": {
+      "type": "string",
+      "required": true,
+      "description": "SMTP server username",
+      "default": "s4a"
+    },
+    "smtp_server_password": {
+      "type": "string",
+      "required": true,
+      "description": "SMTP server password",
+      "default": "s4a"
+    },
+    "smtp_server_from": {
+      "type": "string",
+      "required": true,
+      "description": "SMTP server - envelope from address",
+      "default": "s4a@localhost"
     }
   },
   "validations": [],

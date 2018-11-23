@@ -38,7 +38,7 @@ module.exports = function (salt) {
           };
 
           hell.o([ input.name, "start"], "apply", "info");
-          let child = sudo(['/usr/bin/salt-call', 'state.apply', state_name], options);
+          let child = sudo(['-E', '/usr/bin/salt-call', 'state.apply', state_name], options);
 
           child.stdout.on('data', function (data) {
             salt.output.logs += data.toString();
@@ -47,7 +47,7 @@ module.exports = function (salt) {
 
           child.stderr.on('data', function (data) {
             salt.output.logs += data.toString();
-            salt.output.logs_error += data.toString();
+            salt.output.logs_error += data.toString().trim(); //TODO: ignore only whitespace entries, error_log in components view
           });
 
           let exit_code = await new Promise((done) => {

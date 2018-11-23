@@ -1,6 +1,6 @@
 {
-  "name": "tag",
-  "plural": "tags",
+  "name": "boot",
+  "plural": "boot",
   "base": "PersistedModel",
   "idInjection": true,
   "options": {
@@ -9,40 +9,40 @@
   "properties": {
     "name": {
       "type": "string",
+      "id": true,
       "required": true,
       "index": true,
-      "description": "Tag name"
+      "description": "Boot name",
+      "isArray": false
+    },
+    "friendly_name": {
+      "type": "string",
+      "required": true,
+      "description": "Boot friendly name",
+      "default": ""
     },
     "description": {
       "type": "string",
+      "required": false,
+      "description": "Boot description",
+      "default": ""
+    },
+    "data": {
+      "type": "string",
       "required": true,
-      "description": "Tag description"
+      "description": "Boot value or data",
+      "default": ""
     }
   },
   "validations": [],
   "relations": {
-    "detectors": {
-      "type": "hasAndBelongsToMany",
-      "model": "detector",
-      "foreignKey": ""
-    },
-    "rules": {
-      "type": "hasAndBelongsToMany",
-      "model": "rule",
-      "foreignKey": ""
-    },
-    "rulesets": {
-      "type": "hasAndBelongsToMany",
-      "model": "ruleset",
-      "foreignKey": ""
-    }
   },
   "acls": [
     {
       "accessType": "*",
       "principalType": "ROLE",
       "principalId": "$everyone",
-      "permission": "ALLOW"
+      "permission": "DENY"
     },
     {
       "accessType": "*",
@@ -54,6 +54,13 @@
       "accessType": "*",
       "principalType": "ROLE",
       "principalId": "admin",
+      "permission": "ALLOW"
+    },
+    {
+      "property": "checkRoutine",
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "read",
       "permission": "ALLOW"
     },
     {

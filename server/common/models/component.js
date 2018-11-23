@@ -143,7 +143,12 @@ module.exports = function (component) {
       enabled: false,
       toggleable: false,
       restartable: true,
-      status: false
+      status: false,
+      configuration:
+        {
+          yara_enabled: false,
+          wise_enabled: false
+        }
     },
     {
       name: "nfsen",
@@ -207,6 +212,9 @@ module.exports = function (component) {
 
     (async () => {
       try {
+
+        // await component.destroyAll();
+
         let component_result, update_component;
         for (const comp of input) {
           component_result = await component.findOrCreate({where: {name: comp.name}}, comp);
@@ -404,7 +412,7 @@ module.exports = function (component) {
               status = true;
               message = "OK";
             }
-            success({status: status, message: message, exit_code: exit_code});
+            success({status: status, message: message, exit_code: exit_code, logs: stdout, logs_error: stderr});
           });
 
         } catch (err) {
@@ -434,18 +442,18 @@ module.exports = function (component) {
         let output, service_name = input.name;
       switch (input.name) {
         case "autoupgrade":
-          success({status: true, message: "OK", exit_code: 0});
+          success({status: true, message: "OK", exit_code: 0, logs: false, logs_error: false});
           break;
         case "nfsen":
         case "suricata":
         case "evebox-agent":
-        case "openvpn":
         case "vpn":
         case "telegraf":
-          if (input.name == "vpn" || input.name == "openvpn") service_name = "'openvpn@detector'";
+          if (input.name == "vpn") service_name = "'openvpn@detector'";
 
           hell.o("run systemctl", "checkStatusSystemctl", "info");
           output = await component.shelljsCall("/bin/systemctl status " + service_name);
+
           success( output );
 
           break;
@@ -473,6 +481,8 @@ module.exports = function (component) {
               output.status = false;
               if( err.message !== undefined ) {
                 output.message += " " + err.message;
+                output.logs += " " + result;
+                output.logs_error += " " + JSON.stringify(err);
               }
               return success(output);
             }
@@ -518,7 +528,7 @@ module.exports = function (component) {
             last_message = result.statusText + " ";
           }
 
-          success({status: true, message: last_message});
+          success({status: true, message: last_message, logs: last_message, logs_error: "", exit_code: ""});
 
         } catch (err) {
           hell.o(err, "checkStatusFromHealthUrl", "error");
@@ -531,7 +541,7 @@ module.exports = function (component) {
             last_message += " " + err.errno;
           }
 
-          success({status: false, message: last_message});
+          success({status: false, message: last_message, logs: "", logs_error: last_message, exit_code: ""});
         }
 
       })(); //async
@@ -568,29 +578,30 @@ module.exports = function (component) {
           check_result = await component.checkStatusSystemctl(comp);
         }
 
-        if( check_result.exit_code === undefined ) check_result.exit_code = "";
-
         if (check_result.status) {
           hell.o([comp.name + " OK", check_result.message], "checkComponent", "info");
         } else {
           if( check_result.message == "" ){
             check_result.message = " exit code: " + check_result.exit_code;
           }
+          hell.o(["exit code", check_result.exit_code], "checkComponent", "error");
           hell.o([comp.name + " FAIL", check_result.message], "checkComponent", "error");
         }
 
         update_input = {
           status: check_result.status,
           message: check_result.message,
-          exit_code: check_result.exit_code
+          exit_code: check_result.exit_code,
+          logs: check_result.logs,
+          logs_error: check_result.logs_error
         };
 
         hell.o([comp.name, "update component status"], "checkComponent", "info");
         update_result = await component.update({name: comp.name}, update_input);
         if (!update_result) throw new Error(comp.name + " failed to save component status");
 
-        if (cb) return cb(null, check_result.message );
-        return success( check_result.message );
+        if (cb) return cb(null, check_result);
+        return success(check_result);
 
       } catch (err) {
         hell.o(err, "checkComponent", "error");
@@ -751,6 +762,7 @@ module.exports = function (component) {
             if (comp.name == "netdata") log_err = comp.name + ": test error for netdata... ";
 
             let output = {logs: comp.name + ": OK LOGS " + new Date(), logs_error: log_err, exit_code: 0};
+
             setTimeout(function () {
               component.state_busy = false;
               component.update({name: comp.name}, {loading: false});
@@ -771,9 +783,6 @@ module.exports = function (component) {
             state: state
           };
 
-          //vpn specific salt
-          if (( comp.name == "vpn" || comp.name == "openvpn" ) && state == "restart") salt_input.state = "vpn_enabled";
-
           //evebox-agent, evebox is restarting both
           if ( comp.name == "evebox-agent" && state == "restart") salt_input.name = "evebox";
 
@@ -791,16 +800,20 @@ module.exports = function (component) {
           switch (state) {
             case "install":
               comp_input.installed = true;
+              //ovpn is not enabled after install
               comp_input.enabled = true;
+              if (name == "vpn") comp_input.enabled = false;
               break;
             case "uninstall":
               comp_input.installed = false;
               comp_input.enabled = false;
               break;
             case "enabled":
+              comp_input.installed = true;
               comp_input.enabled = true;
               break;
             case "disabled":
+              comp_input.installed = true;
               comp_input.enabled = false;
               break;
             case "restart":

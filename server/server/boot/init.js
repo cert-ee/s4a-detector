@@ -7,10 +7,18 @@ module.exports = function (app) {
   hell.o("start", "load", "info");
   (async () => {
     try {
+
+      await app.models.boot.initialize();
+      await app.models.wise.initialize();
+      await app.models.yara.initialize();
+
+      await app.models.report.initialize;
+
       const load_central = util.promisify(app.models.central.initialize);
       const load_components = util.promisify(app.models.component.initialize);
       const load_rulesets = util.promisify(app.models.ruleset.initialize);
       const load_settings = util.promisify(app.models.settings.initialize);
+      const load_notify = util.promisify(app.models.notify.initialize);
       const load_report = util.promisify(app.models.report.initialize);
 
       hell.o("central", "load", "info");
@@ -30,6 +38,14 @@ module.exports = function (app) {
       if (!settings_result) throw new Error("failed to load settings");
       let settings = await app.models.settings;
 
+      hell.o("notify", "load", "info");
+      try {
+        let notify_result = await load_notify();
+        if (!notify_result) throw new Error("failed to load notify module");
+      } catch (e) {
+        hell.o("elastic failed", "load", "info");
+      }
+
       hell.o("report", "load", "info");
       try {
         let report_result = await load_report();
@@ -39,8 +55,11 @@ module.exports = function (app) {
       }
 
       hell.o("initialize the intervals for checks", "load", "info");
+
+      // await app.models.rule.checkRoutinePromise({full_check: true});
+
       /*
-      INTERVAL FORMATING
+      INTERVAL FORMAT
       */
       app.check_interval_format = function (minutes, job_name) {
         hell.o("check_interval_format", "load", "info");
@@ -51,6 +70,18 @@ module.exports = function (app) {
         if (process.env.NODE_ENV == "dev") { //dev, tick faster
           schedule_rule = 30000;
         }
+
+        // if (job_name == "job_interval_rules_check") {
+        //   schedule_rule = 10000;
+        // }
+        //
+        // if (job_name == "job_interval_yara_check") {
+        //   schedule_rule = 30000;
+        // }
+        //
+        // if (job_name == "job_interval_wise_check") {
+        //   schedule_rule = 30000;
+        // }
 
         hell.o([job_name + " current ms:", schedule_rule], "load", "info");
         return schedule_rule;
@@ -89,10 +120,36 @@ module.exports = function (app) {
 
       (function interval_rules() {
         setTimeout(() => {
-            app.models.rule.checkRoutine(null, () => {
-              interval_rules();
-            });
+          app.models.rule.checkRoutine(null, () => {
+            interval_rules();
+          });
         }, app.check_interval_format(settings.job_interval_rules_check, "job_interval_rules_check"));
+      })();
+
+      /*
+      SCHEDULE YARA CHECKING
+       */
+      hell.o("schedule yara checker", "init", "info");
+
+      (function interval_yara() {
+        setTimeout(() => {
+          app.models.yara.checkRoutine(null, () => {
+            interval_yara();
+          });
+        }, app.check_interval_format(settings.job_interval_rules_check, "job_interval_yara_check"));
+      })();
+
+      /*
+      SCHEDULE WISE CHECKING
+       */
+      hell.o("schedule wise checker", "init", "info");
+
+      (function interval_wise() {
+        setTimeout(() => {
+          app.models.wise.checkRoutine(null, () => {
+            interval_wise();
+          });
+        }, app.check_interval_format(settings.job_interval_rules_check, "job_interval_wise_check"));
       })();
 
       /*
@@ -106,7 +163,21 @@ module.exports = function (app) {
             interval_alerts();
           });
         }, app.check_interval_format(settings.job_interval_alerts_check, "job_interval_alerts_check"));
-        //}, 1000);
+        // }, 1000);
+      })();
+
+      /*
+      SCHEDULE NOTIFICATIONS
+      */
+      hell.o("schedule notifier", "init", "info");
+
+      (function interval_notify() {
+        setTimeout(() => {
+          app.models.notify.notifyRoutine(null, () => {
+            interval_notify();
+          });
+        }, app.check_interval_format(settings.job_interval_notify_check, "job_interval_notify_check"));
+        // }, 1000);
       })();
 
     }
