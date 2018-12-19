@@ -5,6 +5,7 @@ export default {
 
     data() {
         return {
+            apiKey: false,
             search: '',
             logSearch: '',
             rowsPerPage: [50, 100, {text: 'All', value: -1}],
@@ -30,6 +31,26 @@ export default {
     },
 
     methods: {
+        async showApiKey() {
+            try {
+                let params = {user_id: this.user.id};
+                let result = await this.$axios.$post('users/currentToken', params);
+                this.apiKey = result.token;
+            } catch (err) {
+                this.$store.dispatch('handleError', err);
+            }
+        },
+
+        async renewApiKey() {
+            try {
+                let params = {user_id: this.user.id};
+                let result = await this.$axios.$post('users/renewToken', params);
+                this.apiKey = result.token;
+            } catch (err) {
+                this.$store.dispatch('handleError', err);
+            }
+        },
+
         async toggleRole(role, active) {
             try {
                 if (this.user.username == "admin") {

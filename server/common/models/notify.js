@@ -13,126 +13,184 @@ module.exports = function (notify) {
    * @param input
    * @param cb
    */
-  notify.initialize = function (cb) {
+  notify.initialize = async function () {
     hell.o("start", "initialize", "info");
 
-    (async () => {
+
+    try {
+      hell.o("check/init notifications", "init", "info");
+
+      //
+      // seed database if nothing defined
+      //
+      let notifications = false;
       try {
-        hell.o("check/init notifications", "init", "info");
-
-        //
-        // seed database if nothing defined
-        //
-        let notifications = false;
-        try {
-          notifications = await notify.find();
-        } catch (no_notifications) {
-          hell.o("no notifications found", "check notifications", "info");
-        }
-
-        if (!notifications || notifications === undefined || notifications.length == 0 || notifications == "") {
-          hell.o("count: " + notifications.length, "check notifications", "info")
-
-          // Example alerts
-          let input_data = [
-            {
-              name: "Diff aggregation 1 to root",
-              query: {
-                "size": 0,
-                "query": {"bool": {"must": [{"range": {"timestamp": {"gt": "now-30m"}}}]}},
-                "aggs": {
-                  "notify": {
-                    "date_histogram": {"field": "@timestamp", "interval": "30m"},
-                    "aggs": {
-                      "count_me": {"value_count": {"field": "@timestamp"}},
-                      "diff": {"serial_diff": {"buckets_path": "count_me"}},
-                      "treshold": {
-                        "bucket_selector": {
-                          "buckets_path": {"alarms_count": "count_me.value"},
-                          "script": "params.alarms_count > 100"
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              email: "root@localhost",
-              subject: "Diff aggregation 1 to root",
-              enabled: false
-            },
-            {
-              name: "Count Aggregation to postmaster",
-              query: {
-                "size": 0,
-                "query": {"bool": {"must": [{"range": {"timestamp": {"gt": "now-60m"}}}]}},
-                "aggs": {
-                  "notify": {
-                    "date_histogram": {"field": "@timestamp", "interval": "30m"},
-                    "aggs": {
-                      "treshold": {
-                        "bucket_selector": {
-                          "buckets_path": {"alarms_count": "_count"},
-                          "script": "params.alarms_count > 100"
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              email: "postmaster@localhost",
-              subject: "Count Aggregation to postmaster",
-              enabled: false
-            }
-          ];
-
-          let create_result = await notify.create(input_data);
-        }
-
-        //
-        // Initialize elasticsearch connection
-        //
-        hell.o("check elastic", "initialize", "info");
-
-        let elastic_check = await notify.app.models.component.findOne({where: {name: "elastic", status: true}});
-        if (!elastic_check) throw new Error("elastic component status failed");
-
-        notify.es_client = new elasticsearch.Client({
-          host: 'localhost:9200',
-          //log: 'trace'
-        });
-
-        hell.o("elastic client ok", "initialize", "info");
-
-        let settings = await notify.app.models.settings.findOne();
-
-        //
-        // Initialize mailer
-        //
-        hell.o("init nodemailer", "initialize", "info");
-        let smtp_config = {
-          host: settings['smtp_server_host'],
-          port: settings['smtp_server_port'],
-          secure: settings['smtp_server_tls'],
-          ignoreTLS: settings['smtp_server_force_notls'],
-          authMethod: settings['smtp_server_auth_method'],
-          auth: {
-            user: settings['smtp_server_username'],
-            pass: settings['smtp_server_password']
-          }
-        };
-        notify.nm_client = new nodemailer.createTransport(smtp_config);
-
-        hell.o("nodemailer client ok", "initialize", "info");
-
-        cb(null, {message: "ok"});
-      } catch (err) {
-        hell.o(err, "initialize", "error");
-        cb({name: "Error", status: 400, message: err});
+        notifications = await notify.find();
+      } catch (no_notifications) {
+        hell.o("no notifications found", "check notifications", "info");
       }
 
-    })(); // async
+      if (!notifications || notifications === undefined || notifications.length == 0 || notifications == "") {
+        hell.o("count: " + notifications.length, "check notifications", "info")
+
+        // Example alerts
+        let input_data = [
+          {
+            name: "Diff aggregation 1 to root",
+            query: {
+              "size": 0,
+              "query": {"bool": {"must": [{"range": {"timestamp": {"gt": "now-30m"}}}]}},
+              "aggs": {
+                "notify": {
+                  "date_histogram": {"field": "@timestamp", "interval": "30m"},
+                  "aggs": {
+                    "count_me": {"value_count": {"field": "@timestamp"}},
+                    "diff": {"serial_diff": {"buckets_path": "count_me"}},
+                    "treshold": {
+                      "bucket_selector": {
+                        "buckets_path": {"alarms_count": "count_me.value"},
+                        "script": "params.alarms_count > 100"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            email: "root@localhost",
+            subject: "Diff aggregation 1 to root",
+            enabled: false
+          },
+          {
+            name: "Count Aggregation to postmaster",
+            query: {
+              "size": 0,
+              "query": {"bool": {"must": [{"range": {"timestamp": {"gt": "now-60m"}}}]}},
+              "aggs": {
+                "notify": {
+                  "date_histogram": {"field": "@timestamp", "interval": "30m"},
+                  "aggs": {
+                    "treshold": {
+                      "bucket_selector": {
+                        "buckets_path": {"alarms_count": "_count"},
+                        "script": "params.alarms_count > 100"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            email: "postmaster@localhost",
+            subject: "Count Aggregation to postmaster",
+            enabled: false
+          },
+          {
+            name: "Severity 1 to admin",
+            query: {
+              "query": {
+                "bool": {
+                  "must": [
+                    {
+                      "term": {
+                        "alert.severity": 1
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            email: "postmaster@localhost",
+            subject: "Severy 1 to admin",
+            enabled: false
+          }
+        ];
+
+        for (const default_notify of input_data) {
+          //issue with dots in key names
+          let clone = Object.assign({}, default_notify);
+          delete clone.query;
+
+          let create_result = await notify.create(clone);
+          let patch_result = await notify.update({id: create_result.id}, default_notify);
+
+        }
+
+      }
+
+      await notify.initializeMailer();
+
+      //
+      // Initialize elasticsearch connection
+      //
+      hell.o("check elastic", "initialize", "info");
+
+      let elastic_check = await notify.app.models.component.findOne({where: {name: "elastic", status: true}});
+      if (!elastic_check) throw new Error("elastic component status failed");
+
+      notify.es_client = new elasticsearch.Client({
+        host: 'localhost:9200',
+        //log: 'trace'
+      });
+
+      hell.o("elastic client ok", "initialize", "info");
+      return true;
+    } catch (err) {
+      hell.o(err, "initialize", "error");
+      return false;
+    }
+
 
   };
+
+  /**
+   * INIT nodemailer when config changes
+   * @param cb
+   * @returns {*}
+   */
+  notify.initializeMailer = async function (cb) {
+    hell.o("init nodemailer", "initializeMailer", "info");
+
+    try {
+
+      //check if our registration is approved up
+      if (!notify.app.models.central.CENTRAL_TOKEN || notify.app.models.central.CENTRAL_TOKEN == "invalid") {
+        hell.o("no API Key yet", "initializeMailer", "warn");
+        notify.app.models.central.lastSeen(false);
+        return false;
+      }
+
+      let settings = await notify.app.models.settings.findOne();
+
+      let smtp_config = {
+        host: settings['smtp_server_host'],
+        port: settings['smtp_server_port'],
+        secure: settings['smtp_server_tls'],
+        ignoreTLS: settings['smtp_server_force_notls'],
+      };
+
+      if (settings['smtp_server_requires_auth']) {
+        smtp_config.authMethod = settings['smtp_server_auth_method'];
+        smtp_config.auth = {
+          user: settings['smtp_server_username'],
+          pass: settings['smtp_server_password']
+        };
+      }
+
+      // notify.smtp_config = smtp_config;
+      notify.nm_client = new nodemailer.createTransport(smtp_config);
+
+
+      hell.o("done", "initializeMailer", "info");
+      if (cb) return cb(null, {message: "ok"});
+      return true;
+    } catch (err) {
+      hell.o(err, "initializeMailer", "error");
+      notify.notify_routine_active = false;
+      if (cb) return cb({name: "Error", status: 400, message: err.message});
+      return false;
+    }
+
+  };
+
 
   /**
    * GET ALERTS FROM ELASTIC SEARCH
@@ -194,7 +252,7 @@ module.exports = function (notify) {
 
         notify.es_client.search(elastic_params).then(function (body) {
           hell.o("elastic result", "checkAlerts", "info");
-          hell.o(JSON.stringify(body), "checkAlerts", "info");
+          // hell.o(JSON.stringify(body), "checkAlerts", "info");
 
           let hits = body.hits.hits;
           let aggregations = body.aggregations;
@@ -314,7 +372,7 @@ module.exports = function (notify) {
     }
 
     notify.notify_routine_active = true;
-
+    notify.current_notify = {};
     (async function () {
       try {
 
@@ -325,8 +383,9 @@ module.exports = function (notify) {
 
           hell.o("Notify #" + ntfy_id, "notifyRoutine", "info");
 
+          notify.current_notify = notifying[ntfy_id];
+
           hell.o("check for alerts to notify", "notifyRoutine", "info");
-          // NOTE: depend on reports module alert finder
           let alerts_checked = await notify.checkAlerts(notifying[ntfy_id]);
           if (!alerts_checked) throw new Error("load_failed");
 
@@ -340,6 +399,7 @@ module.exports = function (notify) {
           hell.o("notify aggregation match: " + aggregation_match, "notifyRoutine", "info");
           let notify_input = {alerts: alerts_checked.alerts};
           let send_notfications;
+
 
           try {
             let message_text = '';
@@ -365,8 +425,8 @@ module.exports = function (notify) {
               text: message_text
             }
             hell.o("subject: " + notifying[ntfy_id].subject, "notifyRoutine", "info");
-
             send_notfications = await notify.nm_client.sendMail(message);
+            hell.o(["sendMail result", send_notfications], "notifyRoutine", "info");
 
             // aggregations don't have timestamp, assume "now"
             if (aggregation_match)
@@ -377,7 +437,9 @@ module.exports = function (notify) {
               hell.o("update alarm pointer: " + alerts_checked.alerts_pointer, "notifyRoutine", "info");
 
               notify_input = {
-                alerts_pointer: alerts_checked.alerts_pointer
+                alerts_pointer: alerts_checked.alerts_pointer,
+                last_result: true,
+                last_logs: send_notfications
               };
 
               let updated_pointer = await notify.update({id: notifying[ntfy_id].id}, notify_input);
@@ -389,11 +451,19 @@ module.exports = function (notify) {
           } catch (err) {
             hell.o("notify failed: " + err.message, "notifyRoutine", "error");
 
-            let out = "Notification failed [ " + err.message + " ]";
-            if (err.response && err.response.data
-              && err.response.data.error && err.response.data.error.message) {
-              out = err.response.data.error.message;
-            }
+            // let out = "Notification failed [ " + err.message + " ]";
+            // if (err.response && err.response.data
+            //   && err.response.data.error && err.response.data.error.message) {
+            //   out = err.response.data.error.message;
+            // }
+
+            let error_input = {
+              last_result: false,
+              last_logs: err
+            };
+
+            let update_last_try = await notify.update({id: notify.current_notify.id}, error_input);
+
           }
 // ----
         }

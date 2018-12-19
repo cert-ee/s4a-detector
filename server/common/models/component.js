@@ -2,6 +2,7 @@
 
 const axios = require('axios');
 const shelljs = require('shelljs');
+const sudo = require('sudo');
 const sslutils = require('ssl-utils');
 const util = require('util');
 const fs = require('fs');
@@ -9,10 +10,28 @@ const hell = new (require(__dirname + "/helper.js"))({module_name: "component"})
 
 module.exports = function (component) {
 
-  const input = [
+  const default_components = [
+    {
+      name: "s4a-detector",
+      friendly_name: "s4a-detector",
+      package_name: "s4a-detector",
+      message: "already installed",
+      network_interface_changes: false,
+      web_url: false,
+      install_order: 1,
+      preset: true,
+      after_approval: false,
+      installed: true,
+      installable: false,
+      enabled: true,
+      toggleable: false,
+      restartable: false,
+      status: false
+    },
     {
       name: "autoupgrade",
       friendly_name: "Auto upgrade",
+      package_name: "unattended-upgrades",
       message: "",
       network_interface_changes: false,
       web_url: false,
@@ -29,6 +48,7 @@ module.exports = function (component) {
     {
       name: "nginx",
       friendly_name: "Nginx",
+      package_name: "nginx",
       message: "Already installed",
       network_interface_changes: false,
       web_url: false,
@@ -51,6 +71,7 @@ module.exports = function (component) {
     {
       name: "elastic",
       friendly_name: "Elasticsearch",
+      package_name: "elasticsearch",
       message: "",
       network_interface_changes: false,
       web_url: false,
@@ -58,7 +79,7 @@ module.exports = function (component) {
       install_order: 2,
       preset: true,
       after_approval: false,
-      installed: false,
+      installed: true,
       installable: false,
       enabled: false,
       toggleable: false,
@@ -68,6 +89,7 @@ module.exports = function (component) {
     {
       name: "suricata",
       friendly_name: "Suricata",
+      package_name: "suricata",
       message: "",
       network_interface_changes: true,
       web_url: false,
@@ -84,6 +106,7 @@ module.exports = function (component) {
     {
       name: "evebox",
       friendly_name: "Evebox",
+      package_name: "evebox",
       message: "",
       network_interface_changes: false,
       web_url: "evebox/",
@@ -101,6 +124,7 @@ module.exports = function (component) {
     {
       name: "evebox-agent",
       friendly_name: "Evebox Agent",
+      package_name: "evebox",
       message: "Will be installed with evebox",
       network_interface_changes: false,
       web_url: false,
@@ -116,6 +140,7 @@ module.exports = function (component) {
     {
       name: "netdata",
       friendly_name: "Netdata",
+      package_name: "netdata",
       message: "",
       network_interface_changes: false,
       web_url: "netdata/",
@@ -132,6 +157,7 @@ module.exports = function (component) {
     {
       name: "moloch",
       friendly_name: "Moloch",
+      package_name: "moloch",
       message: "",
       network_interface_changes: true,
       web_url: "moloch/",
@@ -147,12 +173,14 @@ module.exports = function (component) {
       configuration:
         {
           yara_enabled: false,
-          wise_enabled: false
+          wise_enabled: false,
+          exclude_ips: []
         }
     },
     {
       name: "nfsen",
       friendly_name: "NFsen",
+      package_name: "nfsen",
       message: "",
       network_interface_changes: true,
       web_url: "nfsen/",
@@ -171,6 +199,7 @@ module.exports = function (component) {
     {
       name: "telegraf",
       friendly_name: "Telegraf",
+      package_name: "telegraf",
       message: "Will be automatically installed after registration process",
       network_interface_changes: false,
       web_url: false,
@@ -186,6 +215,7 @@ module.exports = function (component) {
     {
       name: "vpn",
       friendly_name: "OpenVPN",
+      package_name: "openvpn",
       message: "",
       network_interface_changes: false,
       web_url: false,
@@ -200,51 +230,76 @@ module.exports = function (component) {
     }
   ];
 
+
   /**
    * INITIALIZE
    *
    * ready http and create db entries if missing components
    */
-  component.initialize = function (cb) {
+  component.initialize = async function () {
     hell.o("start", "initialize", "info");
     component.local_connection = axios.create({});
     hell.o("local axios created", "initialize", "info");
 
-    (async () => {
-      try {
+    try {
 
-        // await component.destroyAll();
+      // await component.destroyAll();
 
-        let component_result, update_component;
-        for (const comp of input) {
-          component_result = await component.findOrCreate({where: {name: comp.name}}, comp);
-          if (!component_result) throw new Error("failed to create component " + comp.name);
+      let component_found, update_component;
+      for (const comp of default_components) {
+        component_found = await component.findOrCreate({where: {name: comp.name}}, comp);
+        if (!component_found) throw new Error("failed to create component " + comp.name);
+        component_found = component_found[0];
+        // lets call this part "update script", if new version has extra details"
 
-          // lets call this part "update script", if new version has extra details"
-          for ( let params in comp ){
-            if( comp.hasOwnProperty(params) && component_result[0][params] === undefined ){
-              update_component = {};
-              update_component[params] = comp[params];
-              console.log( update_component );
-              hell.o(["update component: " + comp.name +" defaults: " + params, comp[params]], "initialize", "info");
-              await component.update({name: comp.name}, update_component );
-            }
+        //MOLOCH CHANGES IF MISSING
+        if (component_found.name === 'moloch') {
+          if ('configuration' in component_found === false) {
+            component_found.configuration = {};
           }
-
+          if ('exclude_ips' in component_found.configuration === false) {
+            update_component = {configuration: component_found.configuration};
+            update_component.configuration.exclude_ips = [];
+            if ('yara_enabled' in component_found.configuration === false) {
+              update_component.configuration.yara_enabled = false;
+            }
+            if ('wise_enabled' in component_found.configuration === false) {
+              update_component.configuration.wise_enabled = false;
+            }
+            hell.o(["update component: " + component_found.name + " defaults: configuration exclude_ips "], "initialize", "info");
+            await component.update({name: comp.name}, update_component);
+          }
         }
 
-        hell.o("done", "initialize", "info");
-        cb(null, {message: "ok"});
+        for (let params in comp) {
+          // if (params == "package_name") {
+          //   console.log("FINDME", comp.name);
+          //   console.log(comp.hasOwnProperty(params), component_found[params]);
+          // }
+          if (params === 'package_name' && comp.hasOwnProperty(params) &&
+            comp[params] !== component_found[params]
+          ) {
+            update_component = {};
+            update_component[params] = comp[params];
+            console.log(update_component);
+            hell.o(["update component: " + comp.name + " defaults: " + params, comp[params]], "initialize", "info");
+            await component.update({name: comp.name}, update_component);
+          }
+        }
 
-      } catch (err) {
-        hell.o(err, "initialize", "error");
-        component.components_routine_active = false;
-        cb({name: "Error", status: 400, message: err});
       }
 
-    })(); //async
+      hell.o("done", "initialize", "info");
+
+      return true;
+    } catch (err) {
+      hell.o(err, "initialize", "error");
+      component.components_routine_active = false;
+      return false;
+    }
 
   };
+
 
   /**
    * CHECK SSL STRINGS
@@ -255,11 +310,11 @@ module.exports = function (component) {
    * @param options
    * @returns {Promise}
    */
-  component.sslCheck = function( ssl_cert, ssl_chain, ssl_key, cb ){
+  component.sslCheck = function (ssl_cert, ssl_chain, ssl_key, cb) {
     hell.o("start", "sslCheck", "info");
     return new Promise((success, reject) => {
 
-       (async function () {
+      (async function () {
         try {
 
           // hell.o([ "ssl_cert", ssl_cert ], "sslCheck", "info");
@@ -267,8 +322,8 @@ module.exports = function (component) {
           // hell.o([ "ssl_key", ssl_key ], "sslCheck", "info");
 
           let ca_file_path_in_tmp = "/tmp/chain_for_ssl_check";
-          let ssl_options = { "CAfile" : ca_file_path_in_tmp };
-          let result ;
+          let ssl_options = {"CAfile": ca_file_path_in_tmp};
+          let result;
 
           let write_tmp_ca = new Promise((resolve, reject) => {
             fs.writeFile(ca_file_path_in_tmp, ssl_chain, (err) => {
@@ -285,37 +340,37 @@ module.exports = function (component) {
           result = await write_tmp_ca;
 
           hell.o("verify certificate and CA", "sslCheck", "info");
-          let verifyCertificate = util.promisify( sslutils.verifyCertificate );
-          result = await verifyCertificate( ssl_cert, ssl_options  );
-          if( result.valid !== true || result.verifiedCA !== true ){
-            throw new Error( "Certificate not valid: " + result.output );
+          let verifyCertificate = util.promisify(sslutils.verifyCertificate);
+          result = await verifyCertificate(ssl_cert, ssl_options);
+          if (result.valid !== true || result.verifiedCA !== true) {
+            throw new Error("Certificate not valid: " + result.output);
           }
 
           hell.o("verify key", "sslCheck", "info");
-          let verifyKey = util.promisify( sslutils.verifyKey );
-          await verifyKey( ssl_key );
+          let verifyKey = util.promisify(sslutils.verifyKey);
+          await verifyKey(ssl_key);
 
           hell.o("compare moduli", "sslCheck", "info");
-          let compareModuli = util.promisify( sslutils.compareModuli );
-          await compareModuli( ssl_cert, ssl_key );
+          let compareModuli = util.promisify(sslutils.compareModuli);
+          await compareModuli(ssl_cert, ssl_key);
 
           hell.o("check expiration", "sslCheck", "info");
-          let checkCertificateExpiration = util.promisify( sslutils.checkCertificateExpiration );
-          result = await checkCertificateExpiration( ssl_cert );
+          let checkCertificateExpiration = util.promisify(sslutils.checkCertificateExpiration);
+          result = await checkCertificateExpiration(ssl_cert);
 
           let remaining_time = result.getTime() - Date.now();
-          let one_day = 24*60*60*1000;
-          let remaining_days = Math.round( remaining_time / one_day );
+          let one_day = 24 * 60 * 60 * 1000;
+          let remaining_days = Math.round(remaining_time / one_day);
 
           let output_message = "SSL expires after days: " + remaining_days;
-          if( remaining_days <= 15 ) {
-            throw new Error( output_message );
+          if (remaining_days <= 15) {
+            throw new Error(output_message);
           }
 
-          hell.o([ "ssl ok ", output_message ], "sslCheck", "info");
+          hell.o(["ssl ok ", output_message], "sslCheck", "info");
 
-          if (cb) return cb(null, output_message );
-          return success( output_message );
+          if (cb) return cb(null, output_message);
+          return success(output_message);
 
         } catch (err) {
           hell.o(err, "sslCheck", "error");
@@ -323,9 +378,9 @@ module.exports = function (component) {
           return reject(err);
         }
 
-    })(); //async
+      })(); //async
 
-  }); //promise
+    }); //promise
 
   };
 
@@ -351,25 +406,26 @@ module.exports = function (component) {
    * @param options
    * @returns {Promise}
    */
-  component.sslDisable = function( cb ){
+  component.sslDisable = function (cb) {
     hell.o("start", "sslDisable", "info");
     return new Promise((success, reject) => {
 
       (async function () {
         try {
 
-          let input = { configuration:
-            { ssl_enabled: false, ssl_cert: "", ssl_chain: "", ssl_key: "" }
+          let input = {
+            configuration:
+              {ssl_enabled: false, ssl_cert: "", ssl_chain: "", ssl_key: ""}
           };
 
-          await component.update({ name: "nginx"}, input );
-          await component.stateApply( "nginx", "restart")
+          await component.update({name: "nginx"}, input);
+          await component.stateApply("nginx", "restart")
 
           let output_message = "ssl disabled";
-          hell.o( output_message, "sslDisable", "info");
+          hell.o(output_message, "sslDisable", "info");
 
-          if (cb) return cb(null, output_message );
-          return success( output_message );
+          if (cb) return cb(null, output_message);
+          return success(output_message);
 
         } catch (err) {
           hell.o(err, "sslDisable", "error");
@@ -398,14 +454,14 @@ module.exports = function (component) {
    * @param cb
    * @returns {Promise}
    */
-  component.shelljsCall = function ( input, cb) {
+  component.shelljsCall = function (input, cb) {
     hell.o("start: " + input, "shelljsCall", "info");
     return new Promise((success, reject) => {
 
       (async function () {
         try {
 
-          shelljs.exec( input, {silent: true}, function (exit_code, stdout, stderr) {
+          shelljs.exec(input, {silent: true}, function (exit_code, stdout, stderr) {
             hell.o(["shelljs result ", exit_code], "shelljsCall", "info");
             let status = false, message = stderr;
             if (exit_code == 0) {
@@ -440,62 +496,63 @@ module.exports = function (component) {
       (async function () {
 
         let output, service_name = input.name;
-      switch (input.name) {
-        case "autoupgrade":
-          success({status: true, message: "OK", exit_code: 0, logs: false, logs_error: false});
-          break;
-        case "nfsen":
-        case "suricata":
-        case "evebox-agent":
-        case "vpn":
-        case "telegraf":
-          if (input.name == "vpn") service_name = "'openvpn@detector'";
+        switch (input.name) {
+          case "autoupgrade":
+            success({status: true, message: "OK", exit_code: 0, logs: false, logs_error: false});
+            break;
+          case "nfsen":
+          case "suricata":
+          case "evebox-agent":
+          case "vpn":
+          case "telegraf":
+          case "s4a-detector":
+            if (input.name == "vpn") service_name = "'openvpn@detector'";
 
-          hell.o("run systemctl", "checkStatusSystemctl", "info");
-          output = await component.shelljsCall("/bin/systemctl status " + service_name);
+            hell.o("run systemctl", "checkStatusSystemctl", "info");
+            output = await component.shelljsCall("/bin/systemctl status " + service_name);
 
-          success( output );
+            success(output);
 
-          break;
-        case "nginx":
+            break;
+          case "nginx":
 
-          hell.o("run systemctl", "checkStatusSystemctl", "info");
-          output = await component.shelljsCall("/bin/systemctl status " + input.name);
+            hell.o("run systemctl", "checkStatusSystemctl", "info");
+            output = await component.shelljsCall("/bin/systemctl status " + input.name);
 
-          if( ! input.ssl_enabled ) return success( output );
+            if (!input.ssl_enabled) return success(output);
 
-          /*
-          SSL enabled, check if valid
-           */
-          let ssl_cert = input.configuration.ssl_cert, ssl_chain = input.configuration.ssl_chain,
-            ssl_key = input.configuration.ssl_key;
+            /*
+            SSL enabled, check if valid
+             */
+            let ssl_cert = input.configuration.ssl_cert, ssl_chain = input.configuration.ssl_chain,
+              ssl_key = input.configuration.ssl_key;
 
-          //no SSL to check
-          if( ssl_cert.length < 100 || ssl_chain.length < 100 && ssl_key.length < 100 ){
-            return success( output );
-          }
-
-          component.sslCheck( ssl_cert, ssl_chain, ssl_key, function( err, result ){
-            if( err ){
-              hell.o(["sslCheck err:", err ], "checkStatusSystemctl", "error");
-              output.status = false;
-              if( err.message !== undefined ) {
-                output.message += " " + err.message;
-                output.logs += " " + result;
-                output.logs_error += " " + JSON.stringify(err);
-              }
+            //no SSL to check
+            if (ssl_cert.length < 100 || ssl_chain.length < 100 && ssl_key.length < 100) {
               return success(output);
             }
-            hell.o(["sslCheck result:", result ], "checkStatusSystemctl", "info");
-            output.message += " " + result;
-            return success(output);
-          });
 
-        break;
-        default:
-          hell.o(["could not find component ", input], "checkStatusSystemctl", "error");
-          success({message: "FAIL"});
-      }
+            component.sslCheck(ssl_cert, ssl_chain, ssl_key, function (err, result) {
+              if (err) {
+                hell.o(["sslCheck err:", err], "checkStatusSystemctl", "error");
+                output.status = false;
+                if (err.message !== undefined) {
+                  output.message += " " + err.message;
+                  output.logs += " " + result;
+                  output.logs_error += " " + JSON.stringify(err);
+                }
+                return success(output);
+              }
+              hell.o(["sslCheck result:", result], "checkStatusSystemctl", "info");
+              output.message += " " + result;
+              return success(output);
+            });
+
+            break;
+          default:
+            hell.o(["could not find component ", input], "checkStatusSystemctl", "error");
+            success({message: "FAIL"});
+        }
 
       })(); //async
 
@@ -534,7 +591,7 @@ module.exports = function (component) {
           hell.o(err, "checkStatusFromHealthUrl", "error");
 
           last_message = "Check failed ";
-          if ( err.code !== undefined && err.code) {
+          if (err.code !== undefined && err.code) {
             last_message += "with error " + err.code;
           }
           if (err.errno !== undefined && err.errno) {
@@ -550,6 +607,81 @@ module.exports = function (component) {
 
   };
 
+
+  /**
+   * CHECK APT PACKAGE VERSION VIA SUDO
+   *
+   * @param package_name
+   * @returns {Promise<{logs_error: string, exit_code: number, logs: string}>}
+   */
+  component.checkPackageVersions = async function (package_name) {
+    hell.o("start: " + package_name, "checkPackageVersions", "info");
+    let output = {
+      version_installed: "Error",
+      version_available: "error",
+      version_status: false,
+      logs: "",
+      logs_error: "",
+      exit_code: 0
+    };
+
+    try {
+
+      let options = {
+        cachePassword: true,
+        spawnOptions: {/* other options for spawn */}
+      };
+
+      hell.o("/usr/bin/apt-cache policy " + package_name, "checkPackageVersions", "info");
+      let child = sudo(['-E', '/usr/bin/apt-cache', 'policy', package_name], options);
+
+      child.stdout.on('data', function (data) {
+        output.logs += data.toString();
+        output.logs_error += "";
+      });
+
+      child.stderr.on('data', function (data) {
+        output.logs += data.toString();
+        output.logs_error += data.toString().trim();
+      });
+
+      let exit_code = await new Promise((done) => {
+        child.on('close', function (exit_code) {
+          output.exit_code = exit_code;
+          done(exit_code);
+          return;
+        });
+      });
+
+      let splitted;
+      for (let row of output.logs.split('\n')) {
+        if (row.match('Installed:')) {
+          splitted = row.split('Installed: ');
+          output.version_installed = splitted[1].trim();
+        }
+        if (row.match('Candidate:')) {
+          splitted = row.split('Candidate: ');
+          output.version_available = splitted[1].trim();
+        }
+      }
+
+      if (output.version_installed === output.version_available) {
+        output.version_status = true;
+      }
+
+      hell.o("done", "checkPackageVersions", "info");
+      return output;
+
+    } catch (err) {
+      hell.o(err.message, "checkPackageVersions", "error");
+      hell.o(sudo.output, "checkPackageVersions", "error");
+      salt.output.error = err;
+      return
+    }
+
+  };
+
+
   /**
    * CHECK COMPONENT STATUS
    *
@@ -560,56 +692,75 @@ module.exports = function (component) {
    * @param cb
    * @returns {Promise}
    */
-  component.checkComponent = function ( component_name, cb) {
+  component.checkComponent = function (component_name, cb) {
     hell.o("start: " + component_name, "checkComponent", "info");
     return new Promise((success, reject) => {
 
-    (async function () {
-      try {
+      (async function () {
+        try {
 
-        let comp, check_result, update_input, update_result;
+          let comp, check_result, update_input, update_result, package_versions, installed_version = "",
+            available_version = "", package_version_status = true;
 
-        comp = await component.findOne({where: { name: component_name, installed: true, enabled: true}});
-        if( !comp ) throw new Error( "Component not installed" );
+          comp = await component.findOne({where: {name: component_name, installed: true, enabled: true}});
+          if (!comp) throw new Error("Component not installed");
 
-        if (comp.health_url && comp.health_url.length > 5) {
-          check_result = await component.checkStatusFromHealthUrl(comp);
-        } else {
-          check_result = await component.checkStatusSystemctl(comp);
-        }
-
-        if (check_result.status) {
-          hell.o([comp.name + " OK", check_result.message], "checkComponent", "info");
-        } else {
-          if( check_result.message == "" ){
-            check_result.message = " exit code: " + check_result.exit_code;
+          if (comp.health_url && comp.health_url.length > 5) {
+            check_result = await component.checkStatusFromHealthUrl(comp);
+          } else {
+            check_result = await component.checkStatusSystemctl(comp);
           }
-          hell.o(["exit code", check_result.exit_code], "checkComponent", "error");
-          hell.o([comp.name + " FAIL", check_result.message], "checkComponent", "error");
+
+          if (check_result.status) {
+            hell.o([comp.name + " OK", check_result.message], "checkComponent", "info");
+          } else {
+            if (check_result.message == "") {
+              check_result.message = " exit code: " + check_result.exit_code;
+            }
+            hell.o(["exit code", check_result.exit_code], "checkComponent", "error");
+            hell.o([comp.name + " FAIL", check_result.message], "checkComponent", "error");
+          }
+
+          /*
+          GET PACKAGE VERSIONS
+           */
+          hell.o([comp.name + "", "check versions"], "checkComponent", "info");
+          if (process.env.NODE_ENV == "dev") {
+            package_versions = {
+              version_status: true,
+              version_installed: "old",
+              version_available: "new",
+            };
+          } else {
+            package_versions = await component.checkPackageVersions(comp.package_name);
+          }
+          hell.o([package_versions, "check versions"], "checkComponent", "info");
+
+          update_input = {
+            status: check_result.status,
+            message: check_result.message,
+            exit_code: check_result.exit_code,
+            logs: check_result.logs,
+            logs_error: check_result.logs_error,
+            version_status: package_versions.version_status,
+            version_installed: package_versions.version_installed,
+            version_available: package_versions.version_available
+          };
+
+          hell.o([comp.name, "update component status"], "checkComponent", "info");
+          update_result = await component.update({name: comp.name}, update_input);
+          if (!update_result) throw new Error(comp.name + " failed to save component status");
+
+          if (cb) return cb(null, check_result);
+          return success(check_result);
+
+        } catch (err) {
+          hell.o(err, "checkComponent", "error");
+          if (cb) return cb({name: "Error", status: 400, message: err.message, data: err});
+          return reject(err);
         }
 
-        update_input = {
-          status: check_result.status,
-          message: check_result.message,
-          exit_code: check_result.exit_code,
-          logs: check_result.logs,
-          logs_error: check_result.logs_error
-        };
-
-        hell.o([comp.name, "update component status"], "checkComponent", "info");
-        update_result = await component.update({name: comp.name}, update_input);
-        if (!update_result) throw new Error(comp.name + " failed to save component status");
-
-        if (cb) return cb(null, check_result);
-        return success(check_result);
-
-      } catch (err) {
-        hell.o(err, "checkComponent", "error");
-        if (cb) return cb({name: "Error", status: 400, message: err.message, data: err});
-        return reject(err);
-      }
-
-    })(); //async
+      })(); //async
 
     }); //promise
 
@@ -617,7 +768,7 @@ module.exports = function (component) {
 
   component.remoteMethod('checkComponent', {
     accepts: [
-      {arg: "component_name", type: "string", required: true }
+      {arg: "component_name", type: "string", required: true}
       //{arg: "options", type: "object", http: "optionsFromRequest"}
     ],
     returns: {type: 'object', root: true},
@@ -651,7 +802,7 @@ module.exports = function (component) {
         let comp, check_result;
         for (let i = 0, l = result.length; i < l; i++) {
           comp = result[i];
-          check_result = await component.checkComponent( comp.name );
+          check_result = await component.checkComponent(comp.name);
         }
 
         await component.app.models.central.lastSeen(null, "components", true);
@@ -784,13 +935,13 @@ module.exports = function (component) {
           };
 
           //evebox-agent, evebox is restarting both
-          if ( comp.name == "evebox-agent" && state == "restart") salt_input.name = "evebox";
+          if (comp.name == "evebox-agent" && state == "restart") salt_input.name = "evebox";
 
-          hell.o([ comp.name, "about to call salt.apply"], "stateApply", "info");
+          hell.o([comp.name, "about to call salt.apply"], "stateApply", "info");
 
           salt_result = await component.app.models.salt.apply(salt_input);
 
-          hell.o([ "salt result", salt_result ], "stateApply", "info");
+          hell.o(["salt result", salt_result], "stateApply", "info");
           if (!salt_result) {
             throw new Error({message: "component.stateApply salt error", salt_result: salt_result});
           }

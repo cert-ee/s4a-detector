@@ -2,6 +2,7 @@
   "close": "Close",
   "cancel": "Cancel",
   "save": "Save",
+  "saved": "Saved",
   "add": "Add",
   "delete": "Delete",
   "reset": "Reset",
@@ -41,6 +42,7 @@
     "title": "Detector Dashboard",
     "general": "General",
     "components": "Components",
+    "component_updates_available": "updates available for components",
     "alerts": "Alerts",
     "registration_status": "Registration Status",
     "registration": {
@@ -76,6 +78,9 @@
   },
   "components": {
     "title": "Components",
+    "versions": "Versions",
+    "version_installed": "Version installed",
+    "version_available": "Version available",
     "view_stdout_log": "View stdout log",
     "view_stderr_log": "View stderr log",
     "restart": "Restart",
@@ -124,10 +129,11 @@
     "listening": "Listening",
     "ip": "IP",
     "status": "Status",
-    "nginx_configuration": "Configuration",
+    "nginx_configuration": "Nginx configuration",
     "nginx_ssl_cert": "Certificate",
     "nginx_ssl_chain": "Certificate Chain",
     "nginx_ssl_key": "Private Key",
+    "smtp_server_requires_auth": "SMTP server requires auth",
     "smtp_server_host": "Server",
     "smtp_server_port": "Port",
     "smtp_server_tls": "Enable native TLS",
@@ -138,7 +144,8 @@
     "smtp_server_from": "Sender address",
     "moloch_settings": "Moloch Settings",
     "moloch_yara_enabled": "Yara service",
-    "moloch_wise_enabled": "Wise service"
+    "moloch_wise_enabled": "Wise service",
+    "moloch_exclude_ips": "Exclude IPs list"
   },
   "tags": {
     "add_tag": "Add Tag",
@@ -164,7 +171,9 @@
     "add_notify": "Add new notifier",
     "edit_notify": "Edit notifier",
     "required": "Required",
-    "query_not_valid_json": "Not valid JSON {}"
+    "query_not_valid_json": "Not valid JSON {}",
+    "last_result": "Last result",
+    "last_logs": "Last logs"
   },
   "rulesets": {
     "enable_all": "Enable All",

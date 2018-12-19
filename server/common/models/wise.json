@@ -21,17 +21,59 @@
       "description": "Wise friendly name",
       "default": ""
     },
+    "enabled": {
+      "type": "boolean",
+      "required": false,
+      "description": "Wise enabled",
+      "default": true
+    },
     "description": {
       "type": "string",
       "required": false,
       "description": "Wise description",
       "default": ""
     },
-    "data": {
+    "location": {
       "type": "string",
       "required": true,
-      "description": "Wise value or data",
+      "description": "Wise folder path",
       "default": ""
+    },
+    "filename": {
+      "type": "string",
+      "required": true,
+      "description": "Wise filename",
+      "default": ""
+    },
+    "type": {
+      "type": "string",
+      "required": true,
+      "description": "Wise type",
+      "default": ""
+    },
+    "checksum": {
+      "type": "string",
+      "required": true,
+      "description": "Wise checksum",
+      "default": "default"
+    },
+    "tag_name": {
+      "type": "string",
+      "required": false,
+      "description": "Wise tagger name",
+      "default": ""
+    },
+    "created_time": {
+      "type": "date",
+      "required": true,
+      "description": "Created Time",
+      "default": "$now"
+    },
+    "modified_time": {
+      "type": "date",
+      "required": true,
+      "description": "Modified Time",
+      "default": "$now"
     }
   },
   "validations": [],

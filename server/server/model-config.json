@@ -41,6 +41,10 @@
     "dataSource": "db",
     "public": true
   },
+  "contentman": {
+    "dataSource": "db",
+    "public": true
+  },
   "log": {
     "dataSource": "db",
     "public": true

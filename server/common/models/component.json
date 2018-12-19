@@ -20,6 +20,12 @@
       "required": false,
       "description": "Component display name"
     },
+    "package_name": {
+      "type": "string",
+      "required": false,
+      "description": "Package name on the system",
+      "default": ""
+    },
     "web_url": {
       "type": "string",
       "required": false,
@@ -116,7 +122,25 @@
       "type": "object",
       "required": false,
       "description": "Component extra parameters",
-      "default": []
+      "default": {}
+    },
+    "version_status": {
+      "type": "boolean",
+      "required": false,
+      "description": "Package version ok",
+      "default": true
+    },
+    "version_installed": {
+      "type": "string",
+      "required": false,
+      "description": "Package installed version",
+      "default": ""
+    },
+    "version_available": {
+      "type": "string",
+      "required": false,
+      "description": "Package available version",
+      "default": ""
     }
   },
   "validations": [],

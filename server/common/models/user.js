@@ -8,6 +8,97 @@ module.exports = function (user) {
   delete user.validations.email;
   delete user.validations.password;
 
+
+  /**
+   * GET USER TOKEN
+   *
+   * @param options
+   * @param cb
+   */
+  user.currentToken = function (user_id, options, cb) {
+    hell.o(["start", user_id], "currentToken", "info");
+
+    (async function () {
+      try {
+
+        let user_check = await user.findById(user_id);
+        if (!user_check) throw new Error("no_data");
+
+        let token = await user.app.models.accessToken.findOne({where: {userId: user_id}});
+        if (!token) throw new Error("could not find token");
+        // hell.o(["token", token], "currentToken", "info");
+
+        hell.o("done", "currentToken", "info");
+        let output = {token: token.id};
+        cb(null, output);
+      } catch (err) {
+        hell.o(err, "currentToken", "error");
+        cb({name: "Error", status: 400, message: "No token found, renew token"});
+      }
+
+    })(); // async
+
+  };
+
+  user.remoteMethod('currentToken', {
+    accepts: [
+      {arg: 'user_id', type: 'string', required: true},
+      {arg: "options", type: "object", http: "optionsFromRequest"}
+    ],
+    returns: {type: 'object', root: true},
+    http: {path: '/currentToken', verb: 'post', status: 200}
+  });
+
+
+  /**
+   * RENEW USER TOKEN
+   *
+   * @param options
+   * @param cb
+   */
+  user.renewToken = function (user_id, options, cb) {
+    hell.o(["start", user_id], "renewToken", "info");
+
+    (async function () {
+      try {
+
+        let user_check = await user.findById(user_id);
+        if (!user_check) throw new Error("no_data");
+
+        hell.o("find old tokens", "renewToken", "info");
+        let old_tokens = await user.app.models.AccessToken.find({where: {userId: user_id}});
+        for (let old_token of old_tokens) {
+          hell.o(["destroy old token", old_token.id], "renewToken", "info");
+          await user.app.models.AccessToken.destroyById(old_token.id)
+        }
+
+        hell.o([user_id, "generate new token"], "renewToken", "info");
+        let token_info = {ttl: -1, userId: user_id};
+        let create_token = await user.app.models.AccessToken.create(token_info);
+        if (!create_token) throw new Error("failed to generate new token");
+
+        let output = {token: create_token.id};
+        hell.o("done", "renewToken", "info");
+        cb(null, output);
+      } catch (err) {
+        hell.o(err, "renewToken", "error");
+        cb({name: "Error", status: 400, message: "Failed to generate new token"});
+      }
+
+    })(); // async
+
+  };
+
+  user.remoteMethod('renewToken', {
+    accepts: [
+      {arg: 'user_id', type: 'string', required: true},
+      {arg: "options", type: "object", http: "optionsFromRequest"}
+    ],
+    returns: {type: 'object', root: true},
+    http: {path: '/renewToken', verb: 'post', status: 200}
+  });
+
+
   /**
    * CREATE USER
    *
@@ -97,7 +188,7 @@ module.exports = function (user) {
           let moloch_input = false;
           if (active) {
             if (rolename == "admin") {
-              moloch_input = {createEnabled: true}
+              moloch_input = {createEnabled: true, enabled: true}
             }
             if (rolename == "read") {
               moloch_input = {enabled: true}
@@ -135,9 +226,8 @@ module.exports = function (user) {
   user.remoteMethod('editMolochUser', {
     accepts: [
       {arg: 'username', type: 'string', required: true},
-      {arg: 'active', type: 'string', required: true},
+      {arg: 'active', type: 'boolean', required: true},
       {arg: 'rolename', type: 'string', required: true},
-      {arg: 'input', type: 'object', required: true},
     ],
     returns: {type: 'object', root: true},
     http: {path: '/editMolochUser', verb: 'post', status: 200}
@@ -204,10 +294,10 @@ module.exports = function (user) {
       try {
 
         if (process.env.NODE_ENV == "dev") {
-          return next();
+          return true;
         }
 
-        let change_input = "htpasswd -b /etc/nginx/.htpasswd " + username + " \"" + password + "\"";
+        let change_input = "printf '%s' '" + password.replace(/\'/g, '\'\\\'\'') + "' | htpasswd -i /etc/nginx/.htpasswd " + username;
         shelljs.exec(change_input, {silent: true}, function (exit_code, stdout, stderr) {
           hell.o(["shelljs result ", exit_code], "updatePassword", "info");
           //let message = stderr;
@@ -236,5 +326,48 @@ module.exports = function (user) {
     returns: {type: 'object', root: true},
     http: {path: '/updatePassword', verb: 'post', status: 200}
   });
+
+
+  /**
+   * CHECK IF NO ROLES, REMOVE USER FROM HTPASSWD
+   *
+   * change htpasswd
+   *
+   * @param user_id
+   */
+  user.afterRoleRemove = async function (user_id) {
+    hell.o("start", "afterRoleRemove", "info");
+    hell.o(["user_id", user_id], "afterRoleRemove", "info");
+
+    try {
+
+      if (process.env.NODE_ENV == "dev") {
+        return true;
+      }
+
+      let current_user = await user.findOne({where: {id: user_id}});
+      let current_roles = await user.app.models.roleMapping.find({where: {principalId: user_id}});
+
+      if (current_roles.length > 0) return true;
+      hell.o("No more roles, remove from htpasswd", "afterRoleRemove", "info");
+
+      let change_input = "htpasswd -D /etc/nginx/.htpasswd " + current_user.username;
+      hell.o(change_input, "afterRoleRemove", "info");
+
+      shelljs.exec(change_input, {silent: true}, function (exit_code, stdout, stderr) {
+        hell.o(["shelljs result ", exit_code], "afterRoleRemove", "info");
+        let message = stderr;
+        if (exit_code != 0) throw new Error(stderr);
+
+        hell.o("done", "afterRoleRemove", "info");
+        // cb(null, {message: "ok"});
+        return true;
+      });
+
+    } catch (err) {
+      hell.o(err, "afterRoleRemove", "error");
+      return false;
+    }
+  };
 
 };
