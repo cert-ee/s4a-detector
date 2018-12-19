@@ -41,6 +41,18 @@
       "description": "Last alarm notified ptr",
       "default": "empty"
     },
+    "last_result": {
+      "type": "boolean",
+      "required": true,
+      "description": "Last sending result",
+      "default": false
+    },
+    "last_logs": {
+      "type": "object",
+      "required": true,
+      "description": "Last sending logs",
+      "default": {}
+    },
     "methods": {}
   },
   "acls": [

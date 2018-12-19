@@ -22,6 +22,7 @@ export default {
             installableComponents: 0,
             installedComponents: 0,
             componentProblems: 0,
+            componentUpdatesAvailable: 0,
             rule_drafts: {},
             centralTokenVisible: false
         }
@@ -74,6 +75,8 @@ export default {
             let installableComponents = components.filter(c => c.installable === true);
             let installedComponents = installableComponents.filter(c => c.installed === true);
             this.componentProblems = installedComponents.filter(c => c.status === false).length;
+            this.componentUpdatesAvailable = components.filter(c => c.version_status === false && c.installed === true).length;
+
             this.installedComponents = installedComponents.length;
             this.installableComponents = installableComponents.length;
             this.rule_drafts = rule_drafts;
@@ -100,8 +103,18 @@ export default {
 
         async updateRules() {
             try {
+                // console.log( "UPDATE RULES");
                 this.$store.commit('setRulesSyncing', true);
-                await this.$axios.get('rules/checkRoutine');
+                let yara_result = await this.$axios.get('yara/checkRoutine');
+                console.log("yara_result");
+                console.log(yara_result);
+                let wise_result = await this.$axios.get('wise/checkRoutine');
+                console.log("wise_result");
+                console.log(wise_result);
+                let rules_result = await this.$axios.get('rules/checkRoutine');
+                console.log("rules_result");
+                console.log(rules_result);
+
                 this.rulesStatus = true;
             } catch (err) {
                 this.$store.dispatch('handleError', err);
@@ -113,7 +126,7 @@ export default {
         }
     },
 
-    async asyncData({ store, error, app: {$axios} }) {
+    async asyncData({store, error, app: {$axios}}) {
         try {
             let [
                 {data: reg}, {data: central}, {data: components},
@@ -139,6 +152,7 @@ export default {
             let installableComponents = components.filter(c => c.installable === true);
             let installedComponents = installableComponents.filter(c => c.installed === true);
             let componentProblems = installedComponents.filter(c => c.status === false).length;
+            let componentUpdatesAvailable = components.filter(c => c.version_status === false && c.installed === true).length;
             installedComponents = installedComponents.length;
             installableComponents = installableComponents.length;
 
@@ -147,7 +161,8 @@ export default {
                 centralStatus: central.central_status, lastSync: central.last_central_check,
                 lastRulesUpdate: central.last_rules_update, rulesStatus: central.rules_status,
                 rulesAvailable: central.rules_new_available, rule_drafts,
-                components, installableComponents, installedComponents, componentProblems,
+                components, installableComponents, installedComponents,
+                componentProblems, componentUpdatesAvailable,
                 lastAlertsUpdate: central.last_alerts_update,
                 alertsSentToday: report.alerts_sent_today,
                 alertsSentTotal: report.alerts_sent_total

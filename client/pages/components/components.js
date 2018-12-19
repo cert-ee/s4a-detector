@@ -5,6 +5,7 @@ export default {
             headers: [
                 {text: this.$t('components.name'), align: 'left', value: 'name'},
                 {text: this.$t('components.status'), align: 'left', value: 'statusStr'},
+                {text: this.$t('components.versions'), align: 'left', value: 'version_installed'},
                 {text: this.$t('components.actions'), align: 'left', sortable: false},
                 {text: this.$t('logs'), align: 'left', value: 'log'},
                 {text: this.$t('components.last_message'), align: 'left', value: 'message'}

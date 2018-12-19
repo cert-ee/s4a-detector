@@ -12,7 +12,7 @@ module.exports = function (ruleset) {
    *
    * @param cb
    */
-  ruleset.initialize = function (cb) {
+  ruleset.initialize = async function () {
     hell.o("start", "initialize", "info");
 
     //create the default rulesets
@@ -21,23 +21,20 @@ module.exports = function (ruleset) {
       {name: "custom", description: "Custom Ruleset"}
     ];
 
-    (async function () {
-      try {
+    try {
 
-        hell.o("check rulesets", "initialize", "info");
-        let create_result;
-        for (const rs of default_rulesets) {
-          hell.o(["check ruleset", rs.name], "initialize", "info");
-          create_result = await ruleset.findOrCreate({where: rs}, rs);
-          if (!create_result) throw new Error("failed to create ruleset " + rs.name);
-        }
-        cb(null, true);
-      } catch (err) {
-        hell.o(err, "initialize", "error");
-        cb(err);
+      hell.o("check rulesets", "initialize", "info");
+      let create_result;
+      for (const rs of default_rulesets) {
+        hell.o(["check ruleset", rs.name], "initialize", "info");
+        create_result = await ruleset.findOrCreate({where: rs}, rs);
+        if (!create_result) throw new Error("failed to create ruleset " + rs.name);
       }
-
-    })(); //async
+      return true;
+    } catch (err) {
+      hell.o(err, "initialize", "error");
+      return false;
+    }
 
   };
 
@@ -115,7 +112,7 @@ module.exports = function (ruleset) {
         let tag_exists = await tag.findById(tag_id);
         if (!tag_exists) throw new Error(ruleset_name + " could not find tag: " + tag_id);
 
-        if( enabled ){
+        if (enabled) {
           hell.o([ruleset_name, "add tag to ruleset"], "tagAll", "info");
           let ruleset_tag = await rs.tags.add(tag_exists);
           let rules = await rule.find({where: {ruleset: ruleset_name}});
@@ -125,7 +122,7 @@ module.exports = function (ruleset) {
           }
         }
 
-        if( !enabled ){
+        if (!enabled) {
           hell.o([ruleset_name, "remove tag from ruleset"], "tagAll", "info");
           let ruleset_tag = await rs.tags.remove(tag_exists);
           let rules = await rule.find({where: {ruleset: ruleset_name}});

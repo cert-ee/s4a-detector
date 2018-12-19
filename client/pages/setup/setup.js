@@ -236,6 +236,7 @@ export default {
                     data.system_info = this.system_info;
 
                 const result = await this.$axios.post('/registration/initiate', data);
+                console.log(result);
 
                 this.$store.commit('changeRegStatus', {
                     setupDone: true,

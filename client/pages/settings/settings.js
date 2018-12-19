@@ -1,6 +1,7 @@
 export default {
     data() {
         return {
+            rowsPerPage: [50, 100, {text: 'All', value: -1}],
             settings: {
                 job_interval_alerts_check: 1,
                 alerts_severity_all: true,
@@ -9,6 +10,7 @@ export default {
                 auto_rules: true,
                 job_interval_status_check: 1,
                 auto_upgrade: true,
+                smtp_server_requires_auth: false,
                 smtp_server_host: 'hostname',
                 smtp_server_port: 465,
                 smtp_server_tls: true,
@@ -42,7 +44,13 @@ export default {
             nginxConfDialog: false,
             passwordVisible: false,
             moloch: {},
-            moloch_loading: false
+            moloch_loading: false,
+            arrayEditorDialog: {
+                open: false,
+                title: "",
+                parameter_name: "",
+                list: []
+            },
         }
     },
 
@@ -92,13 +100,60 @@ export default {
             }
         },
 
+
+        openArrayEditor(parameter_name) {
+            // console.log("open array editor");
+            // console.log(parameter_name);
+            // console.log( this.moloch.configuration.exclude_ips );
+
+            this.arrayEditorDialog.list = this.moloch.configuration.exclude_ips;
+            this.arrayEditorDialog.title = parameter_name;
+            this.arrayEditorDialog.parameter_name = "exclude_ips";
+            this.arrayEditorDialog.open = true;
+
+        },
+
+        async arrayEditorSave() {
+            try {
+                // console.log("save array editor ")
+                // console.log( this.arrayEditorDialog.list );
+
+                //TODO filter ips?
+
+                this.arrayEditorDialog.list = this.arrayEditorDialog.list.filter(function (value, index, arr) {
+                    return value !== '' && value !== undefined && value !== null && /\S/.test(value);
+                });
+
+                console.log("list");
+                console.log(this.arrayEditorDialog.list);
+
+                this.moloch.configuration.exclude_ips = this.arrayEditorDialog.list;
+
+                this.arrayEditorDialog.open = false;
+                this.arrayEditorDialog = {
+                    open: false,
+                    title: "",
+                    parameter_name: "",
+                    list: []
+                };
+
+                await this.applyMolochChanges();
+
+                this.$store.commit('showSnackbar', {type: 'success', text: this.$t('saved')});
+            } catch (err) {
+                this.$store.dispatch('handleError', err);
+            }
+
+        },
+
         async applyMolochChanges() {
             this.moloch_loading = true;
 
             let moloch_configuration = {
                 configuration: {
                     yara_enabled: this.moloch.configuration.yara_enabled,
-                    wise_enabled: this.moloch.configuration.wise_enabled
+                    wise_enabled: this.moloch.configuration.wise_enabled,
+                    exclude_ips: this.moloch.configuration.exclude_ips
                 }
             };
 

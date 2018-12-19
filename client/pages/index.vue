@@ -149,6 +149,22 @@
                   <span class="error--text" v-else>
                     <v-icon class="error--text">warning</v-icon> {{ componentProblems }}
                   </span>
+
+
+                  <span v-if="componentUpdatesAvailable > 0" class="warning--text">
+
+                  <v-tooltip right>
+
+                    <span slot="activator">
+                      <v-icon class="warning--text">warning</v-icon> {{ componentUpdatesAvailable }}
+                    </span>
+
+                    <span>{{ componentUpdatesAvailable }} {{ $t('dashboard.component_updates_available') }}</span>
+                  </v-tooltip>
+
+
+                  </span>
+
                 </div>
               </dashboard-card>
             </nuxt-link>

@@ -1,11 +1,9 @@
 'use strict';
-const fs = require("fs");
+const fs = require("fs").promises;
 // const util = require('util');
 const hell = new (require(__dirname + "/helper.js"))({module_name: "yara"});
 
 module.exports = function (yara) {
-
-  const PATH_MOLOCH_YARA_OUT = process.env.PATH_MOLOCH_YARA_OUT;
 
   /**
    * INITIALIZE YARA
@@ -16,31 +14,6 @@ module.exports = function (yara) {
     hell.o("start", "initialize", "info");
 
     try {
-
-      let default_yara = [
-        {
-          name: "checksum",
-          friendly_name: "Checksum",
-          description: "Yara rules checksum",
-          data: "empty"
-        },
-        {
-          name: "busy",
-          friendly_name: "Busy",
-          description: "Importing in progress, wait",
-          data: false
-        }
-      ];
-      // await yara.destroyAll();
-
-      hell.o("check default_yara", "initialize", "info");
-      let create_result;
-      for (const dy of default_yara) {
-        hell.o(["check setting", dy.name], "initialize", "info");
-        create_result = await yara.findOrCreate({where: {name: dy.name}}, dy);
-        if (!create_result) throw new Error("failed to create yara " + dy.name);
-
-      }
 
       hell.o("done", "initialize", "info");
 
@@ -74,11 +47,16 @@ module.exports = function (yara) {
 
     (async function () {
       try {
+        let moloch = await yara.app.models.component.findOne({where: {name: 'moloch'}});
+        if (!moloch.configuration.yara_enabled) {
+          hell.o("yara disabled, done", "checkRoutine", "info");
+          cb(null, {message: "disabled"});
+          return true;
+        }
 
-        const yara_checksum = await yara.findOne({where: {name: "checksum"}});
 
-        let central_input = {checksum: yara_checksum.data};
-        let central_result;
+        let current_list = await yara.find({where: {enabled: true}});
+        let central_input = {feeds: current_list}, central_result;
         try {
           hell.o(["central input ", central_input], "checkRoutine", "info");
           central_result = await yara.app.models.central.connector().post("/report/yara", central_input);
@@ -88,17 +66,13 @@ module.exports = function (yara) {
             && err.response.data.error && err.response.data.error.message) {
             out = err.response.data.error.message;
           }
-
           throw new Error(out);
         }
 
-        if (central_result.data.checksum === yara_checksum.data && central_result.data.yara.length == 0) {
-          hell.o("same checksum, nothing to update", "checkRoutine", "info");
-        } else {
-          hell.o("new checksum, go to apply new rules", "checkRoutine", "info");
-          await yara.applyNewRules(central_result.data.yara);
-          await yara.update({name: "checksum"}, {data: central_result.data.checksum});
-        }
+        await yara.app.models.central.lastSeen(true, "yara");
+
+        hell.o("going to save", "checkRoutine", "info");
+        await yara.saveContents(central_result.data);
 
         hell.o("done", "checkRoutine", "info");
         yara.yara_routine_active = false;
@@ -106,7 +80,7 @@ module.exports = function (yara) {
 
       } catch (err) {
         hell.o(err, "checkRoutine", "error");
-
+        await yara.app.models.central.lastSeen(null, "yara", false);
         yara.yara_routine_active = false;
         cb({name: "error", status: 400, message: err.message});
       }
@@ -123,43 +97,136 @@ module.exports = function (yara) {
     http: {path: '/checkRoutine', verb: 'get', status: 200}
   });
 
+
   /**
-   * APPLY NEW RULES
+   * SAVE CENTRAL YARA
    *
-   * and reload moloch
-   *
-   * @param cb
+   * @param input
+   * @returns {Promise<boolean>}
    */
-  yara.applyNewRules = async function (input, cb) {
-    hell.o("start", "applyNewRules", "info");
+  yara.saveContents = async function (input) {
+    hell.o("start", "saveContents", "info");
 
     try {
 
-      hell.o("start write to file", "applyNewRules", "info");
-      let file = fs.createWriteStream(PATH_MOLOCH_YARA_OUT);
+      //to remove unused in the end of the check
+      let current_list = await yara.find();
+      let current_yara_list = []
+      for (let feed of current_list) {
+        current_yara_list.push(feed.name);
+      }
 
-      file.on('error', function (err) {
-        hell.o(err, "applyNewRules", "error");
-      });
+      let settings = await yara.app.models.settings.findOne();
 
-      file.write(input + '\n');
+      let current, output, content_path, changes_detected = false;
+      for (let feed of input) {
+        console.log("feed from central", feed);
 
-      file.end();
+        current = await yara.findOne({where: {name: feed.name}});
+        if (!current || current.enabled !== feed.enabled) changes_detected = true;
 
-      hell.o("end of yara write to file", "applyNewRules", "info");
+        if (current_yara_list.length > 0 && current !== undefined && current !== null) {
+          current_yara_list = current_yara_list.filter(function (value, index, arr) {
+            return value !== current.name;
+          });
+        }
 
-      hell.o("restart moloch to reload rules file", "applyNewRules", "info");
-      let salt_result = await yara.app.models.component.stateApply("moloch", "restart");
-      hell.o(["salt result", salt_result], "applyNewRules", "info");
-      if (!salt_result || salt_result.exit_code != 0) throw new Error("component_restart_failed");
+        content_path = settings["path_moloch_" + feed.type];
+        output = {
+          folder: content_path + feed.name + "/",
+          local_path: content_path + "/" + feed.name + "/" + feed.filename
+        };
 
-      hell.o("done", "applyNewRules", "info");
+        hell.o([feed.name, "check folders"], "saveContents", "info");
+        await yara.app.models.contentman.pathCheck(output.local_path);
 
-      if (cb) cb(null, {message: "ok"});
+        console.log(current);
+        if (current !== null && current !== undefined && current.checksum === feed.checksum) {
+          hell.o([feed.name, "checksums are the same"], "saveContents", "info");
+        } else {
+          hell.o([feed.name, "write content"], "saveContents", "info");
+          await fs.writeFile(output.local_path, feed.contents);
+          changes_detected = true;
+        }
+
+        delete feed.contents;
+        feed.location = output.folder;
+        if (!current) {
+          hell.o([feed.name, "create db entry"], "saveContents", "info");
+          await yara.create(feed);
+        } else {
+          hell.o([feed.name, "update db entry"], "saveContents", "info");
+          await yara.update({name: feed.name}, feed);
+        }
+
+      }
+
+      // console.log("CURRENT yara LIST");
+      // console.log(current_yara_list);
+      if (current_yara_list.length > 0) {
+        for (let old_feed of current_yara_list) {
+          hell.o(["turning off old feed", old_feed], "saveContents", "info");
+          await yara.update({name: old_feed}, {enabled: false});
+          changes_detected = true;
+        }
+      }
+
+      if (changes_detected) {
+        hell.o("changes detected, apply new conf", "saveContents", "info");
+        await yara.generateAndApply();
+        await yara.app.models.central.lastSeen(null, "yara", true);
+      }
+      {
+        hell.o("no changes", "saveContents", "info");
+      }
+
+      hell.o("done", "saveContents", "info");
       return true;
     } catch (err) {
-      hell.o(err, "applyNewRules", "error");
-      if (cb) cb({name: "Error", status: 400, message: err.message});
+      hell.o(err, "saveContents", "error");
+      return false;
+    }
+
+  };
+
+
+  /**
+   * GENERATE AND APPLY
+   *
+   * create new yara.ini
+   * reload moloch
+   *
+   */
+  yara.generateAndApply = async function () {
+    hell.o("start", "generateAndApply", "info");
+
+    try {
+
+      let feeds = await yara.find({where: {enabled: true}});
+
+      let yara_ini = "";
+      for (let feed of feeds) {
+        // console.log(feed);
+        yara_ini = yara_ini + 'include "' + feed.location + feed.filename + '"\n';
+      }
+
+      // console.log("yara_ini", yara_ini);
+
+      let settings = await yara.app.models.settings.findOne();
+
+      hell.o("save new ini file", "generateAndApply", "info");
+      await fs.writeFile(settings["path_moloch_yara_ini"], yara_ini);
+
+      hell.o("restart moloch to reload rules file", "generateAndApply", "info");
+      let salt_result = await yara.app.models.component.stateApply("moloch", "restart");
+      hell.o(["salt result", salt_result], "generateAndApply", "info");
+      if (!salt_result || salt_result.exit_code != 0) throw new Error("component_restart_failed");
+
+      hell.o("done", "generateAndApply", "info");
+
+      return true;
+    } catch (err) {
+      hell.o(err, "generateAndApply", "error");
       return false;
     }
 
