@@ -11,6 +11,8 @@ export default {
                 {text: this.$t('notify.subject'), align: 'left', value: 'subject'},
                 {text: this.$t('notify.email'), align: 'left', value: 'email'},
                 {text: this.$t('notify.query'), align: 'left', value: 'query'},
+                {text: this.$t('notify.last_result'), align: 'left', value: 'last_result'},
+                {text: this.$t('notify.last_logs'), align: 'left', value: 'last_logs'},
                 {text: this.$t('notify.actions'), align: 'left', sortable: false},
             ],
             addEditEntryDialog: {
@@ -81,8 +83,8 @@ export default {
             }
         },
 
-        async openObjectDialog(entry) {
-            this.objectDialog.data = entry.query;
+        async openObjectDialog(value) {
+            this.objectDialog.data = value;
             this.objectDialog.open = true;
         },
 
@@ -168,8 +170,13 @@ export default {
                 };
 
                 if (this.editEntry.new_entry === true) {
-                    const added = await this.$axios.$post('notify', input);
-                    this.$store.commit('notify/addEntry', added);
+                    //issue for handling dots in object key names
+                    let create_without_query = Object.assign({}, input);
+                    delete create_without_query.query;
+                    let added = await this.$axios.$post('notify', create_without_query);
+                    let patched = await this.$axios.$patch(`notify/${added.id}`, input);
+
+                    this.$store.commit('notify/addEntry', patched);
                 } else {
                     const patched = await this.$axios.$patch(`notify/${this.editEntry.id}`, input);
                     this.$store.commit('notify/updateEntry', patched);

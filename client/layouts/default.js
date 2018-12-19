@@ -88,7 +88,7 @@ export default {
             console.log("resetDemo");
             this.resetDemoDialog = false;
 
-            const result = await this.$axios.get('/registration/resetDetector');
+            const result = await this.$axios.get('/settings/resetApp');
             console.log(result);
 
             this.$store.commit('changeRegStatus', {setupDone: false});

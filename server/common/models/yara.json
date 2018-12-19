@@ -21,17 +21,59 @@
       "description": "Yara friendly name",
       "default": ""
     },
+    "enabled": {
+      "type": "boolean",
+      "required": false,
+      "description": "Yara enabled",
+      "default": true
+    },
     "description": {
       "type": "string",
       "required": false,
       "description": "Yara description",
       "default": ""
     },
-    "data": {
+    "location": {
       "type": "string",
       "required": true,
-      "description": "Yara value or data",
+      "description": "Yara folder path",
       "default": ""
+    },
+    "filename": {
+      "type": "string",
+      "required": true,
+      "description": "Yara filename",
+      "default": ""
+    },
+    "type": {
+      "type": "string",
+      "required": true,
+      "description": "Yara type",
+      "default": ""
+    },
+    "checksum": {
+      "type": "string",
+      "required": true,
+      "description": "Yara checksum",
+      "default": "default"
+    },
+    "tag_name": {
+      "type": "string",
+      "required": false,
+      "description": "Yara tagger name",
+      "default": ""
+    },
+    "created_time": {
+      "type": "date",
+      "required": true,
+      "description": "Created Time",
+      "default": "$now"
+    },
+    "modified_time": {
+      "type": "date",
+      "required": true,
+      "description": "Modified Time",
+      "default": "$now"
     }
   },
   "validations": [],

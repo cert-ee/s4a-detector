@@ -86,7 +86,18 @@
 
                                             <td>
                                                 <v-btn slot="activator" class="info--text" icon
-                                                       @click.stop="openObjectDialog(props.item)">
+                                                       @click.stop="openObjectDialog(props.item.query)">
+                                                    <v-icon>view_list</v-icon>
+                                                </v-btn>
+                                            </td>
+
+                                            <td>
+                                                {{ props.item.last_result }}
+                                            </td>
+
+                                            <td>
+                                                <v-btn slot="activator" class="info--text" icon
+                                                       @click.stop="openObjectDialog(props.item.last_logs)">
                                                     <v-icon>view_list</v-icon>
                                                 </v-btn>
                                             </td>

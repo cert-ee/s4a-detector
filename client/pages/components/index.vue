@@ -12,7 +12,8 @@
               <v-card-title class="mb-3">
                 <v-layout row wrap>
                   <v-flex xs6>
-                    <v-text-field append-icon="search" :label="$t('search')" single-line hide-details v-model="search" clearable></v-text-field>
+                    <v-text-field append-icon="search" :label="$t('search')" single-line hide-details v-model="search"
+                                  clearable></v-text-field>
                   </v-flex>
                 </v-layout>
               </v-card-title>
@@ -32,10 +33,26 @@
                         {{ props.item.statusStr }}
                       </div>
                       <span v-else-if="props.item.installed === false" class="deep-orange--text">{{ $t('components.not_installed') }}</span>
-                      <span v-else-if="props.item.enabled === false" class="deep-orange--text">{{ $t('disabled') }}</span>
+                      <span v-else-if="props.item.enabled === false"
+                            class="deep-orange--text">{{ $t('disabled') }}</span>
+                    </td>
+                    <td :class="props.item.version_status === true ? 'success--text' : 'warning--text'">
+                    <span v-if="props.item.version_status === false">
+                      <v-icon class="warning--text">warning</v-icon><br/>
+                        {{ $t('components.version_available') }}:
+                        <br/>
+                        {{ props.item.version_available }}
+                        <br/>
+                      </span>
+                      <span v-if="props.item.version_status === false">
+                        {{ $t('components.version_installed') }}: <br/>
+                      </span>
+                      {{ props.item.version_installed }}
                     </td>
                     <td>
-                      <v-btn small color="warning" v-if="props.item.installed === true && props.item.restartable === true" :loading="props.item.loading"
+                      <v-btn small color="warning"
+                             v-if="props.item.installed === true && props.item.restartable === true"
+                             :loading="props.item.loading"
                              @click="applyStateToComponent(props.item, 'restart')">
                         {{ $t('components.restart') }}
                       </v-btn>
@@ -48,11 +65,13 @@
                         {{ $t('components.uninstall') }}
                       </v-btn>
 
-                      <v-btn small color="primary" v-if="props.item.installed === true && props.item.enabled === false && props.item.toggleable"
+                      <v-btn small color="primary"
+                             v-if="props.item.installed === true && props.item.enabled === false && props.item.toggleable"
                              :loading="props.item.loading" @click="applyStateToComponent(props.item, 'enabled')">
                         {{ $t('components.enable') }}
                       </v-btn>
-                      <v-btn small color="error" v-if="props.item.installed === true && props.item.enabled === true && props.item.toggleable"
+                      <v-btn small color="error"
+                             v-if="props.item.installed === true && props.item.enabled === true && props.item.toggleable"
                              :loading="props.item.loading" @click="applyStateToComponent(props.item, 'disabled')">
                         {{ $t('components.disable') }}
                       </v-btn>
@@ -62,7 +81,7 @@
                       </v-btn>
                     </td>
                     <td>
-                        <div v-if="props.item.logs != false && props.item.logs != ' '">
+                      <div v-if="props.item.logs != false && props.item.logs != ' '">
                         <v-tooltip right>
                           <v-btn slot="activator" icon
                                  @click.stop="log = {name: props.item.friendly_name, data: props.item.logs }; logDialog = true"
@@ -72,7 +91,7 @@
                           <span>{{ $t('components.view_stdout_log') }}</span>
                         </v-tooltip>
                       </div>
-                        <div class="red--text" v-if="props.item.logs_error != false && props.item.logs_error != ' '">
+                      <div class="red--text" v-if="props.item.logs_error != false && props.item.logs_error != ' '">
                         <v-tooltip right>
                           <v-btn slot="activator" class="red--text" icon
                                  @click.stop="log = {name: props.item.friendly_name + ' error ', data: props.item.logs_error }; logDialog = true"
@@ -83,7 +102,8 @@
                         </v-tooltip>
                       </div>
                     </td>
-                    <td :class="props.item.status === true ? 'success--text' : 'error--text'">{{ props.item.message }}</td>
+                    <td :class="props.item.status === true ? 'success--text' : 'error--text'">{{ props.item.message }}
+                    </td>
                   </template>
                 </v-data-table>
               </v-card-text>

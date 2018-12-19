@@ -51,11 +51,13 @@ module.exports = function (boot) {
       hell.o([system_info_result.data, server_numbers], "boot", "info");
 
       if (system_info_result.data === undefined || system_info_result.data < server_numbers) {
-        hell.o("start apply updates check", "boot", "info");
+        hell.o("start updates check", "boot", "info");
         hell.o(["package json", server_numbers], "boot", "info");
         hell.o(["system_info.update_version", system_info_result.data], "boot", "info");
 
+        let something_to_update = false;
         if (server_numbers <= 178) {
+          something_to_update = true;
           hell.o("need to destroy old feeds n settings", "boot", "info");
           await boot.app.models.yara.destroyAll();
           await boot.app.models.wise.destroyAll();
@@ -69,11 +71,15 @@ module.exports = function (boot) {
             configuration:
               {
                 yara_enabled: false,
-                wise_enabled: false
+                wise_enabled: false,
+                exclude_ips: []
               }
           });
 
-        } else if (server_numbers <= 2132) {
+        }
+
+        if (server_numbers <= 2158) {
+          something_to_update = true;
           hell.o("remove current notify entries", "boot", "info");
           await boot.app.models.notify.destroyAll();
 
@@ -82,11 +88,51 @@ module.exports = function (boot) {
             configuration:
               {
                 yara_enabled: false,
-                wise_enabled: false
+                wise_enabled: false,
+                exclude_ips: []
               }
           });
+        }
 
-        } else {
+        if (server_numbers <= 2174) {
+          something_to_update = true;
+          hell.o("update elastic param", "boot", "info");
+          let elastic_comp = await boot.app.models.component.findOne({where: {name: "elastic"}});
+          await boot.app.models.component.update({name: "elastic"}, {installed: true});
+
+          hell.o("need to remove old yara and wise", "boot", "info");
+          await boot.app.models.wise.destroyAll();
+          await boot.app.models.yara.destroyAll();
+
+          hell.o("need to update settings", "boot", "info");
+          let current_settings = await boot.app.models.settings.findOne();
+          const PATH_BASE = process.env.PATH_BASE;
+          if (!PATH_BASE) throw new Error("env missing: PATH_BASE");
+
+          let update_paths = {
+            path_content_base: PATH_BASE,
+            path_suricata_content: PATH_BASE + "suricata/",
+            path_moloch_content: PATH_BASE + "moloch/",
+            path_moloch_yara: PATH_BASE + "moloch/yara/",
+            path_moloch_yara_ini: PATH_BASE + "moloch/yara.ini",
+            path_moloch_wise_ini: PATH_BASE + "moloch/wise.ini",
+            path_moloch_wise_ip: PATH_BASE + "moloch/wise_ip/",
+            path_moloch_wise_url: PATH_BASE + "moloch/wise_url/",
+            path_moloch_wise_domain: PATH_BASE + "moloch/wise_domain/"
+          };
+
+          await boot.app.models.settings.update({id: current_settings.id}, update_paths);
+
+        }
+
+        if (server_numbers <= 2200) {
+          something_to_update = true;
+          hell.o("update elastic param", "boot", "info");
+          let elastic_comp = await boot.app.models.component.findOne({where: {name: "elastic"}});
+          await boot.app.models.component.update({name: "elastic"}, {installed: true});
+        }
+
+        if (!something_to_update) {
           hell.o("currently no updates", "boot", "info");
         }
 

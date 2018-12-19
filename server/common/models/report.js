@@ -13,37 +13,36 @@ module.exports = function (report) {
    * @param input
    * @param cb
    */
-  report.initialize = function (cb) {
+  report.initialize = async function () {
     hell.o("start", "initialize", "info");
-    (async () => {
-      try {
-        hell.o("check elastic", "initialize", "info");
 
-        //development, return ok
-        if (process.env.NODE_ENV == "dev" ) {
-          hell.o("DEV - elastic client ok", "initialize", "info");
-          return cb(null, {message: "ok"});
-        }
+    try {
+      hell.o("check elastic", "initialize", "info");
 
-        let elastic_check = await report.app.models.component.findOne({where: {name: "elastic", status: true}});
-        if (!elastic_check) throw new Error("elastic component status failed");
-
-        report.es_client = new elasticsearch.Client({
-          host: 'localhost:9200',
-          //log: 'trace'
-        });
-
-        hell.o("elastic client ok", "initialize", "info");
-
-        cb(null, {message: "ok"});
-      } catch (err) {
-        hell.o(err, "initialize", "error");
-        cb({name: "Error", status: 400, message: err});
+      //development, return ok
+      if (process.env.NODE_ENV == "dev") {
+        hell.o("DEV - elastic client ok", "initialize", "info");
+        return false;
       }
 
-    })(); // async
+      let elastic_check = await report.app.models.component.findOne({where: {name: "elastic", status: true}});
+      if (!elastic_check) throw new Error("elastic component status failed");
+
+      report.es_client = new elasticsearch.Client({
+        host: 'localhost:9200',
+        //log: 'trace'
+      });
+
+      hell.o("elastic client ok", "initialize", "info");
+
+      return true;
+    } catch (err) {
+      hell.o(err, "initialize", "error");
+      return false;
+    }
 
   };
+
 
   report.status_routine_active = false;
   report.statusRoutine = function (options, cb) {
@@ -67,10 +66,33 @@ module.exports = function (report) {
     (async () => {
 
       try {
-        let component_statuses = await report.app.models.component.find({fields: ["name", "friendly_name", "status", "message"]});
+        let component_fields = ["name", "friendly_name", "package_name", "status", "message", "version_status", "version_installed",
+          "version_available"];
+        let component_statuses = await report.app.models.component.find({fields: component_fields});
+
+        let rules_count = await report.app.models.rule.count();
+        let rules_count_enabled = await report.app.models.rule.find({
+          where: {enabled: true},
+          scope: {
+            fields: ["id"]
+          }
+        });
+        let rules_count_custom = await report.app.models.rule.find({
+          where: {ruleset: "custom"},
+          scope: {
+            fields: ["id"]
+          }
+        });
 
         let output = {};
         output.components = component_statuses;
+        output.rules = {
+          rules_count: rules_count,
+          rules_count_enabled: rules_count_enabled.length,
+          rules_count_custom: rules_count_custom.length,
+        };
+
+        // console.log("output", output);
 
         hell.o("report status to central", "statusRoutine", "info");
         let result;
@@ -228,7 +250,7 @@ module.exports = function (report) {
       (async () => {
 
         let elastic_check = await report.app.models.component.findOne({where: {name: "elastic", status: true}});
-        if (!elastic_check){
+        if (!elastic_check) {
           hell.o("elastic status failed", "checkAlerts", "info");
           reject("elastic component status failed");
           return;
@@ -247,7 +269,7 @@ module.exports = function (report) {
           elastic_params.body["_source"] = ["_id", "alert", "event_type", "flow_id", "in_iface", "proto", "timestamp"];
         }
 
-        if( entry_ptr === undefined || entry_ptr == "empty" ) {
+        if (entry_ptr === undefined || entry_ptr == "empty") {
           hell.o("alerts pointer empty, go back one month", "checkAlerts", "info");
           let d = new Date();
           d.setMonth(d.getMonth() - 1);
@@ -259,7 +281,7 @@ module.exports = function (report) {
           bool: {
             "must": [
               {range: {"timestamp": {"gt": "" + entry_ptr}}}
-              ,{ "term" : { "event_type": "alert" }}
+              , {"term": {"event_type": "alert"}}
             ]
           }
         };
@@ -272,7 +294,7 @@ module.exports = function (report) {
         elastic_params.body.size = 100;
 
         hell.o("elastic call", "checkAlerts", "info");
-        hell.o( JSON.stringify( elastic_params ) , "checkAlerts", "info");
+        hell.o(JSON.stringify(elastic_params), "checkAlerts", "info");
 
         report.es_client.search(elastic_params).then(function (body) {
           hell.o("elastic result", "checkAlerts", "info");
@@ -282,7 +304,7 @@ module.exports = function (report) {
 
           // hell.o(hits, "checkAlerts", "info");
 
-          for (var id = 0,l = hits.length; id < l; id++) {
+          for (var id = 0, l = hits.length; id < l; id++) {
             result = hits[id]._source;
             //if alert info level is limited, but fill ip fields for evebox
             if (!settings.alerts_info_level_all) {
@@ -292,13 +314,13 @@ module.exports = function (report) {
             //console.log("alerts: " + id );
             //console.log( hits[id] );
             //console.log( result['timestamp'] );
-            if( result['timestamp'] !== undefined && Date.parse(result['timestamp'] ) ){ //if date format
+            if (result['timestamp'] !== undefined && Date.parse(result['timestamp'])) { //if date format
               entry_ptr = result['timestamp'];
               counter++;
             }
           }
 
-          if( counter == 0 ) hits = [];
+          if (counter == 0) hits = [];
 
           hell.o("done: " + counter, "checkAlerts", "info");
           success({alerts_pointer: entry_ptr, alerts: hits});
@@ -348,24 +370,24 @@ module.exports = function (report) {
     (async function () {
       try {
 
-        let reporting = await report.findOne({id: "reportid"});
+        let reporting = await report.findOne();
         if (!reporting) {
           await report.create({id: "reportid"});
-          reporting = await report.findOne({id: "reportid"});
+          reporting = await report.findOne();
         }
 
         //update dashboard alerts sent counter if day changes
         let current_day_number = (new Date()).getDay(), reporting_input;
-        if( reporting.alerts_sent_day != current_day_number ){
-          hell.o([ "reporting day number", reporting.alerts_sent_day ], "alertsRoutine", "info");
-          hell.o([ "current day number", current_day_number ], "alertsRoutine", "info");
+        if (reporting.alerts_sent_day != current_day_number) {
+          hell.o(["reporting day number", reporting.alerts_sent_day], "alertsRoutine", "info");
+          hell.o(["current day number", current_day_number], "alertsRoutine", "info");
 
           reporting_input = {
             alerts_sent_today: 0,
             alerts_sent_day: current_day_number
           };
 
-          await report.update( {id: "reportid"}, reporting_input );
+          await report.update({id: "reportid"}, reporting_input);
 
         }
 
@@ -403,18 +425,18 @@ module.exports = function (report) {
         }
 
         hell.o("going to check alarm pointer: " + alerts_checked.alerts_pointer, "alertsRoutine", "info");
-        if( alerts_checked.alerts_pointer !== undefined && Date.parse( alerts_checked.alerts_pointer ) ) { //if date format
+        if (alerts_checked.alerts_pointer !== undefined && Date.parse(alerts_checked.alerts_pointer)) { //if date format
           hell.o("update alarm pointer: " + alerts_checked.alerts_pointer, "alertsRoutine", "info");
           hell.o("update alerts sent: " + (reporting.alerts_sent_today + alert_count_to_send), "alertsRoutine", "info");
-          hell.o("update alerts sent today: " + ( reporting.alerts_sent_today + alert_count_to_send ), "alertsRoutine", "info");
+          hell.o("update alerts sent today: " + (reporting.alerts_sent_today + alert_count_to_send), "alertsRoutine", "info");
 
           reporting_input = {
             alerts_pointer: alerts_checked.alerts_pointer,
-            alerts_sent_total: parseInt( reporting.alerts_sent_total ) + alert_count_to_send,
-            alerts_sent_today: parseInt( reporting.alerts_sent_today ) + alert_count_to_send
+            alerts_sent_total: parseInt(reporting.alerts_sent_total) + alert_count_to_send,
+            alerts_sent_today: parseInt(reporting.alerts_sent_today) + alert_count_to_send
           };
 
-          let updated_pointer = await report.update({id: "reportid"}, reporting_input );
+          let updated_pointer = await report.update({id: "reportid"}, reporting_input);
           if (!updated_pointer) throw new Error("alerts_pointer_save_failed");
         } else {
           hell.o("malformed alarm pointer: " + alerts_checked.alerts_pointer, "alertsRoutine", "error");
@@ -459,7 +481,7 @@ module.exports = function (report) {
   report.alertsManual = function (alerts, options, cb) {
     hell.o("start", "alertsManual", "info");
 
-    if( process.env.NODE_ENV !== "dev" ) {
+    if (process.env.NODE_ENV !== "dev") {
       hell.o("ENV is not DEV, fail", "alertsManual", "warn");
       cb("error");
       return false;
@@ -541,17 +563,17 @@ module.exports = function (report) {
     (async function () {
       try {
 
-        if( machine_id === undefined || machine_id == "" ){
+        if (machine_id === undefined || machine_id == "") {
           let reg_info = await report.app.models.registration.find();
-          if( reg_info.length > 0 ){
+          if (reg_info.length > 0) {
             machine_id = reg_info[0].machine_id;
           } else {
             machine_id = machineId.machineIdSync();
           }
         }
 
-        if ( ! network_interfaces ) network_interfaces = [];
-        if ( ! components ) components = [];
+        if (!network_interfaces) network_interfaces = [];
+        if (!components) components = [];
 
         let feedback_input = {
           message: message,
@@ -565,7 +587,7 @@ module.exports = function (report) {
           extra: extra
         };
 
-        hell.o( [ "post to central", feedback_input ] , "feedback", "info");
+        hell.o(["post to central", feedback_input], "feedback", "info");
         let post_to_central;
         try {
           post_to_central = await report.app.models.central.connector().post("/report/feedback", feedback_input);

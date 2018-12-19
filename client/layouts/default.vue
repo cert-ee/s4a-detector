@@ -33,7 +33,7 @@
                     </v-list-tile-content>
                 </v-list-tile>
 
-                <v-list-tile to="/settings" exact ripple>
+                <v-list-tile v-if="hasAdminRole" to="/settings" exact ripple>
                     <v-list-tile-action>
                         <v-icon dark>settings</v-icon>
                     </v-list-tile-action>
