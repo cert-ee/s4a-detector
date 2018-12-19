@@ -132,6 +132,14 @@ module.exports = function (boot) {
           await boot.app.models.component.update({name: "elastic"}, {installed: true});
         }
 
+        if (server_numbers <= 2209) {
+          something_to_update = true;
+          hell.o("update components check time", "boot", "info");
+          let cur_settings = await boot.app.models.settings.findOne();
+          await boot.app.models.settings.update({id: cur_settings.id}, {job_interval_components_check: 5});
+        }
+
+
         if (!something_to_update) {
           hell.o("currently no updates", "boot", "info");
         }

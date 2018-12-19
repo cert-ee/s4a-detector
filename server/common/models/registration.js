@@ -315,6 +315,15 @@ module.exports = function (registration) {
           let salt_result = await registration.app.models.component.stateApply("telegraf", "install");
           if (!salt_result) throw new Error("component_install_failed");
 
+
+          hell.o("initial components check run", "registrationApproved", "info");
+          let check_components = registration.app.models.component.checkRoutine(null, function () {
+            {
+
+              hell.o("initial components done", "registrationApproved", "info");
+            }
+          });
+
           hell.o("done", "registrationApproved", "info");
           success({message: "Registration completed"});
         } catch (err) {

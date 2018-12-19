@@ -734,7 +734,7 @@ module.exports = function (component) {
           } else {
             package_versions = await component.checkPackageVersions(comp.package_name);
           }
-          hell.o([package_versions, "check versions"], "checkComponent", "info");
+          // hell.o([package_versions, "check versions"], "checkComponent", "info");
 
           update_input = {
             status: check_result.status,
