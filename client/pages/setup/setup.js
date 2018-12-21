@@ -155,6 +155,8 @@ export default {
                     return a.install_order - b.install_order;
                 });
 
+                console.log(this.components_all);
+
                 let current, comp_input, component_result;
                 for (let i = 0, l = this.components_all.length; i < l; i++) {
                     current = this.components_all[i];

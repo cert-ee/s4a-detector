@@ -201,14 +201,14 @@
       "permission": "ALLOW"
     },
     {
-      "property": "install",
+      "property": "stateApply",
       "accessType": "*",
       "principalType": "ROLE",
       "principalId": "admin",
       "permission": "ALLOW"
     },
     {
-      "property": "uninstall",
+      "property": "stateApplyTEST",
       "accessType": "*",
       "principalType": "ROLE",
       "principalId": "admin",

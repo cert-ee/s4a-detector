@@ -49,7 +49,7 @@ module.exports = function (wise) {
       try {
 
         let moloch = await wise.app.models.component.findOne({where: {name: 'moloch'}});
-        if (!moloch.configuration.wise_enabled) {
+        if (!moloch.configuration.wise_enabled || !moloch.enabled) {
           hell.o("wise disabled, done", "checkRoutine", "info");
           cb(null, {message: "disabled"});
           return true;
