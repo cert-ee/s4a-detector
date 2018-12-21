@@ -117,9 +117,17 @@ dependency_install() {
 
 create_mongodb_users() {
   declare -r service_name="$1"
-  echo "Create MongoDB users..."
+  
+    echo "Create MongoDB users..."
+  
   if [ ! -e /root/.mongodb.passwd ] ; then
-	  echo " * root..."
+
+	 if [ `mongo --quiet --eval "quit()" >/dev/null; echo $?` -gt 0 ] ; then
+	  	echo "CRITICAL: Can't connect to MongoDB !!!"
+		exit 1
+	fi
+
+	echo " * root..."
 	mongodb_pass=$( pwgen 12 1 )
 	echo -e "MONGODB_USER=root\nMONGODB_PASS=$mongodb_pass\n" > /root/.mongodb.passwd
 	mongo admin --eval "db.createUser({user: 'root',pwd: '"$mongodb_pass"', roles: [ 'root' ] })"
@@ -190,15 +198,6 @@ create_mongodb_users '{{ node_deb_package_name }}'
 
 # logrotate script
 cat > /etc/logrotate.d/s4a-detector <<EOF
-/var/log/suricata/*.json
-{
-    rotate 3
-    daily
-    missingok
-    create
-    sharedscripts
-}
-
 /home/{{ node_deb_user }}/.pm2/pm2.log /home/{{ node_deb_user }}/.pm2/logs/*.log {
         rotate 12
         daily

@@ -352,8 +352,7 @@
                             @click:append="() => (passwordVisible = !passwordVisible)"
                             :type="passwordVisible ? 'text' : 'password'"
                             :label="$t('settings.smtp_server_password')" required
-                            @change="updateSetting('smtp_server_password')"
-                            autocomplete="new-password">
+                            @change="updateSetting('smtp_server_password')">
                     </v-text-field>
                   </v-flex>
                   <v-flex xs4>

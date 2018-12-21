@@ -26,7 +26,10 @@ module.exports = function (component) {
       enabled: true,
       toggleable: false,
       restartable: false,
-      status: false
+      status: false,
+      version_status: true,
+      version_installed: "",
+      version_available: ""
     },
     {
       name: "autoupgrade",
@@ -43,7 +46,10 @@ module.exports = function (component) {
       enabled: false,
       toggleable: false,
       restartable: false,
-      status: false
+      status: false,
+      version_status: true,
+      version_installed: "",
+      version_available: ""
     },
     {
       name: "nginx",
@@ -60,6 +66,9 @@ module.exports = function (component) {
       toggleable: false,
       restartable: false,
       status: false,
+      version_status: true,
+      version_installed: "",
+      version_available: "",
       configuration:
         {
           ssl_enabled: false,
@@ -81,10 +90,13 @@ module.exports = function (component) {
       after_approval: false,
       installed: true,
       installable: false,
-      enabled: false,
+      enabled: true,
       toggleable: false,
       restartable: true,
-      status: false
+      status: false,
+      version_status: true,
+      version_installed: "",
+      version_available: ""
     },
     {
       name: "suricata",
@@ -101,7 +113,10 @@ module.exports = function (component) {
       enabled: false,
       toggleable: true,
       restartable: true,
-      status: false
+      status: false,
+      version_status: true,
+      version_installed: "",
+      version_available: ""
     },
     {
       name: "evebox",
@@ -119,7 +134,10 @@ module.exports = function (component) {
       enabled: false,
       toggleable: false,
       restartable: true,
-      status: false
+      status: false,
+      version_status: true,
+      version_installed: "",
+      version_available: ""
     },
     {
       name: "evebox-agent",
@@ -135,7 +153,10 @@ module.exports = function (component) {
       enabled: true,
       toggleable: false,
       restartable: true,
-      status: false
+      status: false,
+      version_status: true,
+      version_installed: "",
+      version_available: ""
     },
     {
       name: "netdata",
@@ -152,7 +173,10 @@ module.exports = function (component) {
       enabled: false,
       toggleable: true,
       restartable: true,
-      status: false
+      status: false,
+      version_status: true,
+      version_installed: "",
+      version_available: ""
     },
     {
       name: "moloch",
@@ -170,6 +194,9 @@ module.exports = function (component) {
       toggleable: false,
       restartable: true,
       status: false,
+      version_status: true,
+      version_installed: "",
+      version_available: "",
       configuration:
         {
           yara_enabled: false,
@@ -191,6 +218,9 @@ module.exports = function (component) {
       toggleable: true,
       restartable: true,
       status: true,
+      version_status: true,
+      version_installed: "",
+      version_available: "",
       configuration:
         {
           sampling_rate: -1000
@@ -210,7 +240,10 @@ module.exports = function (component) {
       enabled: false,
       toggleable: true,
       restartable: true,
-      status: false
+      status: false,
+      version_status: true,
+      version_installed: "",
+      version_available: ""
     },
     {
       name: "vpn",
@@ -226,7 +259,10 @@ module.exports = function (component) {
       enabled: false,
       toggleable: true,
       restartable: true,
-      status: true
+      status: false,
+      version_status: true,
+      version_installed: "",
+      version_available: ""
     }
   ];
 
@@ -615,7 +651,7 @@ module.exports = function (component) {
    * @returns {Promise<{logs_error: string, exit_code: number, logs: string}>}
    */
   component.checkPackageVersions = async function (package_name) {
-    hell.o("start: " + package_name, "checkPackageVersions", "info");
+    hell.o([package_name, "start"], "checkPackageVersions", "info");
     let output = {
       version_installed: "Error",
       version_available: "error",
@@ -669,7 +705,10 @@ module.exports = function (component) {
         output.version_status = true;
       }
 
-      hell.o("done", "checkPackageVersions", "info");
+      hell.o([package_name + " installed", output.version_installed], "checkPackageVersions", "info");
+      hell.o([package_name + " available", output.version_available], "checkPackageVersions", "info");
+
+      hell.o([package_name, "done"], "checkPackageVersions", "info");
       return output;
 
     } catch (err) {
@@ -703,6 +742,7 @@ module.exports = function (component) {
             available_version = "", package_version_status = true;
 
           comp = await component.findOne({where: {name: component_name, installed: true, enabled: true}});
+
           if (!comp) throw new Error("Component not installed");
 
           if (comp.health_url && comp.health_url.length > 5) {
@@ -837,8 +877,11 @@ module.exports = function (component) {
    * @param cb
    */
   component.state_busy = false;
-  component.stateApply = function (name, state, debug, options, cb) {
+  component.stateApply = function (name, state, debug, options, httpReq, cb) {
     hell.o("start", "stateApply", "info");
+    hell.o("appy no timeout to http call", "stateApply", "info");
+    httpReq.setTimeout(0);
+
     return new Promise((success, reject) => {
 
       hell.o([name + " " + state, "start"], "stateApply", "info");
@@ -904,6 +947,31 @@ module.exports = function (component) {
             if (state !== "restart") {
               update_result = await component.update({name: comp.name}, comp_input);
               hell.o([name + " " + state, update_result], "stateApply", "info");
+            }
+
+            component.state_busy = false;
+            await component.update({name: comp.name}, {loading: false});
+            comp = await component.findOne({where: {name: comp.name}});
+
+            if (comp.name == "evebox" && (!comp.installed || !comp.enabled)) {
+              hell.o([name + " " + state, "exebox disabled, do the same for evebox-agent"], "stateApply", "info");
+              update_result = await component.update({name: 'evebox-agent'}, {
+                installed: false,
+                enabled: false
+              });
+            }
+
+            if (comp.name == "evebox" && comp.installed && comp.enabled) {
+              hell.o([name + " " + state, "exebox enabled, do the same for evebox-agent"], "stateApply", "info");
+              update_result = await component.update({name: 'evebox-agent'}, {
+                installed: true,
+                enabled: true
+              });
+            }
+
+            if (comp.installed && comp.enabled) {
+              hell.o([name + " " + state, "perform component check"], "stateApply", "info");
+              await component.checkComponent(comp.name);
             }
 
             hell.o([name + " " + state, "return dummy data"], "stateApply", "info");
@@ -981,6 +1049,28 @@ module.exports = function (component) {
 
           component.state_busy = false;
           await component.update({name: comp.name}, {loading: false});
+          comp = await component.findOne({where: {name: comp.name}});
+
+          if (comp.name == "evebox" && (!comp.installed || !comp.enabled)) {
+            hell.o([name + " " + state, "exebox disabled, do the same for evebox-agent"], "stateApply", "info");
+            update_result = await component.update({name: 'evebox-agent'}, {
+              installed: false,
+              enabled: false
+            });
+          }
+
+          if (comp.name == "evebox" && comp.installed && comp.enabled) {
+            hell.o([name + " " + state, "exebox enabled, do the same for evebox-agent"], "stateApply", "info");
+            update_result = await component.update({name: 'evebox-agent'}, {
+              installed: true,
+              enabled: true
+            });
+          }
+
+          if (comp.installed && comp.enabled) {
+            hell.o([name + " " + state, "perform component check"], "stateApply", "info");
+            await component.checkComponent(comp.name);
+          }
 
           hell.o([name + " " + state, "done"], "stateApply", "info");
 
@@ -1006,10 +1096,64 @@ module.exports = function (component) {
       {arg: "name", type: "string", required: true},
       {arg: "state", type: "string", required: true},
       {arg: "debug", type: "boolean", required: false},
-      {arg: "options", type: "object", http: "optionsFromRequest"}
+      {arg: "options", type: "object", http: "optionsFromRequest"},
+      {arg: "req", type: "object", http: {source: "req"}}
     ],
     returns: {type: 'object', root: true},
     http: {path: '/stateApply', verb: 'post', status: 200}
   });
+
+
+  /**
+   * TEST
+   */
+  component.stateApplyTEST = function (name, state, debug, options, httpReq, cb) {
+    hell.o("start", "stateApplyTest", "info");
+    hell.o("appy no timeout to http call", "stateApplyTest", "info");
+    httpReq.setTimeout(0);
+
+    return new Promise((success, reject) => {
+
+      (async function () {
+        try {
+
+          hell.o(["start", new Date()], "stateApplyTest", "info");
+          let timer = 60000 * 20;
+
+          setTimeout(function () {
+
+            hell.o([name + " " + state, "done"], "stateApplyTest", "info");
+            hell.o(["end", new Date()], "stateApplyTest", "info");
+
+            let output = {message: "end of test"};
+            if (cb) return cb(null, output);
+            return success(output);
+
+          }, timer);
+
+        } catch (err) {
+          hell.o(err, "stateApplyTest", "error");
+          if (cb) return cb({name: "Error", status: 400, message: err.message, data: err});
+          return reject(err);
+        }
+
+      })(); // async
+
+    }); // promise
+
+  };
+
+  component.remoteMethod('stateApplyTEST', {
+    accepts: [
+      {arg: "name", type: "string", required: true},
+      {arg: "state", type: "string", required: true},
+      {arg: "debug", type: "boolean", required: false},
+      {arg: "options", type: "object", http: "optionsFromRequest"},
+      {arg: "req", type: "object", http: {source: "req"}}
+    ],
+    returns: {type: 'object', root: true},
+    http: {path: '/stateApplyTEST', verb: 'post', status: 200}
+  });
+
 
 };

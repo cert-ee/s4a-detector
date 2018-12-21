@@ -33,8 +33,8 @@ module.exports = function (boot) {
 
       let versions_load = util.promisify(boot.app.models.system_info.version);
       let versions = await versions_load();
-      let server_numbers = parseInt(versions.server.replace(/[^0-9]/g, ''));
-      hell.o(["this product server version: ", server_numbers], "boot", "info");
+      let installer_version = parseInt(versions.main.replace(/[^0-9]/g, ''));
+      hell.o(["this product package version: ", installer_version], "boot", "info");
 
       hell.o("find", "boot", "info");
       let system_info_result = await boot.app.models.system_info.findOne({name: "update_version"});
@@ -43,27 +43,29 @@ module.exports = function (boot) {
         hell.o(system_info_result, "boot", "info");
 
         system_info_result = await boot.app.models.system_info.create(
-          {name: "update_version", friendly_name: "App version", description: "", data: server_numbers}
+          {name: "update_version", friendly_name: "App version", description: "", data: installer_version}
         );
         system_info_result = await boot.app.models.system_info.findOne({where: {name: "update_version"}});
       }
 
-      hell.o([system_info_result.data, server_numbers], "boot", "info");
+      let database_installer_version = system_info_result.data;
 
-      if (system_info_result.data === undefined || system_info_result.data < server_numbers) {
+      hell.o([database_installer_version, installer_version], "boot", "info");
+
+      if (database_installer_version === undefined || database_installer_version < installer_version) {
         hell.o("start updates check", "boot", "info");
-        hell.o(["package json", server_numbers], "boot", "info");
-        hell.o(["system_info.update_version", system_info_result.data], "boot", "info");
+        hell.o(["package json", installer_version], "boot", "info");
+        hell.o(["system_info.update_version", database_installer_version], "boot", "info");
 
         let something_to_update = false;
-        if (server_numbers <= 178) {
+        if (database_installer_version <= 178) {
           something_to_update = true;
           hell.o("need to destroy old feeds n settings", "boot", "info");
           await boot.app.models.yara.destroyAll();
           await boot.app.models.wise.destroyAll();
           await boot.app.models.system_info.destroyAll();
           await boot.app.models.system_info.create(
-            {name: "update_version", friendly_name: "App version", description: "", data: server_numbers}
+            {name: "update_version", friendly_name: "App version", description: "", data: installer_version}
           );
 
           hell.o("add default moloch configuration", "boot", "info");
@@ -75,10 +77,10 @@ module.exports = function (boot) {
                 exclude_ips: []
               }
           });
-
+          hell.o("---", "boot", "info");
         }
 
-        if (server_numbers <= 2158) {
+        if (database_installer_version <= 2158) {
           something_to_update = true;
           hell.o("remove current notify entries", "boot", "info");
           await boot.app.models.notify.destroyAll();
@@ -92,9 +94,10 @@ module.exports = function (boot) {
                 exclude_ips: []
               }
           });
+          hell.o("---", "boot", "info");
         }
 
-        if (server_numbers <= 2174) {
+        if (database_installer_version <= 2174) {
           something_to_update = true;
           hell.o("update elastic param", "boot", "info");
           let elastic_comp = await boot.app.models.component.findOne({where: {name: "elastic"}});
@@ -123,30 +126,53 @@ module.exports = function (boot) {
 
           await boot.app.models.settings.update({id: current_settings.id}, update_paths);
 
+          hell.o("---", "boot", "info");
         }
 
-        if (server_numbers <= 2200) {
+        if (database_installer_version <= 2200) {
           something_to_update = true;
           hell.o("update elastic param", "boot", "info");
-          let elastic_comp = await boot.app.models.component.findOne({where: {name: "elastic"}});
           await boot.app.models.component.update({name: "elastic"}, {installed: true});
+          hell.o("---", "boot", "info");
         }
 
-        if (server_numbers <= 2209) {
+        if (database_installer_version <= 2209) {
           something_to_update = true;
           hell.o("update components check time", "boot", "info");
           let cur_settings = await boot.app.models.settings.findOne();
           await boot.app.models.settings.update({id: cur_settings.id}, {job_interval_components_check: 5});
+          hell.o("---", "boot", "info");
         }
 
+        if (database_installer_version <= 2212) {
+
+          let all_components = await boot.app.models.component.find();
+          for (let compo of all_components) {
+            hell.o([compo.name, "reset components version fields"], "boot", "info");
+            let compo_update = {
+              version_status: true,
+              version_installed: "",
+              version_available: ""
+            };
+            await boot.app.models.component.update({name: compo.name}, compo_update);
+          }
+          hell.o("---", "boot", "info");
+        }
+
+        if (database_installer_version <= 2214) {
+          something_to_update = true;
+          hell.o("update elastic enabled param", "boot", "info");
+          await boot.app.models.component.update({name: "elastic"}, {enabled: true});
+          hell.o("---", "boot", "info");
+        }
 
         if (!something_to_update) {
           hell.o("currently no updates", "boot", "info");
         }
 
       }
-      hell.o(["save update / patch level", server_numbers], "boot", "info");
-      await boot.app.models.system_info.update({name: "update_version"}, {data: server_numbers});
+      hell.o(["save update / patch level", installer_version], "boot", "info");
+      await boot.app.models.system_info.update({name: "update_version"}, {data: installer_version});
 
       hell.o("done", "initialize", "info");
 

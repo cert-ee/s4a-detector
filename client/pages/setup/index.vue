@@ -23,6 +23,7 @@
               <p>{{ $t('setup.only_a_minute') }}</p>
               <p>{{ $t('setup.only_a_minute_2') }}</p>
               <img src="~/assets/image/eu_logo_horizontal.jpg" width="35%" class="mb-4"/>
+              <img src="~/assets/image/sisejulgeolekufond.png" width="35%" class="mb-4"/>
             </v-flex>
             <v-flex xs12 class="text-xs-right">
               <v-btn color="primary" @click="currentStep++; steps[0].complete = true">{{ $t('continue') }}</v-btn>
@@ -92,21 +93,21 @@
               <v-divider class="mb-3"></v-divider>
               <v-flex xs12 class="text-xs-center">
                 <p class="headline">{{ $t('setup.recommended_specifications') }}</p>
-                <a :href="$t('setup.recommended_specifications_docs_url')" target="_blank" >
+                <a :href="$t('setup.recommended_specifications_docs_url')" target="_blank">
                   {{$t('setup.recommended_specifications_docs_url')}}
                 </a>
               </v-flex>
 
               <v-divider class="mb-3"></v-divider>
               <v-flex xs12 class="text-xs-center">
-                <p class="headline" >{{$t('setup.sys_cpu')}}</p>
+                <p class="headline">{{$t('setup.sys_cpu')}}</p>
                 {{system_info.cpu.model}} | {{$t('setup.sys_cpu_cores')}} {{system_info.cpu.count}}
               </v-flex>
 
               <v-divider class="mb-3"></v-divider>
 
               <v-flex xs12 class="text-xs-center">
-                <p class="headline" >{{$t('setup.sys_mem')}}</p>
+                <p class="headline">{{$t('setup.sys_mem')}}</p>
                 {{ system_info.mem | kbytesToSize }}
               </v-flex>
 
@@ -150,7 +151,8 @@
                   <td>{{ props.item.friendly_name }}</td>
                   <td>{{ props.item.message }}</td>
                   <td>
-                    <v-checkbox color="primary" :disabled="props.item.preset === true || props.item.installed === true || props.item.after_approval === true"
+                    <v-checkbox color="primary"
+                                :disabled="props.item.preset === true || props.item.installed === true || props.item.after_approval === true"
                                 v-model="props.item.going_to_install === true"></v-checkbox>
                   </td>
                 </template>
@@ -195,18 +197,21 @@
             </v-flex>
             <v-flex xs6 class="text-xs-right">
               <v-btn color="primary" @click="runSetup(false)">Install components</v-btn>
-              <v-btn v-if="$store.state.debugMode" color="warning" @click="runSetup(true)">Registration only ( demo )</v-btn>
+              <v-btn v-if="$store.state.debugMode" color="warning" @click="runSetup(true)">Registration only ( demo )
+              </v-btn>
             </v-flex>
           </v-layout>
         </v-stepper-content>
         <v-stepper-content step="6">
           <v-layout row wrap>
-            <v-flex xs12 class="text-xs-center mb-3" >
-              <div class="display-1" v-if="feedback_button == false && registration_button == false && finish_button == false">
+            <v-flex xs12 class="text-xs-center mb-3">
+              <div class="display-1"
+                   v-if="feedback_button == false && registration_button == false && finish_button == false">
                 {{ $t('setup.installation') }}
               </div>
               <div class="display-1 red--text" v-if="feedback_button">{{ $t('setup.installation_failed') }}</div>
-              <div class="display-1 warning--text" v-if="registration_button">{{ $t('setup.registration_failed') }}</div>
+              <div class="display-1 warning--text" v-if="registration_button">{{ $t('setup.registration_failed') }}
+              </div>
               <div class="display-1 success--text" v-if="finish_button">{{ $t('setup.installation_done') }}</div>
               <v-divider></v-divider>
             </v-flex>
@@ -214,15 +219,16 @@
               <v-data-table :headers="install_headers" :items="components_all"
                             :pagination.sync="install_pagination" hide-actions>
                 <template slot="items" slot-scope="props">
+
                   <td>{{ props.item.friendly_name }}</td>
                   <td>
-                    <v-progress-circular v-if="props.item.loading" indeterminate class="primary--text"></v-progress-circular>
-                    <span class="mr-3" v-if="props.item.going_to_install == false">
-                      <v-icon>check_circle</v-icon> {{ $t('setup.item_skipped') }}
-                    </span>
-                    <span class="mr-3" v-if="props.item.after_approval == true">
-                      <v-icon>check_circle</v-icon> {{ $t('setup.item_telegraf_later') }}
-                    </span>
+
+
+                    <v-progress-circular v-if="props.item.loading" indeterminate
+                                         class="primary--text"></v-progress-circular>
+
+                    <span class="mr-3" v-if="props.item.after_approval === true"><v-icon>check_circle</v-icon>{{ $t('setup.item_after_approval_later') }}</span>
+
                     <div v-if="props.item.salt_done">
                       <span class="success--text">
                         <span class="mr-3" v-if="props.item.installed">
@@ -230,11 +236,11 @@
                         </span>
                       </span>
                       <span class="red--text">
-                        <span class="mr-3" v-if="props.item.installed == false">
+                        <span class="mr-3" v-if="props.item.installed === false">
                           <v-icon class="red--text">info</v-icon> {{ $t('setup.item_errors') }}
                         </span>
                       </span>
-                      <span v-if="props.item.logs != false">
+                      <span v-if="props.item.logs !== false">
                         <v-tooltip right>
                           <v-btn icon slot="activator"
                                  @click.stop="log = {name: props.item.friendly_name, data: props.item.logs }; logDialog = true"
@@ -244,7 +250,7 @@
                           <span>{{ $t('setup.view_stdout_log') }}</span>
                         </v-tooltip>
                       </span>
-                      <span class="red--text" v-if="props.item.logs_error != false">
+                      <span class="red--text" v-if="props.item.logs_error !== false">
                         <v-tooltip right>
                           <v-btn class="red--text" icon slot="activator"
                                  @click.stop="log = {name: props.item.friendly_name + ' error ', data: props.item.logs_error }; logDialog = true"
@@ -255,47 +261,52 @@
                         </v-tooltip>
                       </span>
                     </div>
+
                   </td>
+
                 </template>
               </v-data-table>
             </v-flex>
 
             <v-flex xs12 class="mb-3" v-if="feedback_result">
 
-              <v-flex xs12 class="text-xs-left"  >
+              <v-flex xs12 class="text-xs-left">
                 <p class="red--text title">{{ $t('setup.setup_failed') }}</p>
                 <p>
                   {{ $t('setup.feedback_case_number') }}: <b>{{feedback_result.case_number}}</b> <br/>
                   <br/><br/>
-                  <a :href="feedback_result.faq_url" v-if="feedback_result.faq_url" target="_blank">{{feedback_result.faq_url }}</a> <br/>
+                  <a :href="feedback_result.faq_url" v-if="feedback_result.faq_url" target="_blank">{{feedback_result.faq_url
+                    }}</a> <br/>
                   <br/><br/>
                 </p>
               </v-flex>
             </v-flex>
 
 
-            <v-flex xs12 class="mb-3" v-if="feedback_button" >
+            <v-flex xs12 class="mb-3" v-if="feedback_button">
 
-              <v-flex xs12 class="text-xs-left"  >
-              <p class="red--text title">{{ $t('setup.setup_failed') }}</p>
-              <p>
-                {{ $t('setup.setup_failed_extra') }}
-              </p>
+              <v-flex xs12 class="text-xs-left">
+                <p class="red--text title">{{ $t('setup.setup_failed') }}</p>
                 <p>
-                {{ $t('setup.setup_failed_extra_2') }}
+                  {{ $t('setup.setup_failed_extra') }}
                 </p>
-            </v-flex>
+                <p>
+                  {{ $t('setup.setup_failed_extra_2') }}
+                </p>
+              </v-flex>
 
               <v-flex xs12 class="mb-3">
                 <v-textarea label="Optional comment" v-model="feedback_comment"></v-textarea>
               </v-flex>
-            <v-flex xs12 class="text-xs-right">
-              <v-btn color="error" @click="sendFeedback" >{{ $t('setup.send_feedback') }}</v-btn>
-            </v-flex>
+              <v-flex xs12 class="text-xs-right">
+                <v-btn color="error" @click="sendFeedback">{{ $t('setup.send_feedback') }}</v-btn>
+              </v-flex>
             </v-flex>
 
             <v-flex xs12 class="text-xs-right">
-              <v-btn color="warning" @click="postRegistration" v-if="registration_button">{{ $t('setup.repost_registration') }}</v-btn>
+              <v-btn color="warning" @click="postRegistration" v-if="registration_button">{{
+                $t('setup.repost_registration') }}
+              </v-btn>
             </v-flex>
 
             <v-flex xs12 class="text-xs-right">

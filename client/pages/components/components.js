@@ -17,22 +17,57 @@ export default {
 
     computed: {
         search: {
-            get() { return this.$store.state.components.search; },
-            set(value) { this.$store.commit('components/setSearch', value); }
+            get() {
+                return this.$store.state.components.search;
+            },
+            set(value) {
+                this.$store.commit('components/setSearch', value);
+            }
         },
 
         pagination: {
-            get() { return this.$store.state.components.pagination; },
-            set(value) { this.$store.commit('components/setPagination', value); }
+            get() {
+                return this.$store.state.components.pagination;
+            },
+            set(value) {
+                this.$store.commit('components/setPagination', value);
+            }
         },
 
         components: {
-            get() { return this.$store.state.components.components; },
-            set(value) { return this.$store.commit('components/setComponents', value); }
+            get() {
+                return this.$store.state.components.components;
+            },
+            set(value) {
+                return this.$store.commit('components/setComponents', value);
+            }
         }
     },
 
     methods: {
+        async applyStateTEST(component, state) {
+            let comp = Object.assign({}, component);
+
+            console.log("TEST START", new Date());
+            try {
+                comp.loading = true;
+                let params = {name: comp.name, state: state};
+                let salt_result = await this.$axios.$post('components/stateApplyTEST', params);
+                console.log("TEST END", new Date());
+                comp = await this.$axios.$get(`components/${comp.name}`);
+
+                // comp.logs = salt_result.logs;
+                // comp.logs_error = salt_result.logs_error;
+            } catch (err) {
+                console.log("TEST END ERROR", new Date());
+                console.log(err);
+                this.$store.dispatch('handleError', err);
+            } finally {
+                comp.loading = false;
+
+                this.$store.commit('components/updateComponent', comp);
+            }
+        },
         async applyStateToComponent(component, state) {
             let comp = Object.assign({}, component);
 
@@ -45,6 +80,7 @@ export default {
                 // comp.logs = salt_result.logs;
                 // comp.logs_error = salt_result.logs_error;
             } catch (err) {
+                console.log(err);
                 this.$store.dispatch('handleError', err);
             } finally {
                 comp.loading = false;

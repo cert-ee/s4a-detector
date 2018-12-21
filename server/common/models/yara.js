@@ -48,7 +48,7 @@ module.exports = function (yara) {
     (async function () {
       try {
         let moloch = await yara.app.models.component.findOne({where: {name: 'moloch'}});
-        if (!moloch.configuration.yara_enabled) {
+        if (!moloch.configuration.yara_enabled || !moloch.enabled) {
           hell.o("yara disabled, done", "checkRoutine", "info");
           cb(null, {message: "disabled"});
           return true;
