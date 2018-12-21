@@ -31,95 +31,98 @@
 
                   >
                     <tr v-show="props.item.installed === true || props.item.installable === true">
-                    <td>
-                      <span v-show="props.item.web_url === 'false'">{{ props.item.friendly_name }}</span>
-                      <a v-show="props.item.web_url !== 'false'" :href="props.item.web_url" target="_blank">{{
-                        props.item.friendly_name }}</a>
-                    </td>
-                    <td :class="props.item.status === true ? 'success--text' : 'error--text'">
+                      <td>
+                        <span v-show="props.item.web_url === 'false'">{{ props.item.friendly_name }}</span>
+                        <a v-show="props.item.web_url !== 'false'" :href="props.item.web_url" target="_blank">{{
+                          props.item.friendly_name }}</a>
+                      </td>
+                      <td :class="props.item.status === true ? 'success--text' : 'error--text'">
 
-                      <div v-show="props.item.installed === true">
-                        <v-icon v-show="props.item.status === true" class="success--text">check_circle</v-icon>
-                        <v-icon v-show="props.item.status === false" class="error--text">warning</v-icon>
-                        {{ props.item.statusStr }}
-                      </div>
-                      <span v-show="props.item.installed === false" class="deep-orange--text">{{ $t('components.not_installed') }}</span>
-                      <span v-show="props.item.installed === true && props.item.enabled === false"
-                            class="deep-orange--text">{{ $t('disabled') }}</span>
-                    </td>
-                    <td :class="props.item.version_status === true ? 'success--text' : 'warning--text'">
-                    <span v-show="props.item.version_status === false">
-                      <v-icon class="warning--text">warning</v-icon><br/>
+                        <div v-show="props.item.installed === true">
+                          <v-icon v-show="props.item.status === true" class="success--text">check_circle</v-icon>
+                          <v-icon v-show="props.item.status === false" class="error--text">warning</v-icon>
+                          {{ props.item.statusStr }}
+                        </div>
+                        <span v-show="props.item.installed === false" class="deep-orange--text">{{ $t('components.not_installed') }}</span>
+                        <span v-show="props.item.installed === true && props.item.enabled === false"
+                              class="deep-orange--text">{{ $t('disabled') }}</span>
+                      </td>
+                      <td :class="props.item.version_status === true ? 'success--text' : 'warning--text'">
+                    <span v-show="props.item.version_status === false || props.item.version_hold === true">
+                      <v-icon class="warning--text" v-show="props.item.version_status === false">warning</v-icon><br/>
                         {{ $t('components.version_available') }}:
                         <br/>
                         {{ props.item.version_available }}
                         <br/>
+                        <span v-show="props.item.version_hold === true">
+                          {{ $t('components.version_hold') }} <br/>
+                        </span>
+                        <br/>
                     </span>
-                      <span v-show="props.item.version_status === false">
-                      {{ $t('components.version_installed') }}: <br/>
-                    </span>
-                      {{ props.item.version_installed }}
+                        <span v-show="props.item.version_status === false || props.item.version_hold === true">
+                          {{ $t('components.version_installed') }}: <br/>
+                        </span>
+                        {{ props.item.version_installed }}
+                      </td>
+                      <td>
+                        <v-btn small color="warning"
+                               v-show="props.item.installed === true && props.item.restartable === true"
+                               :loading="props.item.loading"
+                               @click="applyStateToComponent(props.item, 'restart')">
+                          {{ $t('components.restart') }}
+                        </v-btn>
+                        <v-btn small color="primary" v-show="props.item.installed === false && props.item.installable"
+                               :loading="props.item.loading" @click="applyStateToComponent(props.item, 'install')">
+                          {{ $t('components.install') }}
+                        </v-btn>
+                        <v-btn small color="error" v-show="props.item.installed === true && props.item.installable"
+                               :loading="props.item.loading" @click="applyStateToComponent(props.item, 'uninstall')">
+                          {{ $t('components.uninstall') }}
+                        </v-btn>
 
-                    </td>
-                    <td>
-                      <v-btn small color="warning"
-                             v-show="props.item.installed === true && props.item.restartable === true"
-                             :loading="props.item.loading"
-                             @click="applyStateToComponent(props.item, 'restart')">
-                        {{ $t('components.restart') }}
-                      </v-btn>
-                      <v-btn small color="primary" v-show="props.item.installed === false && props.item.installable"
-                             :loading="props.item.loading" @click="applyStateToComponent(props.item, 'install')">
-                        {{ $t('components.install') }}
-                      </v-btn>
-                      <v-btn small color="error" v-show="props.item.installed === true && props.item.installable"
-                             :loading="props.item.loading" @click="applyStateToComponent(props.item, 'uninstall')">
-                        {{ $t('components.uninstall') }}
-                      </v-btn>
-
-                      <v-btn small color="primary"
-                             v-show="props.item.installed === true && props.item.enabled === false && props.item.toggleable"
-                             :loading="props.item.loading" @click="applyStateToComponent(props.item, 'enabled')">
-                        {{ $t('components.enable') }}
-                      </v-btn>
-                      <v-btn small color="error"
-                             v-show="props.item.installed === true && props.item.enabled === true && props.item.toggleable"
-                             :loading="props.item.loading" @click="applyStateToComponent(props.item, 'disabled')">
-                        {{ $t('components.disable') }}
-                      </v-btn>
-                      <v-btn small info v-show="props.item.installed === true && props.item.enabled === true"
-                             :loading="props.item.loading" @click="recheckComponentStatus(props.item)">
-                        {{ $t('components.check_status') }}
-                      </v-btn>
-                    </td>
-                    <td>
-                      <div v-show="props.item.installed && props.item.logs !== false && props.item.logs !== 'false' && props.item.logs !== ' '">
-                        <v-tooltip right>
-                          <v-btn slot="activator" icon
-                                 @click.stop="log = {name: props.item.friendly_name, data: props.item.logs }; logDialog = true"
-                          >
-                            <v-icon>view_list</v-icon>
-                          </v-btn>
-                          <span>{{ $t('components.view_stdout_log') }}</span>
-                        </v-tooltip>
-                      </div>
-                      <div class="red--text"
-                           v-show="props.item.installed && props.item.logs_error != false && props.item.logs_error !== 'false' && props.item.logs_error !== ' '">
-                        <v-tooltip right>
-                          <v-btn slot="activator" class="red--text" icon
-                                 @click.stop="log = {name: props.item.friendly_name + ' error ', data: props.item.logs_error }; logDialog = true"
-                          >
-                            <v-icon>view_list</v-icon>
-                          </v-btn>
-                          <span>{{ $t('components.view_stderr_log') }}</span>
-                        </v-tooltip>
-                      </div>
-                    </td>
-                    <td :class="props.item.status === true ? 'success--text' : 'error--text'">
+                        <v-btn small color="primary"
+                               v-show="props.item.installed === true && props.item.enabled === false && props.item.toggleable"
+                               :loading="props.item.loading" @click="applyStateToComponent(props.item, 'enabled')">
+                          {{ $t('components.enable') }}
+                        </v-btn>
+                        <v-btn small color="error"
+                               v-show="props.item.installed === true && props.item.enabled === true && props.item.toggleable"
+                               :loading="props.item.loading" @click="applyStateToComponent(props.item, 'disabled')">
+                          {{ $t('components.disable') }}
+                        </v-btn>
+                        <v-btn small info v-show="props.item.installed === true && props.item.enabled === true"
+                               :loading="props.item.loading" @click="recheckComponentStatus(props.item)">
+                          {{ $t('components.check_status') }}
+                        </v-btn>
+                      </td>
+                      <td>
+                        <div v-show="props.item.installed && props.item.logs !== false && props.item.logs !== 'false' && props.item.logs !== ' '">
+                          <v-tooltip right>
+                            <v-btn slot="activator" icon
+                                   @click.stop="log = {name: props.item.friendly_name, data: props.item.logs }; logDialog = true"
+                            >
+                              <v-icon>view_list</v-icon>
+                            </v-btn>
+                            <span>{{ $t('components.view_stdout_log') }}</span>
+                          </v-tooltip>
+                        </div>
+                        <div class="red--text"
+                             v-show="props.item.installed && props.item.logs_error != false && props.item.logs_error !== 'false' && props.item.logs_error !== ' '">
+                          <v-tooltip right>
+                            <v-btn slot="activator" class="red--text" icon
+                                   @click.stop="log = {name: props.item.friendly_name + ' error ', data: props.item.logs_error }; logDialog = true"
+                            >
+                              <v-icon>view_list</v-icon>
+                            </v-btn>
+                            <span>{{ $t('components.view_stderr_log') }}</span>
+                          </v-tooltip>
+                        </div>
+                      </td>
+                      <td :class="props.item.status === true ? 'success--text' : 'error--text'">
                       <span v-show="props.item.installed">
                         {{ props.item.message }}
                       </span>
-                    </td>
+                      </td>
                     </tr>
                   </template>
                 </v-data-table>

@@ -79,6 +79,7 @@
   "components": {
     "title": "Components",
     "versions": "Versions",
+    "version_hold": "( Installed version marked to hold )",
     "version_installed": "Version installed",
     "version_available": "Version available",
     "view_stdout_log": "View stdout log",
