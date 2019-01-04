@@ -28,6 +28,7 @@ module.exports = function (component) {
       restartable: false,
       status: false,
       version_status: true,
+      version_hold: false,
       version_installed: "",
       version_available: ""
     },
@@ -48,6 +49,7 @@ module.exports = function (component) {
       restartable: false,
       status: false,
       version_status: true,
+      version_hold: false,
       version_installed: "",
       version_available: ""
     },
@@ -67,6 +69,7 @@ module.exports = function (component) {
       restartable: false,
       status: false,
       version_status: true,
+      version_hold: false,
       version_installed: "",
       version_available: "",
       configuration:
@@ -95,6 +98,7 @@ module.exports = function (component) {
       restartable: true,
       status: false,
       version_status: true,
+      version_hold: false,
       version_installed: "",
       version_available: ""
     },
@@ -115,6 +119,7 @@ module.exports = function (component) {
       restartable: true,
       status: false,
       version_status: true,
+      version_hold: false,
       version_installed: "",
       version_available: ""
     },
@@ -136,6 +141,7 @@ module.exports = function (component) {
       restartable: true,
       status: false,
       version_status: true,
+      version_hold: false,
       version_installed: "",
       version_available: ""
     },
@@ -155,6 +161,7 @@ module.exports = function (component) {
       restartable: true,
       status: false,
       version_status: true,
+      version_hold: false,
       version_installed: "",
       version_available: ""
     },
@@ -175,6 +182,7 @@ module.exports = function (component) {
       restartable: true,
       status: false,
       version_status: true,
+      version_hold: false,
       version_installed: "",
       version_available: ""
     },
@@ -195,6 +203,7 @@ module.exports = function (component) {
       restartable: true,
       status: false,
       version_status: true,
+      version_hold: false,
       version_installed: "",
       version_available: "",
       configuration:
@@ -219,6 +228,7 @@ module.exports = function (component) {
       restartable: true,
       status: true,
       version_status: true,
+      version_hold: false,
       version_installed: "",
       version_available: "",
       configuration:
@@ -242,6 +252,7 @@ module.exports = function (component) {
       restartable: true,
       status: false,
       version_status: true,
+      version_hold: false,
       version_installed: "",
       version_available: ""
     },
@@ -261,6 +272,7 @@ module.exports = function (component) {
       restartable: true,
       status: false,
       version_status: true,
+      version_hold: false,
       version_installed: "",
       version_available: ""
     }
@@ -656,6 +668,7 @@ module.exports = function (component) {
       version_installed: "Error",
       version_available: "error",
       version_status: false,
+      version_hold: false,
       logs: "",
       logs_error: "",
       exit_code: 0
@@ -668,6 +681,49 @@ module.exports = function (component) {
         spawnOptions: {/* other options for spawn */}
       };
 
+      // hell.o("/usr/bin/apt-mark showhold", "checkPackageVersions", "info");
+      // let showhold = await component.shelljsCall("/usr/bin/apt-mark showhold");
+      // console.log( showhold );
+
+      /*
+      APT-MARK
+       */
+      let aptmark_output = {
+        logs: "",
+        logs_error: "",
+        exit_code: 0
+      };
+      hell.o("/usr/bin/apt-mark showhold", "checkPackageVersions", "info");
+      let aptmark = sudo(['-E', '/usr/bin/apt-mark', 'showhold'], options);
+
+      aptmark.stdout.on('data', function (data) {
+        aptmark_output.logs += data.toString();
+        aptmark_output.logs_error += "";
+      });
+
+      aptmark.stderr.on('data', function (data) {
+        aptmark_output.logs += data.toString();
+        aptmark_output.logs_error += data.toString().trim();
+      });
+
+      aptmark_output.exit_code = await new Promise((done) => {
+        aptmark.on('close', function (exit_code) {
+          aptmark_output.exit_code = exit_code;
+          done(exit_code);
+          return;
+        });
+      });
+
+      for (let row of aptmark_output.logs.split('\n')) {
+        if (row.match(package_name)) {
+          hell.o([package_name, "in apt hold list"], "checkPackageVersions", "info");
+          output.version_hold = true;
+        }
+      }
+
+      /*
+      APT-CACHE
+       */
       hell.o("/usr/bin/apt-cache policy " + package_name, "checkPackageVersions", "info");
       let child = sudo(['-E', '/usr/bin/apt-cache', 'policy', package_name], options);
 
@@ -701,7 +757,7 @@ module.exports = function (component) {
         }
       }
 
-      if (output.version_installed === output.version_available) {
+      if (output.version_installed === output.version_available || output.version_hold) {
         output.version_status = true;
       }
 
@@ -768,9 +824,13 @@ module.exports = function (component) {
           if (process.env.NODE_ENV == "dev") {
             package_versions = {
               version_status: true,
+              version_hold: false,
               version_installed: "old",
               version_available: "new",
             };
+            if (comp.name == "elastic") {
+              package_versions.version_hold = true;
+            }
           } else {
             package_versions = await component.checkPackageVersions(comp.package_name);
           }
@@ -783,6 +843,7 @@ module.exports = function (component) {
             logs: check_result.logs,
             logs_error: check_result.logs_error,
             version_status: package_versions.version_status,
+            version_hold: package_versions.version_hold,
             version_installed: package_versions.version_installed,
             version_available: package_versions.version_available
           };

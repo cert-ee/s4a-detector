@@ -130,6 +130,12 @@
       "description": "Package version ok",
       "default": true
     },
+    "version_hold": {
+      "type": "boolean",
+      "required": false,
+      "description": "Package in hold list",
+      "default": false
+    },
     "version_installed": {
       "type": "string",
       "required": false,

@@ -67,7 +67,7 @@ module.exports = function (report) {
 
       try {
         let component_fields = ["name", "friendly_name", "package_name", "status", "message", "version_status", "version_installed",
-          "version_available"];
+          "version_available", "version_hold"];
         let component_statuses = await report.app.models.component.find({fields: component_fields});
 
         let rules_count = await report.app.models.rule.count();
