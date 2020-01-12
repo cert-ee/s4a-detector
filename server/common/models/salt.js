@@ -20,7 +20,7 @@ module.exports = function (salt) {
       (async function () {
         try {
 
-          let states = ['install', 'uninstall', 'enabled', 'disabled', 'restart'];
+          let states = ['install', 'uninstall', 'enabled', 'disabled', 'restart', 'reload'];
           let state = input.state;
           let state_name = 'detector/' + input.name;
 

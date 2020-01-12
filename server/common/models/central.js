@@ -56,6 +56,7 @@ module.exports = function (central) {
         baseURL: central.CENTRAL_API,
         headers: {'X-Access-Token': central.CENTRAL_TOKEN}
       });
+      central.central_connection.defaults.timeout = 300000; // 5 min
 
       hell.o("done", "initialize", "info");
       return true;

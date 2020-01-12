@@ -154,11 +154,43 @@
                 </v-layout>
 
 
+                <v-subheader>{{ $t('settings.rules_full_sync') }}</v-subheader>
+                <v-divider></v-divider>
+                <v-layout row wrap>
+                  <v-flex xs6>
+                    <v-btn flat color="warning" :loading="$store.state.rulesSyncing" @click="updateRules">
+                      {{ $t('settings.rules_full_sync_button') }}
+                    </v-btn>
+                  </v-flex>
+                </v-layout>
+
                 <v-card-title primary-title>
                   <div class="headline">{{ $t('settings.moloch_settings') }}</div>
                 </v-card-title>
 
-                <template v-if="!moloch_loading">
+                <template v-if="!salt_loading">
+
+
+                  <v-subheader>{{ $t('settings.moloch_drop_tls_enabled') }}</v-subheader>
+                  <v-divider></v-divider>
+                  <v-layout row wrap>
+                    <v-flex xs6>
+                      <v-radio-group v-model="moloch.configuration.drop_tls"
+                                     @change="applyMolochChanges"
+                      >
+                        <v-radio color="primary" :label="$t('enabled')" :value="true"></v-radio>
+                      </v-radio-group>
+                    </v-flex>
+                    <v-flex xs6>
+                      <v-radio-group v-model="moloch.configuration.drop_tls"
+                                     @change="applyMolochChanges"
+                      >
+                        <v-radio color="primary" :label="$t('disabled')"
+                                 :value="false"></v-radio>
+                      </v-radio-group>
+
+                    </v-flex>
+                  </v-layout>
 
                   <v-subheader>{{ $t('settings.moloch_yara_enabled') }}</v-subheader>
                   <v-divider></v-divider>
@@ -249,7 +281,7 @@
 
                 </template>
 
-                <template v-if="moloch_loading">
+                <template v-if="salt_loading">
                   <v-layout row wrap>
                     <v-flex xs6 class="text-md-center">
                       <v-progress-circular indeterminate color="primary"></v-progress-circular>

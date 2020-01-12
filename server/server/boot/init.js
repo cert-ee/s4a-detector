@@ -39,7 +39,9 @@ module.exports = function (app) {
           schedule_rule = 30000;
         }
 
-
+        // if (job_name == "job_interval_status_check") {
+        //   schedule_rule = 10000;
+        // }
         // if (job_name == "job_interval_notify_check") {
         //   schedule_rule = 10000;
         // }

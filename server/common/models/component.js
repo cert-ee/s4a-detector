@@ -42,9 +42,9 @@ module.exports = function (component) {
       install_order: 1,
       preset: true,
       after_approval: false,
-      installed: false,
+      installed: true,
       installable: false,
-      enabled: false,
+      enabled: true,
       toggleable: false,
       restartable: false,
       status: false,
@@ -208,10 +208,51 @@ module.exports = function (component) {
       version_available: "",
       configuration:
         {
+          drop_tls: false,
           yara_enabled: false,
           wise_enabled: false,
           exclude_ips: []
         }
+    },
+    {
+      name: "molochcapture",
+      friendly_name: "Moloch Capture",
+      package_name: "moloch",
+      message: "Service",
+      network_interface_changes: false,
+      web_url: false,
+      preset: true,
+      after_approval: false,
+      installed: true,
+      installable: false,
+      enabled: true,
+      toggleable: false,
+      restartable: true,
+      status: false,
+      version_status: true,
+      version_hold: false,
+      version_installed: "",
+      version_available: ""
+    },
+    {
+      name: "molochviewer",
+      friendly_name: "Moloch Viewer",
+      package_name: "moloch",
+      message: "Service",
+      network_interface_changes: false,
+      web_url: false,
+      preset: true,
+      after_approval: false,
+      installed: true,
+      installable: false,
+      enabled: true,
+      toggleable: false,
+      restartable: true,
+      status: false,
+      version_status: true,
+      version_hold: false,
+      version_installed: "",
+      version_available: ""
     },
     {
       name: "nfsen",
@@ -299,6 +340,7 @@ module.exports = function (component) {
         if (!component_found) throw new Error("failed to create component " + comp.name);
         component_found = component_found[0];
         // lets call this part "update script", if new version has extra details"
+        // console.log(component_found);
 
         //MOLOCH CHANGES IF MISSING
         if (component_found.name === 'moloch') {
@@ -308,25 +350,29 @@ module.exports = function (component) {
           if ('exclude_ips' in component_found.configuration === false) {
             update_component = {configuration: component_found.configuration};
             update_component.configuration.exclude_ips = [];
-            if ('yara_enabled' in component_found.configuration === false) {
-              update_component.configuration.yara_enabled = false;
-            }
-            if ('wise_enabled' in component_found.configuration === false) {
-              update_component.configuration.wise_enabled = false;
-            }
-            hell.o(["update component: " + component_found.name + " defaults: configuration exclude_ips "], "initialize", "info");
+          }
+          if ('yara_enabled' in component_found.configuration === false) {
+            update_component = {configuration: component_found.configuration};
+            update_component.configuration.yara_enabled = false;
+          }
+          if ('wise_enabled' in component_found.configuration === false) {
+            update_component = {configuration: component_found.configuration};
+            update_component.configuration.wise_enabled = false;
+          }
+          if ('drop_tls' in component_found.configuration === false) {
+            update_component = {configuration: component_found.configuration};
+            update_component.configuration.drop_tls = false;
+          }
+
+          if (update_component !== undefined) {
+            hell.o(["update component: " + component_found.name + " defaults: configuration"], "initialize", "info");
             await component.update({name: comp.name}, update_component);
           }
         }
 
+        // fill in defaults if missing
         for (let params in comp) {
-          // if (params == "package_name") {
-          //   console.log("FINDME", comp.name);
-          //   console.log(comp.hasOwnProperty(params), component_found[params]);
-          // }
-          if (params === 'package_name' && comp.hasOwnProperty(params) &&
-            comp[params] !== component_found[params]
-          ) {
+          if (!comp.hasOwnProperty(params)) {
             update_component = {};
             update_component[params] = comp[params];
             console.log(update_component);
@@ -554,6 +600,8 @@ module.exports = function (component) {
           case "vpn":
           case "telegraf":
           case "s4a-detector":
+          case "molochviewer":
+          case "molochcapture":
             if (input.name == "vpn") service_name = "'openvpn@detector'";
 
             hell.o("run systemctl", "checkStatusSystemctl", "info");
@@ -597,6 +645,7 @@ module.exports = function (component) {
             });
 
             break;
+
           default:
             hell.o(["could not find component ", input], "checkStatusSystemctl", "error");
             success({message: "FAIL"});
@@ -633,6 +682,14 @@ module.exports = function (component) {
             last_message = result.statusText + " ";
           }
 
+          if (input.name == "elastic") {
+            if (result.data.status == "green" || result.data.status == "yellow" ) {
+              last_message = last_message + " Elastic status is " + result.data.status ;
+            } else {
+              throw new Error('Elastic status ' + result.data.status);
+            }
+          }
+
           success({status: true, message: last_message, logs: last_message, logs_error: "", exit_code: ""});
 
         } catch (err) {
@@ -645,6 +702,9 @@ module.exports = function (component) {
           if (err.errno !== undefined && err.errno) {
             last_message += " " + err.errno;
           }
+          // if (typeof err !== "object") {
+            last_message += " " + err;
+          // }
 
           success({status: false, message: last_message, logs: "", logs_error: last_message, exit_code: ""});
         }
@@ -896,6 +956,7 @@ module.exports = function (component) {
 
     (async function () {
       try {
+
         let result = await component.find({where: {installed: true, enabled: true}});
         hell.o("found: " + result.length, "checkRoutine", "info");
         if (!result || result.length == 0) throw new Error("no_data_found");
@@ -906,6 +967,14 @@ module.exports = function (component) {
           check_result = await component.checkComponent(comp.name);
         }
 
+        // update uninstalled components
+        let uninstalled = await component.find({where: {installed: false}});
+        for (let i = 0, l = uninstalled.length; i < l; i++) {
+          comp = uninstalled[i];
+          if (!comp.status || !comp.version_status) {
+            await component.update({name: comp.name}, {status: true, version_status: true});
+          }
+        }
         await component.app.models.central.lastSeen(null, "components", true);
         component.components_routine_active = false;
 
@@ -940,8 +1009,12 @@ module.exports = function (component) {
   component.state_busy = false;
   component.stateApply = function (name, state, debug, options, httpReq, cb) {
     hell.o("start", "stateApply", "info");
-    hell.o("appy no timeout to http call", "stateApply", "info");
-    httpReq.setTimeout(0);
+
+    if (httpReq !== undefined) {
+      // console.log( httpReq );
+      hell.o("apply no timeout to http call", "stateApply", "info");
+      httpReq.setTimeout(0);
+    }
 
     return new Promise((success, reject) => {
 
@@ -991,21 +1064,26 @@ module.exports = function (component) {
               case "uninstall":
                 comp_input.installed = false;
                 comp_input.enabled = false;
+                comp_input.version_status = true;
+                comp_input.status = true;
                 comp_input.last_message = "";
                 break;
               case "enabled":
                 comp_input.enabled = true;
                 break;
               case "disabled":
+                comp_input.installed = true;
                 comp_input.enabled = false;
-                comp_input.last_message = "";
+                comp_input.status = true;
+                // comp_input.last_message = "";
                 break;
               case "restart":
+              case "reload":
                 break;
             }
 
             //save to database
-            if (state !== "restart") {
+            if (state !== "restart" && state !== "reload") {
               update_result = await component.update({name: comp.name}, comp_input);
               hell.o([name + " " + state, update_result], "stateApply", "info");
             }
@@ -1025,6 +1103,30 @@ module.exports = function (component) {
             if (comp.name == "evebox" && comp.installed && comp.enabled) {
               hell.o([name + " " + state, "exebox enabled, do the same for evebox-agent"], "stateApply", "info");
               update_result = await component.update({name: 'evebox-agent'}, {
+                installed: true,
+                enabled: true
+              });
+            }
+
+            if (comp.name == "moloch" && (!comp.installed || !comp.enabled)) {
+              hell.o([name + " " + state, "moloch disabled, do the same for molochcapture and molochviewer"], "stateApply", "info");
+              update_result = await component.update({name: 'molochcapture'}, {
+                installed: false,
+                enabled: false
+              });
+              update_result = await component.update({name: 'molochviewer'}, {
+                installed: false,
+                enabled: false
+              });
+            }
+
+            if (comp.name == "moloch" && (comp.installed || comp.enabled)) {
+              hell.o([name + " " + state, "moloch enabled, do the same for molochcapture and molochviewer"], "stateApply", "info");
+              update_result = await component.update({name: 'molochcapture'}, {
+                installed: true,
+                enabled: true
+              });
+              update_result = await component.update({name: 'molochviewer'}, {
                 installed: true,
                 enabled: true
               });
@@ -1087,6 +1189,9 @@ module.exports = function (component) {
             case "uninstall":
               comp_input.installed = false;
               comp_input.enabled = false;
+              comp_input.version_status = true;
+              comp_input.status = true;
+              comp_input.last_message = "";
               break;
             case "enabled":
               comp_input.installed = true;
@@ -1095,12 +1200,14 @@ module.exports = function (component) {
             case "disabled":
               comp_input.installed = true;
               comp_input.enabled = false;
+              comp_input.status = true;
               break;
             case "restart":
+            case "reload":
               break;
           }
 
-          if (state !== "restart") {
+          if (state !== "restart" && state !== "reload") {
             hell.o([name + " " + state, "update db for component enabled: " +
             comp_input.enabled + " installed: " +
             comp_input.installed], "stateApply", "info");
@@ -1170,8 +1277,13 @@ module.exports = function (component) {
    */
   component.stateApplyTEST = function (name, state, debug, options, httpReq, cb) {
     hell.o("start", "stateApplyTest", "info");
-    hell.o("appy no timeout to http call", "stateApplyTest", "info");
-    httpReq.setTimeout(0);
+
+    // console.log( httpReq )
+    if (httpReq !== undefined) {
+      console.log(httpReq);
+      hell.o("appy no timeout to http call", "stateApplyTest", "info");
+      httpReq.setTimeout(0);
+    }
 
     return new Promise((success, reject) => {
 

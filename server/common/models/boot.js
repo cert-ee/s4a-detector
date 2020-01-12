@@ -9,6 +9,9 @@ module.exports = function (boot) {
    *
    * create defaults
    */
+  boot.tasks = {
+    rules_full_sync: false
+  };
   boot.initialize = async function () {
     hell.o("start", "initialize", "info");
 
@@ -163,6 +166,20 @@ module.exports = function (boot) {
           something_to_update = true;
           hell.o("update elastic enabled param", "boot", "info");
           await boot.app.models.component.update({name: "elastic"}, {enabled: true});
+          hell.o("---", "boot", "info");
+        }
+
+        if (database_installer_version <= 2214) {
+          something_to_update = true;
+          hell.o("update elastic enabled param", "boot", "info");
+          await boot.app.models.component.update({name: "elastic"}, {enabled: true});
+          hell.o("---", "boot", "info");
+        }
+
+        if (database_installer_version <= 2252) {
+          something_to_update = true;
+          hell.o("update autoupgrade enabled param", "boot", "info");
+          await boot.app.models.component.update({name: "autoupgrade"}, {enabled: true, installed: true});
           hell.o("---", "boot", "info");
         }
 

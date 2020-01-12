@@ -280,15 +280,22 @@ module.exports = function (report) {
         elastic_params.body.query = {
           bool: {
             "must": [
-              {range: {"timestamp": {"gt": "" + entry_ptr}}}
-              , {"term": {"event_type": "alert"}}
+              {
+                range: {
+                  "timestamp": {"gt": "" + entry_ptr}
+                }
+              }, {
+                "term": {
+                  "event_type": "alert"
+                }
+              }
             ]
           }
         };
 
         if (!settings.alerts_severity_all) {
           //hell.o("settings.alerts_severity_all == false", "checkAlerts", "info");
-          elastic_params.body.query.bool.must.push = {term: {"alert.severity": 1}};
+          elastic_params.body.query.bool.must.push({term: {"alert.severity": 1}});
         }
 
         elastic_params.body.size = 100;

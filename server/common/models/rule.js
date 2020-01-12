@@ -14,6 +14,9 @@ module.exports = function (rule) {
   rule.rules_routine_active = false;
   rule.checkRoutine = function (params, cb) {
     hell.o("start", "checkRoutine", "info");
+    if (params !== undefined) {
+      hell.o(params, "checkRoutine", "info");
+    }
 
     if (!rule.app.models.central.CENTRAL_ACTIVATED) {
       hell.o("central is not activated yet, return", "checkRoutine", "warn");
@@ -41,6 +44,12 @@ module.exports = function (rule) {
           params === undefined || params === null || params.full_check !== true)) {
 
           central_input = {last_rules_update: central_info.last_rules_update};
+        }
+
+        //after boot always perform full sync
+        if (!rule.app.models.boot.tasks.rules_full_sync) {
+          rule.app.models.boot.tasks.rules_full_sync = true;
+          central_input = {last_rules_update: "full"};
         }
 
         //central_input = {last_rules_update: "full"}; //initiate full sync on demand
@@ -325,8 +334,8 @@ module.exports = function (rule) {
 
         hell.o("end of rules write to file", "applyNewRules", "info");
 
-        hell.o("restart suricata to reload rules file", "applyNewRules", "info");
-        let salt_result = await rule.app.models.component.stateApply("suricata", "restart");
+        hell.o("reload suricata rules file", "applyNewRules", "info");
+        let salt_result = await rule.app.models.component.stateApply("suricata", "reload");
         hell.o(["salt result", salt_result], "applyNewRules", "info");
         if (!salt_result || salt_result.exit_code != 0) throw new Error("component_restart_failed");
 
