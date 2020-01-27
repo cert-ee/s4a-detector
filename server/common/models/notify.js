@@ -2,6 +2,7 @@
 const elasticsearch = require('elasticsearch');
 const nodemailer = require('nodemailer');
 const hell = new (require(__dirname + "/helper.js"))({module_name: "notify"});
+const os = require('os');
 
 module.exports = function (notify) {
 
@@ -165,6 +166,7 @@ module.exports = function (notify) {
         port: settings['smtp_server_port'],
         secure: settings['smtp_server_tls'],
         ignoreTLS: settings['smtp_server_force_notls'],
+        name: os.hostname()
       };
 
       if (settings['smtp_server_requires_auth']) {
