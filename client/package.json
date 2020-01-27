@@ -1,6 +1,6 @@
 {
   "name": "s4a-detector-client",
-  "version": "0.2.278",
+  "version": "0.2.281",
   "description": "s4a detector",
   "license": "MIT",
   "private": true,
@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@nuxtjs/axios": "5.9.3",
-    "highlight.js": "9.17.1",
+    "highlight.js": "^9.18.0",
     "material-design-icons-iconfont": "5.0.1",
     "nuxt": "2.11.0",
     "typeface-roboto": "0.0.75",

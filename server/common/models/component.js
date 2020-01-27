@@ -27,6 +27,7 @@ module.exports = function (component) {
       toggleable: false,
       restartable: false,
       status: false,
+      loading: false,
       version_status: true,
       version_hold: false,
       version_installed: "",
@@ -48,6 +49,7 @@ module.exports = function (component) {
       toggleable: false,
       restartable: false,
       status: false,
+      loading: false,
       version_status: true,
       version_hold: false,
       version_installed: "",
@@ -68,6 +70,7 @@ module.exports = function (component) {
       toggleable: false,
       restartable: false,
       status: false,
+      loading: false,
       version_status: true,
       version_hold: false,
       version_installed: "",
@@ -97,6 +100,7 @@ module.exports = function (component) {
       toggleable: false,
       restartable: true,
       status: false,
+      loading: false,
       version_status: true,
       version_hold: false,
       version_installed: "",
@@ -118,6 +122,7 @@ module.exports = function (component) {
       toggleable: true,
       restartable: true,
       status: false,
+      loading: false,
       version_status: true,
       version_hold: false,
       version_installed: "",
@@ -140,6 +145,7 @@ module.exports = function (component) {
       toggleable: false,
       restartable: true,
       status: false,
+      loading: false,
       version_status: true,
       version_hold: false,
       version_installed: "",
@@ -160,6 +166,7 @@ module.exports = function (component) {
       toggleable: false,
       restartable: true,
       status: false,
+      loading: false,
       version_status: true,
       version_hold: false,
       version_installed: "",
@@ -181,6 +188,7 @@ module.exports = function (component) {
       toggleable: true,
       restartable: true,
       status: false,
+      loading: false,
       version_status: true,
       version_hold: false,
       version_installed: "",
@@ -202,6 +210,7 @@ module.exports = function (component) {
       toggleable: false,
       restartable: true,
       status: false,
+      loading: false,
       version_status: true,
       version_hold: false,
       version_installed: "",
@@ -229,6 +238,7 @@ module.exports = function (component) {
       toggleable: false,
       restartable: true,
       status: false,
+      loading: false,
       version_status: true,
       version_hold: false,
       version_installed: "",
@@ -249,6 +259,7 @@ module.exports = function (component) {
       toggleable: false,
       restartable: true,
       status: false,
+      loading: false,
       version_status: true,
       version_hold: false,
       version_installed: "",
@@ -268,6 +279,7 @@ module.exports = function (component) {
       toggleable: true,
       restartable: true,
       status: true,
+      loading: false,
       version_status: true,
       version_hold: false,
       version_installed: "",
@@ -292,6 +304,7 @@ module.exports = function (component) {
       toggleable: true,
       restartable: true,
       status: false,
+      loading: false,
       version_status: true,
       version_hold: false,
       version_installed: "",
@@ -312,6 +325,7 @@ module.exports = function (component) {
       toggleable: true,
       restartable: true,
       status: false,
+      loading: false,
       version_status: true,
       version_hold: false,
       version_installed: "",
@@ -339,6 +353,9 @@ module.exports = function (component) {
         component_found = await component.findOrCreate({where: {name: comp.name}}, comp);
         if (!component_found) throw new Error("failed to create component " + comp.name);
         component_found = component_found[0];
+
+        //loading false to all components
+        await component.update({name: comp.name}, {"loading": false});
         // lets call this part "update script", if new version has extra details"
         // console.log(component_found);
 

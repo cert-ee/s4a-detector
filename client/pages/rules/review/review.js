@@ -6,6 +6,7 @@ export default {
                 {text: 'SID', align: 'left', value: 'sid'},
                 {text: this.$t('enabled'), align: 'left', value: 'enabled'},
                 {text: this.$t('rules.severity'), align: 'left', value: 'severity'},
+                {text: this.$t('rules.revision'), align: 'left', value: 'revision'},
                 {text: this.$t('rules.ruleset'), align: 'left', value: 'ruleset'},
                 {text: this.$t('rules.classtype'), align: 'left', value: 'classtype'},
                 {text: this.$t('rules.message'), align: 'left', value: 'message'},
@@ -33,6 +34,7 @@ export default {
                 message: '',
                 rule_data: '',
                 enabled: true,
+                force_disabled: false,
                 revision: '1',
                 ruleset: this.$store.state.rule_custom_name,
                 tags_changes: []
@@ -71,7 +73,10 @@ export default {
     methods: {
         async changeEnabled(rule) {
             try {
-                await this.$axios.patch(`rule_drafts/${rule.id}`, {enabled: rule.enabled});
+                await this.$axios.patch(`rule_drafts/${rule.id}`, {
+                    enabled: rule.enabled,
+                    force_disabled: !rule.enabled
+                });
             } catch (err) {
                 this.$store.dispatch('handleError', err);
             }
@@ -102,6 +107,7 @@ export default {
                 this.$refs.editRuleForm.validate();
                 if (!this.formValid) return;
                 this.editRule.enabled = !!this.editRule.enabled;
+                this.editRule.force_disabled = !this.editRule.enabled;
                 await this.$axios.patch(`rule_drafts/${this.editRule.id}`, this.editRule);
                 Object.assign(this.ruleRef, this.editRule);
                 this.editRuleDialog = false;

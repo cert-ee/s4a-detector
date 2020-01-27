@@ -78,21 +78,26 @@
                               :pagination.sync="pagination" v-model="selectedRules" select-all="primary"
                 >
                   <template slot="items" slot-scope="props">
-                    <td>
-                      <v-checkbox color="primary" hide-details v-model="props.selected"></v-checkbox>
-                    </td>
-                    <td>{{ props.item.sid }}</td>
-                    <td>{{ props.item.enabled }}</td>
-                    <td>{{ props.item.severity }}</td>
-                    <td>{{ props.item.revision }}</td>
-                    <td>{{ props.item.ruleset }}</td>
-                    <td>{{ props.item.classtype }}</td>
-                    <td>{{ props.item.message }}</td>
-                    <td>{{ props.item.tagsStr }}</td>
-                    <td>
-                      <v-icon class="pointer" @click.stop="newRule.rule_data = props.item.rule_data; ruleDataDialog = true">
-                        track_changes
-                      </v-icon>
+                      <td>
+                          <v-checkbox color="primary" hide-details v-model="props.selected"></v-checkbox>
+                      </td>
+                      <td>{{ props.item.sid }}</td>
+                      <td>{{ props.item.enabled }}
+                          <i v-if="props.item.force_disabled === true" color="primary">
+                              !
+                          </i>
+                      </td>
+                      <td>{{ props.item.severity }}</td>
+                      <td>{{ props.item.revision }}</td>
+                      <td>{{ props.item.ruleset }}</td>
+                      <td>{{ props.item.classtype }}</td>
+                      <td>{{ props.item.message }}</td>
+                      <td>{{ props.item.tagsStr }}</td>
+                      <td>
+                          <v-icon class="pointer"
+                                  @click.stop="newRule.rule_data = props.item.rule_data; ruleDataDialog = true">
+                              track_changes
+                          </v-icon>
                     </td>
                     <td>
                       <v-icon v-if="props.item.ruleset === $store.state.rule_custom_name" color="primary" class="pointer"
