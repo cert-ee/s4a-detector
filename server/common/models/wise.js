@@ -112,8 +112,10 @@ module.exports = function (wise) {
 
       //to remove unused in the end of the check
       let current_list = await wise.find();
-      let current_wise_list = []
+      let current_wise_list = [];
       for (let feed of current_list) {
+        hell.o("database feed", "saveContents", "info");
+        hell.o(feed, "saveContents", "info");
         current_wise_list.push(feed.name);
       }
 
@@ -121,13 +123,20 @@ module.exports = function (wise) {
 
       let current, output, content_path, changes_detected = false;
       for (let feed of input) {
-        console.log("feed from central", feed);
+        hell.o("feed from central", "saveContents", "info");
+        hell.o(feed, "saveContents", "info");
 
         current = await wise.findOne({where: {name: feed.name}});
-        if (!current || current.enabled !== feed.enabled) changes_detected = true;
+        if (!current || current.enabled !== feed.enabled) {
+          hell.o("feed not found, new", "saveContents", "info");
+          changes_detected = true;
+        }
 
         if (current_wise_list.length > 0 && current !== undefined && current !== null) {
-          console.log("current", current)
+          hell.o("current_wise_list", "saveContents", "info");
+          hell.o(current_wise_list, "saveContents", "info");
+          hell.o("current", "saveContents", "info");
+          hell.o(current, "saveContents", "info");
           current_wise_list = current_wise_list.filter(function (value, index, arr) {
             return value !== current.name;
           });
@@ -166,6 +175,7 @@ module.exports = function (wise) {
       // console.log(current_wise_list);
       if (current_wise_list.length > 0) {
         for (let old_feed of current_wise_list) {
+          if (!old_feed.enabled) continue;
           hell.o(["turning off old feed", old_feed], "saveContents", "info");
           await wise.update({name: old_feed}, {enabled: false});
           changes_detected = true;
@@ -176,7 +186,7 @@ module.exports = function (wise) {
         hell.o("changes detected, apply new conf", "saveContents", "info");
         await wise.generateAndApply();
         await wise.app.models.central.lastSeen(null, "wise", true);
-      }
+      } else
       {
         hell.o("no changes", "saveContents", "info");
       }

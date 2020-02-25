@@ -14,6 +14,9 @@ module.exports = function (rule) {
   rule.rules_routine_active = false;
   rule.checkRoutine = function (params, cb) {
     hell.o("start", "checkRoutine", "info");
+    if (params !== undefined) {
+      hell.o(params, "checkRoutine", "info");
+    }
 
     if (!rule.app.models.central.CENTRAL_ACTIVATED) {
       hell.o("central is not activated yet, return", "checkRoutine", "warn");
@@ -41,6 +44,12 @@ module.exports = function (rule) {
           params === undefined || params === null || params.full_check !== true)) {
 
           central_input = {last_rules_update: central_info.last_rules_update};
+        }
+
+        //after boot always perform full sync
+        if (!rule.app.models.boot.tasks.rules_full_sync) {
+          rule.app.models.boot.tasks.rules_full_sync = true;
+          central_input = {last_rules_update: "full"};
         }
 
         //central_input = {last_rules_update: "full"}; //initiate full sync on demand
@@ -95,7 +104,7 @@ module.exports = function (rule) {
           rule_info = central_result.data.rules[i];
           sid = rule_info.sid;
           enabled = rule_info.enabled;
-          revision = rule_info.revision;
+          revision = parseInt(rule_info.revision);
 
           /*
           remember latest change time for next update polling
@@ -107,6 +116,7 @@ module.exports = function (rule) {
               latest_change_central = rule_info.modified_time;
             }
           }
+
 
           let update_input, update_result, tag_rule, ruleset, rs_tags, draft_input;
           let rule_found = await rule.findOne({where: {sid: sid}});
@@ -126,11 +136,19 @@ module.exports = function (rule) {
           }
 
           /*
+           * IF RULESET HAS FORCE DISABLED
+           */
+          if (ruleset.force_disabled === true || rule_found && rule_found.force_disabled) {
+            enabled = false;
+            rule_info.enabled = false;
+          }
+
+          /*
           NEW RULE, CREATE
            */
           if (!rule_found) {
-            //hell.o([sid, "no rule found, create"], "checkRuleLine", "info");
-            if (!ruleset.automatically_enable_new_rules) {
+            hell.o([sid, "no rule found, create"], "checkRuleLine", "info");
+            if (!ruleset.skip_review) {
               rule_info.enabled = false;
             }
 
@@ -146,7 +164,7 @@ module.exports = function (rule) {
             }
 
             //if automatically is disable for ruleset, but rule should be enabled, add to drafts
-            if (!ruleset.automatically_enable_new_rules && enabled) {
+            if (!ruleset.skip_review && enabled) {
               hell.o([sid, "create draft"], "checkRuleLine", "info");
               draft_input = [{id: rule_create.id, enabled: true}];
               rule.app.models.rule_draft.more(draft_input, null, function () {
@@ -168,17 +186,18 @@ module.exports = function (rule) {
           SAME REVISION, CHECK IF ENABLED IS STILL UNCHANGED
            */
           if (rule_found.revision == revision) { //if same revision, only enable/disable changes for now
-            if (rule_found.enabled == enabled) {
+            if (rule_found.enabled == enabled || rule_found.force_disabled && !enabled) {
               // hell.o([sid, "no changes"], "checkRuleLine", "info");
               continue;
             }
           }
 
           /*
-          AUTOMATIC UPDATE ALLOWED FOR RULESET
+          SKIP REVIEW - AUTOMATIC UPDATE ALLOWED FOR RULESET
            */
-          if (ruleset.automatically_enable_new_rules) {
-            // hell.o([sid, "new revision update"], "checkRuleLine", "info");
+          if (ruleset.skip_review) {
+            hell.o([sid, "new revision update"], "checkRuleLine", "info");
+            // hell.o([sid, rule_info], "checkRuleLine", "info");
             update_result = await rule.update({id: rule_found.id}, rule_info);
             if (!update_result) throw new Error(sid + " failed to update rule");
             hell.o([sid, "update ok"], "checkRuleLine", "info");
@@ -199,7 +218,6 @@ module.exports = function (rule) {
             rule_info.id = rule_found.id;
             draft_input = [rule_info];
           }
-
           hell.o([sid, "create draft"], "checkRuleLine", "info");
 
           await rule.app.models.rule_draft.more(draft_input, null, function () {
@@ -325,8 +343,8 @@ module.exports = function (rule) {
 
         hell.o("end of rules write to file", "applyNewRules", "info");
 
-        hell.o("restart suricata to reload rules file", "applyNewRules", "info");
-        let salt_result = await rule.app.models.component.stateApply("suricata", "restart");
+        hell.o("reload suricata rules file", "applyNewRules", "info");
+        let salt_result = await rule.app.models.component.stateApply("suricata", "reload");
         hell.o(["salt result", salt_result], "applyNewRules", "info");
         if (!salt_result || salt_result.exit_code != 0) throw new Error("component_restart_failed");
 

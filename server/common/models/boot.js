@@ -9,6 +9,9 @@ module.exports = function (boot) {
    *
    * create defaults
    */
+  boot.tasks = {
+    rules_full_sync: false
+  };
   boot.initialize = async function () {
     hell.o("start", "initialize", "info");
 
@@ -163,6 +166,53 @@ module.exports = function (boot) {
           something_to_update = true;
           hell.o("update elastic enabled param", "boot", "info");
           await boot.app.models.component.update({name: "elastic"}, {enabled: true});
+          hell.o("---", "boot", "info");
+        }
+
+        if (database_installer_version <= 2214) {
+          something_to_update = true;
+          hell.o("update elastic enabled param", "boot", "info");
+          await boot.app.models.component.update({name: "elastic"}, {enabled: true});
+          hell.o("---", "boot", "info");
+        }
+
+        if (database_installer_version <= 2252) {
+          something_to_update = true;
+          hell.o("update autoupgrade enabled param", "boot", "info");
+          await boot.app.models.component.update({name: "autoupgrade"}, {enabled: true, installed: true});
+          hell.o("---", "boot", "info");
+        }
+
+        if (database_installer_version <= 2281) {
+          something_to_update = true;
+          hell.o("update ruleset model with skip_review and force_disabled", "boot", "info");
+          let rulesets = await boot.app.models.ruleset.find();
+          for (const rs of rulesets) {
+            await boot.app.models.ruleset.update({name: rs.name}, {
+              skip_review: rs.automatically_enable_new_rules,
+              force_disabled: false
+            });
+          }
+          hell.o("do some defaulting for rules");
+          let rules = await boot.app.models.rule.find(), temp_rule;
+          for (const r of rules) {
+
+            temp_rule = {
+              sid: r.sid,
+              revision: r.revision,
+              classtype: r.classtype,
+              severity: r.severity,
+              ruleset: r.ruleset,
+              enabled: r.enabled,
+              message: r.message,
+              rule_data: r.rule_data,
+              force_disabled: r.force_disabled || false,
+              feed_name: false,
+              primary: false
+            };
+
+            await boot.app.models.rule.update({id: r.id}, temp_rule);
+          }
           hell.o("---", "boot", "info");
         }
 

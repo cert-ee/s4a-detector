@@ -16,8 +16,14 @@ module.exports = function (settings) {
    * @param cb
    * @returns {Promise}
    */
-  settings.updateSetting = function (name, value, options, cb) {
+  settings.updateSetting = function (name, value, options, httpReq, cb) {
     hell.o(["update setting", "start name: " + name + " value: " + value], "updateSetting", "info");
+
+    if (httpReq !== undefined) {
+      // console.log( httpReq );
+      hell.o("apply no timeout to http call", "updateSetting", "info");
+      httpReq.setTimeout(0);
+    }
 
     (async function () {
       try {
@@ -37,9 +43,13 @@ module.exports = function (settings) {
          */
         let update_input = {};
         update_input[name] = value;
+        // console.log( "update_input" );
+        // console.log( update_input);
+
         let update_result;
 
         if (name == "auto_upgrade") {
+
           hell.o("auto_upgrade", "updateSetting", "info");
 
           let state = "enabled";
@@ -84,7 +94,8 @@ module.exports = function (settings) {
     accepts: [
       {arg: 'name', type: 'string', required: true},
       {arg: 'value', type: 'any', required: true},
-      {arg: "options", type: "object", http: "optionsFromRequest"}
+      {arg: "options", type: "object", http: "optionsFromRequest"},
+      {arg: "req", type: "object", http: {source: "req"}}
     ],
     returns: {type: 'object', root: true},
     http: {path: '/updateSetting', verb: 'post', status: 200}

@@ -2,6 +2,7 @@
 const elasticsearch = require('elasticsearch');
 const nodemailer = require('nodemailer');
 const hell = new (require(__dirname + "/helper.js"))({module_name: "notify"});
+const os = require('os');
 
 module.exports = function (notify) {
 
@@ -165,6 +166,7 @@ module.exports = function (notify) {
         port: settings['smtp_server_port'],
         secure: settings['smtp_server_tls'],
         ignoreTLS: settings['smtp_server_force_notls'],
+        name: os.hostname()
       };
 
       if (settings['smtp_server_requires_auth']) {
@@ -282,7 +284,7 @@ module.exports = function (notify) {
           if (counter == 0) hits = [];
 
           hell.o("done: " + counter, "checkAlerts", "info");
-          success({alerts_pointer: entry_ptr, alerts: hits, aggregation_match: aggregation_match});
+          success({alerts_pointer: entry_ptr, alerts: hits, aggregation_match: aggregation_match, aggregations: aggregations});
 
         }).catch(function (e) {
           hell.o(e, "checkAlerts", "error");
@@ -405,17 +407,16 @@ module.exports = function (notify) {
             let message_text = '';
 
             if (aggregation_match)
-              message_text = 'Aggregation triggered alarm\n---\n\n';
+              message_text = 'Aggregation triggered alarm:\n---\n\n';
 
-            for (let i = 0, l = notify_input.alerts.length; i < l; i++) {
-              let alert = notify_input.alerts[i];
-              // TODO: This here is just for testing, what should be in those results?
-              message_text += "category: " + alert._source.alert.category + "\n"
-                + "signature: " + alert._source.alert.signature + "\n"
-                + alert._source.src_ip + ":" + alert._source.src_port
-                + " -> "
-                + alert._source.dest_ip + ":" + alert._source.dest_port + "\n"
-                + "---\n";
+            if (alerts_checked.aggregations) {
+              Object.keys(alerts_checked.aggregations).forEach(function (key) {
+                for (let j = 0, b_length = alerts_checked.aggregations[key].buckets.length; j < b_length; j++) {
+                  let agg_result = alerts_checked.aggregations[key].buckets[j];
+                  // TODO: This here is just for testing, what should be in those results?
+                  message_text += "key: " + agg_result.key + "\t" + "count: " + agg_result.doc_count + "\n---\n";
+                }
+              });
             }
 
             let message = {

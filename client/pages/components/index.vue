@@ -48,21 +48,25 @@
                               class="deep-orange--text">{{ $t('disabled') }}</span>
                       </td>
                       <td :class="props.item.version_status === true ? 'success--text' : 'warning--text'">
-                    <span v-show="props.item.version_status === false || props.item.version_hold === true">
-                      <v-icon class="warning--text" v-show="props.item.version_status === false">warning</v-icon><br/>
-                        {{ $t('components.version_available') }}:
-                        <br/>
-                        {{ props.item.version_available }}
-                        <br/>
-                        <span v-show="props.item.version_hold === true">
-                          {{ $t('components.version_hold') }} <br/>
+                        <span v-show="props.item.installed === true">
+                        <span v-show="props.item.version_status === false || props.item.version_hold === true">
+                          <v-icon class="warning--text"
+                                  v-show="props.item.version_status === false">warning</v-icon><br/>
+                            {{ $t('components.version_available') }}:
+                            <br/>
+                            {{ props.item.version_available }}
+                            <br/>
+                            <span v-show="props.item.version_hold === true">
+                              {{ $t('components.version_hold') }} <br/>
+                            </span>
+                            <br/>
                         </span>
-                        <br/>
-                    </span>
                         <span v-show="props.item.version_status === false || props.item.version_hold === true">
                           {{ $t('components.version_installed') }}: <br/>
                         </span>
                         {{ props.item.version_installed }}
+                        </span>
+                        <span v-show="props.item.installed === false" class="deep-orange--text">{{ $t('components.not_installed') }}</span>
                       </td>
                       <td>
                         <v-btn small color="warning"
@@ -133,7 +137,7 @@
           <v-dialog v-model="logDialog" width="70%" lazy scrollable>
             <v-card>
               <v-card-title>
-                <span class="headline">{{ log.name }} {{ $t('components.install_log') }}</span>
+                <span class="headline">{{ log.name }} {{ $t('components.logs') }}</span>
               </v-card-title>
               <v-card-text style="height: 500px;">
                 <pre>{{ log.data }}</pre>

@@ -117,9 +117,7 @@ dependency_install() {
 
 create_mongodb_users() {
   declare -r service_name="$1"
-  
-    echo "Create MongoDB users..."
-  
+  echo "Create MongoDB users..."
   if [ ! -e /root/.mongodb.passwd ] ; then
 
 	 if [ `mongo --quiet --eval "quit()" >/dev/null; echo $?` -gt 0 ] ; then
@@ -140,8 +138,8 @@ create_mongodb_users() {
   . /root/.mongodb.passwd
 
   app_db_pass=$( pwgen 12 1 )
-  user_found=$( mongo --quiet --authenticationDatabase admin -u $MONGODB_USER -p $MONGODB_PASS $service_name --eval "db.getUsers();" | jq -r '.[] | select(.user | match("'$service_name'"))|.user' )
-  if [ "x$user_found" == "x$service_name" ] ; then
+  user_found=$( mongo --quiet --authenticationDatabase admin -u $MONGODB_USER -p $MONGODB_PASS $service_name --eval "user=db.getUsers( { filter: { user: '$service_name'} }); if (user[0]) print(user[0].user);" )
+  if [ $user_found != "[ ]" ] ; then
         echo " * $service_name - reset password ..."
 	mongo --quiet --authenticationDatabase admin -u $MONGODB_USER -p $MONGODB_PASS $service_name --eval "db.changeUserPassword(\"$service_name\", \"$app_db_pass\")"
   else

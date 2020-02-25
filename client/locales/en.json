@@ -96,7 +96,8 @@
     "name": "Name",
     "actions": "Actions",
     "not_installed": "Not Installed",
-    "last_message": "Last Message"
+    "last_message": "Last Message",
+    "logs": "logs"
   },
   "settings": {
     "alerts": "Alerts",
@@ -105,6 +106,8 @@
     "alerts_info_level": "Alerts Info Level",
     "rules": "Rules",
     "rules_update_check_interval": "Rules Update Check Interval",
+    "rules_full_sync": "Rules full sync ( time consuming )",
+    "rules_full_sync_button": "Perform full sync now",
     "automatic_rules_download": "Automatic Rules Download",
     "network": "Network",
     "select_the_network_interfaces": "Select the network interfaces",
@@ -144,6 +147,7 @@
     "smtp_server_password": "Password",
     "smtp_server_from": "Sender address",
     "moloch_settings": "Moloch Settings",
+    "moloch_drop_tls_enabled": "Drop TLS",
     "moloch_yara_enabled": "Yara service",
     "moloch_wise_enabled": "Wise service",
     "moloch_exclude_ips": "Exclude IPs list"
@@ -181,6 +185,8 @@
     "disable_all": "Disable All",
     "add_tag": "Add Tag",
     "remove_tag": "Remove Tag",
+    "skip_review": "Skip review and update rules",
+    "force_disabled": "Force external rule updates to disabled",
     "automatic_updates_enable_new": "Automatic updates: enable new rules"
   },
   "rules": {
