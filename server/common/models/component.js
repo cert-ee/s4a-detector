@@ -290,6 +290,25 @@ module.exports = function (component) {
         }
     },
     {
+      name: "kibana",
+      friendly_name: "Kibana",
+      package_name: "kibana",
+      message: "",
+      web_url: "kibana/",
+      preset: false,
+      installed: false,
+      installable: true,
+      enabled: false,
+      toggleable: true,
+      restartable: true,
+      status: true,
+      loading: false,
+      version_status: true,
+      version_hold: true,
+      version_installed: "",
+      version_available: "",
+    },
+    {
       name: "telegraf",
       friendly_name: "Telegraf",
       package_name: "telegraf",
@@ -611,6 +630,7 @@ module.exports = function (component) {
           case "autoupgrade":
             success({status: true, message: "OK", exit_code: 0, logs: false, logs_error: false});
             break;
+          case "kibana":
           case "nfsen":
           case "suricata":
           case "evebox-agent":

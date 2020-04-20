@@ -173,13 +173,13 @@
             <v-flex v-if="$vuetify.breakpoint.smAndUp" sm4 lg6></v-flex>
           </no-ssr>
           <v-flex xs6 sm4 lg3>
-            <a :href="components.find(c => c.name === 'evebox').web_url" target="_blank" style="text-decoration: none;">
-              <dashboard-card icon="widgets" title="Evebox" link>
+            <a :href="components.find(c => c.name === 'kibana').web_url" target="_blank" style="text-decoration: none;">
+              <dashboard-card icon="widgets" title="Kibana" link>
                 <div class="headline">
-                  <span v-if="!components.find(c => c.name === 'evebox').installed" class="deep-orange--text">
+                  <span v-if="!components.find(c => c.name === 'kibana').installed" class="deep-orange--text">
                     {{ $t('components.not_installed') }}
                   </span>
-                  <span v-else-if="components.find(c => c.name === 'evebox').status" class="success--text">
+                  <span v-else-if="components.find(c => c.name === 'kibana').status" class="success--text">
                     <v-icon class="success--text">check_circle</v-icon> {{ $t('ok') }}
                   </span>
                   <span class="error--text" v-else>
