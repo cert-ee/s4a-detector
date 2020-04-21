@@ -259,7 +259,7 @@ module.exports = function (report) {
         let entry_ptr = input.alerts_pointer;
         hell.o("pointer " + entry_ptr, "checkAlerts", "info");
 
-        let elastic_params = {index: "logstash*", body: {}};
+        let elastic_params = {index: "suricata*", body: {}};
 
         let settings = await report.app.models.settings.findOne();
 
