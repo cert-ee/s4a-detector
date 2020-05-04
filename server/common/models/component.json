@@ -20,6 +20,12 @@
       "required": false,
       "description": "Component display name"
     },
+    "package_name": {
+      "type": "string",
+      "required": false,
+      "description": "Package name on the system",
+      "default": ""
+    },
     "web_url": {
       "type": "string",
       "required": false,
@@ -29,6 +35,18 @@
       "type": "string",
       "required": false,
       "description": "Component health check url"
+    },
+    "install_order": {
+      "type": "number",
+      "required": true,
+      "description": "Component install order",
+      "default": 10
+    },
+    "loading": {
+      "type": "boolean",
+      "required": true,
+      "description": "Component busy",
+      "default": false
     },
     "network_interface_changes": {
       "type": "boolean",
@@ -46,6 +64,18 @@
       "type": "string",
       "required": false,
       "description": "Component last message"
+    },
+    "logs": {
+      "type": "string",
+      "required": false,
+      "description": "Component last stdout",
+      "default": ""
+    },
+    "logs_error": {
+      "type": "string",
+      "required": false,
+      "description": "Component last stderr",
+      "default": ""
     },
     "exit_code": {
       "type": "string",
@@ -92,7 +122,31 @@
       "type": "object",
       "required": false,
       "description": "Component extra parameters",
-      "default": []
+      "default": {}
+    },
+    "version_status": {
+      "type": "boolean",
+      "required": false,
+      "description": "Package version ok",
+      "default": true
+    },
+    "version_hold": {
+      "type": "boolean",
+      "required": false,
+      "description": "Package in hold list",
+      "default": false
+    },
+    "version_installed": {
+      "type": "string",
+      "required": false,
+      "description": "Package installed version",
+      "default": ""
+    },
+    "version_available": {
+      "type": "string",
+      "required": false,
+      "description": "Package available version",
+      "default": ""
     }
   },
   "validations": [],
@@ -153,14 +207,14 @@
       "permission": "ALLOW"
     },
     {
-      "property": "install",
+      "property": "stateApply",
       "accessType": "*",
       "principalType": "ROLE",
       "principalId": "admin",
       "permission": "ALLOW"
     },
     {
-      "property": "uninstall",
+      "property": "stateApplyTEST",
       "accessType": "*",
       "principalType": "ROLE",
       "principalId": "admin",

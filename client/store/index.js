@@ -4,6 +4,7 @@ export function state() {
         drawer: true,
         user: {},
         rulesReview: false,
+        rulesExpanded: false,
         unauthorized: 'You are not authorized to view this page.',
         versions: {},
         snackBar: {
@@ -23,6 +24,10 @@ export const mutations = {
 
     setRulesReview(state, value) {
         state.rulesReview = value;
+    },
+
+    setRulesExpanded(state, value) {
+        state.rulesExpanded = value;
     },
 
     changeRegStatus(state, status) {
@@ -56,10 +61,10 @@ export const mutations = {
 export const actions = {
     async nuxtServerInit({state}, {req, env, error, isDev, app: {$axios}}) {
         try {
-            console.log("FRONTEND: NUXT SERVER INIT");
+            console.log("FRONTEND | NUXT SERVER INIT");
             //console.log(req.headers);
             if (!req.headers["x-remote-user"]) {
-                console.log("no x-remote-user");
+                console.log("FRONTEND | no x-remote-user");
                 error("no x-remote-user");
             }
 
@@ -73,7 +78,9 @@ export const actions = {
             state.rule_sid_limit_max = 200000000;
             state.API_URL = env.API_URL;
             state.debugMode = isDev;
-            console.log( "FRONTEND: API URL:", state.API_URL );
+
+            console.log("FRONTEND | API URL:", state.API_URL);
+            console.log("FRONTEND | DEBUG MODE:", state.debugMode);
 
             const [ {data: reg}, {data: versions} ] = await Promise.all([
                 $axios.get('registration'), $axios.get('system_info/version')
@@ -95,7 +102,7 @@ export const actions = {
         } catch (err) {
             console.log(err);
             if (err.response && err.response.data && err.response.data.error) {
-                console.log("FRONTEND: errors: " + err.statusCode + " " + err.response.data.error.message + " ");
+                console.log("FRONTEND | errors: " + err.statusCode + " " + err.response.data.error.message + " ");
             }
 
             error({

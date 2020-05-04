@@ -88,6 +88,26 @@
       "required": false,
       "description": "Last rules update"
     },
+    "last_wise_check": {
+      "type": "date",
+      "required": false,
+      "description": "Last wise check"
+    },
+    "last_wise_update": {
+      "type": "date",
+      "required": false,
+      "description": "Last wise update"
+    },
+    "last_yara_check": {
+      "type": "date",
+      "required": false,
+      "description": "Last yara check"
+    },
+    "last_yara_update": {
+      "type": "date",
+      "required": false,
+      "description": "Last yara update"
+    },
     "alerts_status": {
       "type": "boolean",
       "required": true,

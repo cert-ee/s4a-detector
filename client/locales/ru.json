@@ -121,7 +121,15 @@
     "nginx_configuration": "RU Configuration",
     "nginx_ssl_cert": "RU Certificate",
     "nginx_ssl_chain": "RU Certificate Chain",
-    "nginx_ssl_key": "RU Private Key"
+    "nginx_ssl_key": "RU Private Key",
+    "smtp_server_host": "Cервер",
+    "smtp_server_port": "Порт",
+    "smtp_server_tls": "TLS Защита",
+    "smtp_server_force_notls": "Усиливать no-TLS",
+    "smtp_server_auth_method": "Метод аутентификации",
+    "smtp_server_username": "Имя пользователя",
+    "smtp_server_password": "Пароль",
+    "smtp_server_from": "Адресант"
   },
   "tags": {
     "add_tag": "добавлять тег",

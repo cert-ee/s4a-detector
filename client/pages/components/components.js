@@ -5,88 +5,117 @@ export default {
             headers: [
                 {text: this.$t('components.name'), align: 'left', value: 'name'},
                 {text: this.$t('components.status'), align: 'left', value: 'statusStr'},
+                {text: this.$t('components.versions'), align: 'left', value: 'version_installed'},
                 {text: this.$t('components.actions'), align: 'left', sortable: false},
                 {text: this.$t('logs'), align: 'left', value: 'log'},
                 {text: this.$t('components.last_message'), align: 'left', value: 'message'}
             ],
             logDialog: false,
-            log: {name: '', data: ''},
-            componentsAll: []
+            log: {name: '', data: ''}
         }
     },
 
     computed: {
-        drawer: {
-            get() { return this.$store.state.drawer; },
-            set() {}
-        },
-
         search: {
-            get() { return this.$store.state.components.search; },
-            set(value) { this.$store.commit('components/setSearch', value); }
+            get() {
+                return this.$store.state.components.search;
+            },
+            set(value) {
+                this.$store.commit('components/setSearch', value);
+            }
         },
 
         pagination: {
-            get() { return this.$store.state.components.pagination; },
-            set(value) { this.$store.commit('components/setPagination', value); }
+            get() {
+                return this.$store.state.components.pagination;
+            },
+            set(value) {
+                this.$store.commit('components/setPagination', value);
+            }
+        },
+
+        components: {
+            get() {
+                return this.$store.state.components.components;
+            },
+            set(value) {
+                return this.$store.commit('components/setComponents', value);
+            }
         }
     },
 
     methods: {
-        async applyStateToComponent(component, state) {
-            try {
-                component.loading = true;
-                let params = {name: component.name, state: state};
-                let salt_result = await this.$axios.post('components/stateApply', params);
-                component.logs = salt_result.data.logs;
-                component.logs_error = salt_result.data.logs_error;
-                let {data: comp} = await this.$axios.get(`components/${component.name}`);
-                component.status = comp.status;
-                component.statusStr = component.status === true ? this.$t('ok') : this.$t('fail');
+        async applyStateTEST(component, state) {
+            let comp = Object.assign({}, component);
 
-                if (["install", "uninstall"].includes(state)) {
-                    component.installed = !component.installed;
-                    component.enabled = !component.enabled;
-                }
-                else if (["enabled", "disabled"].includes(state)) {
-                    component.enabled = !component.enabled;
-                }
+            console.log("TEST START", new Date());
+            try {
+                comp.loading = true;
+                let params = {name: comp.name, state: state};
+                let salt_result = await this.$axios.$post('components/stateApplyTEST', params);
+                console.log("TEST END", new Date());
+                comp = await this.$axios.$get(`components/${comp.name}`);
+
+                // comp.logs = salt_result.logs;
+                // comp.logs_error = salt_result.logs_error;
             } catch (err) {
+                console.log("TEST END ERROR", new Date());
+                console.log(err);
                 this.$store.dispatch('handleError', err);
             } finally {
-                component.loading = false;
+                comp.loading = false;
+
+                this.$store.commit('components/updateComponent', comp);
+            }
+        },
+        async applyStateToComponent(component, state) {
+            let comp = Object.assign({}, component);
+
+            try {
+                comp.loading = true;
+                this.$store.commit('components/updateComponent', comp);
+                let params = {name: comp.name, state: state};
+                let salt_result = await this.$axios.$post('components/stateApply', params);
+                comp = await this.$axios.$get(`components/${comp.name}`);
+                // comp.logs = salt_result.logs;
+                // comp.logs_error = salt_result.logs_error;
+            } catch (err) {
+                console.log(err);
+                this.$store.dispatch('handleError', err);
+            } finally {
+                comp.loading = false;
+                this.$store.commit('components/updateComponent', comp);
             }
         },
         async recheckComponentStatus(component) {
+            let comp = Object.assign({}, component);
+
             try {
-                component.loading = true;
-                let params = {component_name: component.name};
-                console.log( component );
-                let run_check = await this.$axios.post('components/checkComponent', params);
-                console.log( run_check );
-                let {data: comp} = await this.$axios.get(`components/${component.name}`);
-                component.status = comp.status;
-                component.statusStr = component.status === true ? this.$t('ok') : this.$t('fail');
+                comp.loading = true;
+                this.$store.commit('components/updateComponent', comp);
+                let params = {component_name: comp.name};
+                await this.$axios.post('components/checkComponent', params);
+                comp = await this.$axios.$get(`components/${comp.name}`);
             } catch (err) {
                 this.$store.dispatch('handleError', err);
             } finally {
-                component.loading = false;
+                comp.loading = false;
+                this.$store.commit('components/updateComponent', comp);
             }
         }
     },
 
     async asyncData({store, error, app: {$axios, i18n}}) {
         try {
-            let {data: componentsAll} = await $axios.get('components');
+            let components = await $axios.$get('components');
 
-            for (let component of componentsAll) {
+            for (let component of components) {
                 component.statusStr = component.status === true ? i18n.t('ok') : i18n.t('fail');
-                component.loading = false;
-                component.logs = false;
-                component.logs_error = false;
+                // component.logs = false;
+                // component.logs_error = false;
             }
 
-            return {componentsAll};
+            store.commit('components/setComponents', components);
         } catch (err) {
             if (err.response && err.response.status === 401) {
                 return error({statusCode: 401, message: store.state.unauthorized});

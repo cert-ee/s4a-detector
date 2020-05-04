@@ -80,7 +80,11 @@ module.exports = function (registration) {
 
         hell.o("update token", "initiate", "info");
         let update_token = await registration.app.models.central.updateToken(
-          {temporary: central_result.data.temporary, token: central_result.data.token});
+          {
+            temporary: central_result.data.temporary,
+            token: central_result.data.token
+          }
+        );
         if (!update_token) throw new Error("central_token_update_failed");
 
         let central_input = {registration_status: "Pending"};
@@ -311,6 +315,15 @@ module.exports = function (registration) {
           let salt_result = await registration.app.models.component.stateApply("telegraf", "install");
           if (!salt_result) throw new Error("component_install_failed");
 
+
+          hell.o("initial components check run", "registrationApproved", "info");
+          let check_components = registration.app.models.component.checkRoutine(null, function () {
+            {
+
+              hell.o("initial components done", "registrationApproved", "info");
+            }
+          });
+
           hell.o("done", "registrationApproved", "info");
           success({message: "Registration completed"});
         } catch (err) {
@@ -409,66 +422,6 @@ module.exports = function (registration) {
     ],
     returns: {type: 'object', root: true},
     http: {path: '/renewToken', verb: 'post', status: 201}
-  });
-
-
-  /**
-   * RESET FUNCTION
-   *
-   * for development
-   *
-   * @param options
-   * @param cb
-   */
-  registration.resetDetector = function (options, cb) {
-    hell.o("start", "resetDetector", "warn");
-
-    if( process.env.NODE_ENV !== "dev" ) {
-      hell.o("ENV is not DEV, fail", "resetDetector", "warn");
-      cb("error");
-      return false;
-    }
-
-    (async function () {
-      try {
-
-        hell.o("destroy database", "resetDetector", "warn");
-        await registration.destroyAll();
-        await registration.app.models.central.destroyAll();
-        await registration.app.models.component.destroyAll();
-        await registration.app.models.network_interfaces.destroyAll();
-        await registration.app.models.rule.destroyAll();
-        await registration.app.models.rule_draft.destroyAll();
-        await registration.app.models.ruleset.destroyAll();
-        await registration.app.models.log.destroyAll();
-        await registration.app.models.role.destroyAll();
-
-        cb(null, {message: "Reset Done"});
-
-        hell.o("restart process", "resetDetector", "warn");
-        if (process.env.NODE_ENV == "dev") {
-          hell.o("restart nodemon", "resetDetector", "warn");
-          shelljs.touch("server.js"); // kick nodemon
-        } else {
-          hell.o("pm2 restart", "resetDetector", "warn");
-          //process.exit(1); //pm2
-        }
-
-      } catch (err) {
-        console.log("RESET: registration.resetDetector failed");
-        cb(err);
-      }
-
-    })(); // async
-
-  };
-
-  registration.remoteMethod('resetDetector', {
-    accepts: [
-      {arg: "options", type: "object", http: "optionsFromRequest"}
-    ],
-    returns: {type: 'object', root: true},
-    http: {path: '/resetDetector', verb: 'get', status: 200}
   });
 
 };

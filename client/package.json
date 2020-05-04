@@ -1,6 +1,6 @@
 {
   "name": "s4a-detector-client",
-  "version": "0.1.46",
+  "version": "0.2.283",
   "description": "s4a detector",
   "license": "MIT",
   "private": true,
@@ -20,16 +20,27 @@
     "prodenv": "yarn build && yarn start"
   },
   "dependencies": {
-    "@nuxtjs/axios": "^5.x.x",
-    "highlight.js": "^9.12.0",
-    "nsp": "^3.1.0",
-    "nuxt": "^1.0.0-rc11",
-    "stylus": "^0.54.5",
-    "stylus-loader": "^3.0.1",
-    "vue-highlight-component": "^1.0.0",
-    "vue-i18n": "^7.3.0",
-    "vue-moment": "^2.x.x",
-    "vuetify": "0.15.7"
+    "@nuxtjs/axios": "5.9.3",
+    "highlight.js": "^9.18.0",
+    "material-design-icons-iconfont": "5.0.1",
+    "nuxt": "2.11.0",
+    "typeface-roboto": "0.0.75",
+    "vue-highlight-component": "1.0.0",
+    "vue-i18n": "8.15.3",
+    "vue-moment": "4.1.0",
+    "vuetify": "1.5.22"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "babel-eslint": "^10.0.3",
+    "eslint": "6.8.0",
+    "eslint-config-standard": "14.1.0",
+    "eslint-loader": "3.0.3",
+    "eslint-plugin-html": "6.0.0",
+    "eslint-plugin-import": "2.20.0",
+    "eslint-plugin-node": "11.0.0",
+    "eslint-plugin-promise": "4.2.1",
+    "eslint-plugin-standard": "4.0.1",
+    "stylus": "0.54.7",
+    "stylus-loader": "3.0.2"
+  }
 }

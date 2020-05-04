@@ -1,14 +1,16 @@
 {
-  "no_api_token": "No API token",
-  "not_approved": "Your registration has been approved yet",
-  "worker_busy": "Worker already busy, please wait",
+  "disabled": "Feature disabled",
   "no_changes": "No changes",
   "no_data_found": "No data found",
+  "duplicate_data": "Already exists",
+  "worker_busy": "Worker already busy, please wait",
   "save_failed": "Failed to save info to database",
   "load_failed": "Failed to load info from database",
   "delete_failed": "Failed to remove info from database",
-
   "done": "Done",
+
+  "no_api_token": "No API token",
+  "not_approved": "Your registration has been approved yet",
 
   "network_interfaces_no_interfaces_enabled": "Failed to find enabled components to restart",
   "network_interfaces_failed_to_restart_components": "Failed to restart components",

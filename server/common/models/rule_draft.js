@@ -22,7 +22,7 @@ module.exports = function (rule_draft) {
         /*
         HACK EDIT MODAL to smaller pieces if more changes
          */
-
+        // console.log( "changes", changes );
         if ( changes.length == 1 && changes[0].id !== undefined && Object.keys(changes[0]).length > 5
         ) {
           //hell.o("more changes, hack to objects", "more", "info");
@@ -85,7 +85,7 @@ module.exports = function (rule_draft) {
           tmp = Object.keys(current);
           // console.log(Object.keys(current));
           field_to_update = tmp[1];
-          hell.o(["field_to_update", field_to_update], "more", "info");
+          // hell.o(["field_to_update", field_to_update], "more", "info");
 
           /*
           GET ORIGINAL RULE
@@ -110,7 +110,7 @@ module.exports = function (rule_draft) {
 
               if (!draft || draft.tags_changes.length == 0) continue;
 
-              hell.o([original.sid, "his rule has a draft, check if we have opposite tag change stored"], "more", "info");
+              hell.o([original.sid, "this rule has a draft, check if we have opposite tag change stored"], "more", "info");
               found = false, update_input = [];
 
               for (let i = 0, l = draft.tags_changes.length; i < l; i++) {
@@ -251,7 +251,7 @@ module.exports = function (rule_draft) {
           draft = await rule_draft.findOne({where: {ruleId: current.id}});
           if (!draft) throw new Error(original.sid + " failed to reload draft ");
 
-          let matcher = ["sid", "enabled", "revision", "classtype", "severity", "message", "rule_data"];
+          let matcher = ["sid", "enabled", "force_disabled", "revision", "classtype", "severity", "message", "rule_data"];
           update_input = [];
           hell.o([original.sid, "match values again"], "more", "info");
           for (let i = 0, l = matcher.length; i < l; i++) {
@@ -380,6 +380,7 @@ module.exports = function (rule_draft) {
               classtype: draft.classtype,
               ruleset: draft.ruleset,
               enabled: draft.enabled,
+              force_disabled: draft.force_disabled || false,
               rule_data: draft.rule_data,
               created_time: new Date(),
               modified_time: new Date()
@@ -402,9 +403,11 @@ module.exports = function (rule_draft) {
           if (draft.changes_fields !== undefined && draft.changes_fields.length > 0) {
             let cur_up;
             let update_input = {};
+
             for (let i = 0, l = draft.changes_fields.length; i < l; i++) {
               cur_up = draft.changes_fields[i];
               hell.o([draft.sid, "update field " + cur_up], "publish", "info");
+              // hell.o([draft.sid, published_rule[cur_up], draft[cur_up] ], "publish", "info");
               update_input[cur_up] = draft[cur_up];
             }
 
@@ -413,7 +416,7 @@ module.exports = function (rule_draft) {
             }
             update_input.modified_time = new Date();
 
-            //hell.o( [ draft.sid, update_input ],"publish","info");
+            // hell.o( [ draft.sid, update_input ],"publish","info");
             update_result = await rule.update({id: published_rule.id}, update_input);
             if (!update_result) throw new Error(draft.sid + " failed to update rule " + published_rule.sid);
             hell.o([draft.sid, "updated"], "publish", "info");
@@ -428,7 +431,7 @@ module.exports = function (rule_draft) {
 
             for (let ti = 0, tl = draft_tags.length; ti < tl; ti++) {
 
-              if( draft_tags[i].added === undefined ) continue;
+              if (draft_tags[ti].added === undefined) continue;
 
               hell.o([draft.sid, "find tag"], "publish", "info");
               tag_exists = await tag.findOne({where: {id: draft_tags[ti].id}});

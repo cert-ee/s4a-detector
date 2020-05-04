@@ -151,6 +151,12 @@ export default {
             try {
                 console.log("installComponents");
 
+                this.components_all.sort(function (a, b) {
+                    return a.install_order - b.install_order;
+                });
+
+                console.log(this.components_all);
+
                 let current, comp_input, component_result;
                 for (let i = 0, l = this.components_all.length; i < l; i++) {
                     current = this.components_all[i];
@@ -205,7 +211,7 @@ export default {
                     if (component_result.data.logs_error.length > 2) this.components_all[i].logs_error = component_result.data.logs_error;
 
                     console.log( current.name, "component install result");
-                    console.log( current.name, component.result);
+                    console.log( current.name, component_result );
 
                 } // components for loop
 
@@ -232,6 +238,7 @@ export default {
                     data.system_info = this.system_info;
 
                 const result = await this.$axios.post('/registration/initiate', data);
+                console.log(result);
 
                 this.$store.commit('changeRegStatus', {
                     setupDone: true,
@@ -273,6 +280,7 @@ export default {
 
                 let update_input, update_result, has_interfaces = false;
                 for (const inter of this.interfaces) {
+                    console.log( "network interface:" );
                     console.log(inter);
                     if (inter.install) {
                         update_input = {enabled: inter.install};
@@ -344,7 +352,7 @@ export default {
                 components_all[i].logs = false;
                 components_all[i].logs_error = false;
             }
-            //console.log( components_all );
+
             return {interfaces, system_info, components_all};
         } catch (err) {
             if (err.response && err.response.status === 401) {
