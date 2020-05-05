@@ -17,5 +17,5 @@ PATH_CSR_SIGNED="/etc/openvpn/detector.conf"
 PATH_CSR_UNSIGNED="/etc/openvpn/detector.csr"
 PATH_SURICATA_RULES_OUT="/etc/suricata/rules/all.rules"
 DEBUG=1
-DEBUG_LEVEL=5
+DEBUG_LEVEL=4
 
