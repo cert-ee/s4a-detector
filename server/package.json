@@ -1,6 +1,6 @@
 {
   "name": "s4a-detector-lb_server",
-  "version": "0.2.283",
+  "version": "0.2.290",
   "description": "s4a detector loopback server",
   "license": "MIT",
   "private": true,
@@ -20,33 +20,34 @@
   "dependencies": {
     "axios": "0.19.2",
     "bunyan-mongodb-logger": "1.0.0",
-    "chalk": "3.0.0",
+    "chalk": "4.0.0",
     "compression": "^1.7.4",
     "cors": "2.8.5",
-    "elasticsearch": "16.6.0",
-    "helmet": "3.21.2",
+    "elasticsearch": "16.7.1",
+    "helmet": "3.22.0",
     "i18n-node": "2.1.5",
-    "loopback": "3.26.0",
+    "loopback": "3.27.0",
     "loopback-boot": "3.3.1",
-    "loopback-connector-mongodb": "5.2.1",
-    "mongodb": "3.5.2",
-    "mustache": "4.0.0",
+    "loopback-connector-mongodb": "5.2.3",
+    "mongodb": "3.5.8",
+    "mustache": "4.0.1",
     "node-machine-id": "1.1.12",
-    "nodemailer": "6.4.2",
+    "nodemailer": "6.4.8",
     "passport": "0.4.1",
+    "shelljs": "0.8.4",
     "ssl-utils": "1.0.0",
     "strong-error-handler": "3.4.0",
     "sudo": "1.0.3"
   },
   "devDependencies": {
-    "eslint": "6.8.0",
+    "eslint": "7.2.0",
     "eslint-config-loopback": "13.1.0",
-    "nodemon": "2.0.2"
+    "nodemon": "2.0.4"
   },
   "resolutions": {
-    "i18n-node/mustache": "4.0.0",
-    "bunyan-mongodb-logger/mongodb": "3.5.2",
-    "nodemailer": "6.4.2"
+    "i18n-node/mustache": "4.0.1",
+    "bunyan-mongodb-logger/mongodb": "3.5.8",
+    "nodemailer": "6.4.8"
   },
   "repository": {
     "type": "",
