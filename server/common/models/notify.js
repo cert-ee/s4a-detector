@@ -410,6 +410,7 @@ module.exports = function (notify) {
               message_text = 'Aggregation triggered alarm:\n---\n\n';
 
             if (alerts_checked.aggregations) {
+              // aggregation alarm
               Object.keys(alerts_checked.aggregations).forEach(function (key) {
                 for (let j = 0, b_length = alerts_checked.aggregations[key].buckets.length; j < b_length; j++) {
                   let agg_result = alerts_checked.aggregations[key].buckets[j];
@@ -417,8 +418,20 @@ module.exports = function (notify) {
                   message_text += "key: " + agg_result.key + "\t" + "count: " + agg_result.doc_count + "\n---\n";
                 }
               });
+            } else {
+                // regular alarm
+                for (let i = 0, l = notify_input.alerts.length; i < l; i++) {
+                  let alert = notify_input.alerts[i];
+ 
+                  message_text += "category: " + alert._source.alert.category + "\n"
+                    + "signature: " + alert._source.alert.signature + "\n"
+                    + alert._source.src_ip + ":" + alert._source.src_port
+                    + " -> "
+                    + alert._source.dest_ip + ":" + alert._source.dest_port + "\n"
+                    + "---\n";
+                }
             }
-
+            
             let message = {
               from: settings['smtp_server_from'],
               to: notifying[ntfy_id].email,
