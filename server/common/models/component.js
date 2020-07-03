@@ -264,6 +264,32 @@ module.exports = function (component) {
       version_available: "",
     },
     {
+      name: "nfsen",
+      friendly_name: "NFsen",
+      package_name: "nfsen",
+      message: "",
+      network_interface_changes: true,
+      web_url: "nfsen/",
+      preset: false,
+      installed: false,
+      installable: true,
+      enabled: false,
+      toggleable: true,
+      restartable: true,
+      restartable: false,
+      status: true,
+      loading: false,
+      version_status: true,
+      version_hold: false,
+      version_status: false,
+      version_installed: "",
+      version_available: "",
+      configuration:
+        {
+          sampling_rate: -1000
+        }
+    },
+    {
       name: "kibana",
       friendly_name: "Kibana",
       package_name: "kibana",
