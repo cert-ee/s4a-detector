@@ -32,7 +32,7 @@
     "mongodb": "3.5.8",
     "mustache": "4.0.1",
     "node-machine-id": "1.1.12",
-    "nodemailer": "6.4.8",
+    "nodemailer": "6.4.16",
     "passport": "0.4.1",
     "shelljs": "0.8.4",
     "ssl-utils": "1.0.0",
@@ -47,7 +47,7 @@
   "resolutions": {
     "i18n-node/mustache": "4.0.1",
     "bunyan-mongodb-logger/mongodb": "3.5.8",
-    "nodemailer": "6.4.8"
+    "nodemailer": "6.4.16"
   },
   "repository": {
     "type": "",
