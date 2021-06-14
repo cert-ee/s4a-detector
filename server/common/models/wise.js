@@ -238,7 +238,7 @@ module.exports = function (wise) {
       await fs.writeFile(settings["path_moloch_wise_ini"], wise_ini);
 
       hell.o("restart moloch to reload rules file", "generateAndApply", "info");
-      let salt_result = await wise.app.models.component.stateApply("moloch", "restart");
+      let salt_result = await wise.app.models.component.stateApply("molochwise", "restart");
       hell.o(["salt result", salt_result], "generateAndApply", "info");
       if (!salt_result || salt_result.exit_code != 0) throw new Error("component_restart_failed");
 

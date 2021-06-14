@@ -209,6 +209,10 @@ cat > /etc/logrotate.d/s4a-detector <<EOF
 
 EOF
 
+source /etc/default/s4a-detector
+mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.remove({"_id" : "nfsen"});'
+mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id" : "moloch"},{ $set: { "health_url" : "http://localhost:9200/_cluster/health" }});'
+
 
 if [[ "$init_type" != 'none' ]]; then
   start_service '{{ node_deb_package_name }}'
