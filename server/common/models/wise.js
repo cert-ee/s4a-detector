@@ -190,6 +190,13 @@ module.exports = function (wise) {
           hell.o(["turning off old feed", old_feed], "saveContents", "info");
           await wise.update({name: old_feed}, {enabled: false});
           changes_detected = true;
+          let filename = old_feed_entry.location + old_feed_entry.filename;
+          hell.o(['removing old feed file', filename], 'saveContents', 'info');
+          try {
+              await fs.unlink(filename);
+          } catch(e) {
+              hell.o(`failed to remove ${filename}: ${e}`, 'saveContents', 'info');
+          }
         }
       }
 
