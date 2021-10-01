@@ -1,6 +1,7 @@
 'use strict';
 
 const axios = require('axios');
+const https = require('https');
 const shelljs = require('shelljs');
 const sudo = require('sudo');
 const sslutils = require('ssl-utils');
@@ -354,8 +355,6 @@ module.exports = function (component) {
    */
   component.initialize = async function () {
     hell.o("start", "initialize", "info");
-    component.local_connection = axios.create({});
-    hell.o("local axios created", "initialize", "info");
 
     try {
 
@@ -703,7 +702,8 @@ module.exports = function (component) {
         let last_message;
         try {
           hell.o(["try health url", input.health_url], "checkStatusFromHealthUrl", "info");
-          let result = await component.local_connection.get(input.health_url);
+          let opts = input.hasOwnProperty("health_url_ca") ? {httpsAgent: new https.Agent({ca: input.health_url_ca})} : {};
+          let result = await axios.get(input.health_url, opts);
           if (!result || !result.data) throw new Error("no response from health url");
 
           if (result.status) {
