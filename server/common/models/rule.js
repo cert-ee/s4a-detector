@@ -124,8 +124,7 @@ module.exports = function (rule) {
           //create ruleset if new
           [ruleset] = await rule.app.models.ruleset.findOrCreate(
             {where: {name: rule_info.ruleset}, include: ['tags']}, {name: rule_info.ruleset});
-          rs_tags = ruleset.tags;
-          if (rs_tags === undefined) rs_tags = [];
+          rs_tags = ruleset.tags ? ruleset.tags : [];
           //hell.o([current_rule.sid, "" + current_rule.ruleset ], "checkRoutine", "info");
 
           //create classtype if new
