@@ -125,11 +125,11 @@ module.exports = function (user) {
 
         let comp = await user.app.models.component.findOne({where: {name: "moloch", installed: true, enabled: true}})
         if (comp && process.env.NODE_ENV != "dev") {
-          user.local_connection.post("http://localhost:9200/users/user/" + username,
+          user.local_connection.post("http://localhost:9200/arkime_users/_doc/" + username,
             {
               "removeEnabled": false,
               "userName": username,
-              "emailSearch": false,
+              "emailSearch": true,
               "enabled": false,
               "webEnabled": true,
               "headerAuthEnabled": true,
@@ -206,7 +206,7 @@ module.exports = function (user) {
             moloch_input = {doc: moloch_input};
           }
           hell.o(["moloch input:", moloch_input], "editMolochUser", "info");
-          let moloch_update = await user.local_connection.post("http://localhost:9200/users/user/" + username + "/_update/", moloch_input);
+          let moloch_update = await user.local_connection.post("http://localhost:9200/arkime_users/_doc/" + username + "/_update/", moloch_input);
           user.local_connection = "";
         }
 
@@ -262,7 +262,7 @@ module.exports = function (user) {
         if (comp && process.env.NODE_ENV != "dev") {
           hell.o("delete from moloch start", "deleteUser", "info");
           user.local_connection = axios.create({});
-          user.local_connection.delete("http://localhost:9200/users/user/" + user_find.username);
+          user.local_connection.delete("http://localhost:9200/arkime_users/_doc/" + user_find.username);
           user.local_connection = "";
           hell.o("delete from moloch done", "deleteUser", "info");
         }
