@@ -121,29 +121,27 @@ module.exports = function (wise) {
 
       let settings = await wise.app.models.settings.findOne();
 
-      let current, output, content_path, changes_detected = false;
+      let changes_detected = false;
       for (let feed of input) {
         hell.o("feed from central", "saveContents", "info");
         hell.o(feed, "saveContents", "info");
 
-        current = await wise.findOne({where: {name: feed.name}});
+        let current = await wise.findOne({where: {name: feed.name}});
         if (!current || current.enabled !== feed.enabled) {
           hell.o("feed not found, new", "saveContents", "info");
           changes_detected = true;
         }
 
-        if (current_wise_list.length > 0 && current !== undefined && current !== null) {
+        if (current && current_wise_list.length > 0) {
           hell.o("current_wise_list", "saveContents", "info");
           hell.o(current_wise_list, "saveContents", "info");
           hell.o("current", "saveContents", "info");
           hell.o(current, "saveContents", "info");
-          current_wise_list = current_wise_list.filter(function (value, index, arr) {
-            return value !== current.name;
-          });
+          current_wise_list = current_wise_list.filter((value, index, arr) => value !== feed.name);
         }
 
-        content_path = settings["path_moloch_" + feed.type];
-        output = {
+        let content_path = settings["path_moloch_" + feed.type];
+        let output = {
           folder: content_path + feed.name + "/",
           local_path: content_path + "/" + feed.name + "/" + feed.filename
         };
@@ -151,7 +149,7 @@ module.exports = function (wise) {
         hell.o([feed.name, "check folders"], "saveContents", "info");
         await wise.app.models.contentman.pathCheck(output.local_path);
 
-        if (current !== null && current !== undefined && current.checksum === feed.checksum) {
+        if (current && current.checksum === feed.checksum) {
           hell.o([feed.name, "checksums are the same"], "saveContents", "info");
         } else {
           hell.o([feed.name, "write content"], "saveContents", "info");
@@ -167,6 +165,18 @@ module.exports = function (wise) {
         } else {
           hell.o([feed.name, "update db entry"], "saveContents", "info");
           await wise.update({name: feed.name}, feed);
+
+          if (current && ['location', 'filename'].some(field => current[field] !== feed[field])) {
+            // remove old file
+            let filename = current.location + current.filename;
+            hell.o(['removing old file', filename], 'saveContents', 'info');
+            try {
+              await fs.unlink(filename);
+            } catch(e) {
+              hell.o(`failed to remove ${filename}: ${e}`, 'saveContents', 'info');
+            };
+          };
+
         }
 
       }
@@ -175,10 +185,18 @@ module.exports = function (wise) {
       // console.log(current_wise_list);
       if (current_wise_list.length > 0) {
         for (let old_feed of current_wise_list) {
-          if (!old_feed.enabled) continue;
+          let old_feed_entry = await wise.findOne({where: {name: old_feed}});
+          if (!old_feed_entry || !old_feed_entry.enabled) continue; // null coalescing would be nice here
           hell.o(["turning off old feed", old_feed], "saveContents", "info");
           await wise.update({name: old_feed}, {enabled: false});
           changes_detected = true;
+          let filename = old_feed_entry.location + old_feed_entry.filename;
+          hell.o(['removing old feed file', filename], 'saveContents', 'info');
+          try {
+              await fs.unlink(filename);
+          } catch(e) {
+              hell.o(`failed to remove ${filename}: ${e}`, 'saveContents', 'info');
+          }
         }
       }
 
@@ -220,13 +238,15 @@ module.exports = function (wise) {
       for (let feed of feeds) {
         console.log(feed);
 
-        wise_ini = wise_ini +
-          '[file:' + feed.name + ']' + '\n' +
-          'file=' + feed.location + feed.filename + '\n' +
-          'tags=' + feed.tag_name + '\n' +
-          'type=' + feed.type.replace("wise_", "") + '\n' +
-          'format=tagger' + '\n' +
-          '\n';
+        wise_ini += [
+          `[file:${feed.name}]`,
+          `file=${feed.location + feed.filename}`,
+          `tags=${feed.tag_name}`,
+          `type=${feed.type.replace("wise_", "")}`,
+          'format=tagger',
+          '',
+          '',
+        ].join('\n');
 
       }
 
@@ -238,7 +258,7 @@ module.exports = function (wise) {
       await fs.writeFile(settings["path_moloch_wise_ini"], wise_ini);
 
       hell.o("restart moloch to reload rules file", "generateAndApply", "info");
-      let salt_result = await wise.app.models.component.stateApply("moloch", "restart");
+      let salt_result = await wise.app.models.component.stateApply("molochwise", "restart");
       hell.o(["salt result", salt_result], "generateAndApply", "info");
       if (!salt_result || salt_result.exit_code != 0) throw new Error("component_restart_failed");
 

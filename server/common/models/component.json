@@ -36,6 +36,11 @@
       "required": false,
       "description": "Component health check url"
     },
+    "health_url_ca": {
+      "type": "string",
+      "required": false,
+      "description": "Component health check url custom CA certificate"
+    },
     "install_order": {
       "type": "number",
       "required": true,

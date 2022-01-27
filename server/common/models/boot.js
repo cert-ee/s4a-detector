@@ -123,6 +123,7 @@ module.exports = function (boot) {
             path_moloch_yara_ini: PATH_BASE + "moloch/yara.ini",
             path_moloch_wise_ini: PATH_BASE + "moloch/wise.ini",
             path_moloch_wise_ip: PATH_BASE + "moloch/wise_ip/",
+            path_moloch_wise_ja3: PATH_BASE + "moloch/wise_ja3/",
             path_moloch_wise_url: PATH_BASE + "moloch/wise_url/",
             path_moloch_wise_domain: PATH_BASE + "moloch/wise_domain/"
           };

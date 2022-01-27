@@ -1,6 +1,7 @@
 'use strict';
 
 const axios = require('axios');
+const https = require('https');
 const shelljs = require('shelljs');
 const sudo = require('sudo');
 const sslutils = require('ssl-utils');
@@ -94,9 +95,9 @@ module.exports = function (component) {
       install_order: 2,
       preset: true,
       after_approval: false,
-      installed: true,
-      installable: false,
-      enabled: true,
+      installed: false,
+      installable: true,
+      enabled: false,
       toggleable: false,
       restartable: true,
       status: false,
@@ -119,7 +120,7 @@ module.exports = function (component) {
       installed: false,
       installable: true,
       enabled: false,
-      toggleable: true,
+      toggleable: false,
       restartable: true,
       status: false,
       loading: false,
@@ -162,9 +163,9 @@ module.exports = function (component) {
       after_approval: false,
       installed: true,
       installable: false,
-      enabled: true,
+      enabled: false,
       toggleable: false,
-      restartable: true,
+      restartable: false,
       status: false,
       loading: false,
       version_status: true,
@@ -185,7 +186,7 @@ module.exports = function (component) {
       installed: false,
       installable: true,
       enabled: false,
-      toggleable: true,
+      toggleable: false,
       restartable: true,
       status: false,
       loading: false,
@@ -201,7 +202,7 @@ module.exports = function (component) {
       message: "",
       network_interface_changes: true,
       web_url: "moloch/",
-      health_url: "http://localhost:8005/eshealth.json",
+      health_url: "http://localhost:9200/_cluster/health",
       preset: false,
       after_approval: false,
       installed: false,
@@ -234,7 +235,7 @@ module.exports = function (component) {
       after_approval: false,
       installed: false,
       installable: false,
-      enabled: true,
+      enabled: false,
       toggleable: false,
       restartable: false,
       status: true,
@@ -254,7 +255,7 @@ module.exports = function (component) {
       after_approval: false,
       installed: false,
       installable: false,
-      enabled: true,
+      enabled: false,
       toggleable: false,
       restartable: false,
       status: true,
@@ -264,30 +265,24 @@ module.exports = function (component) {
       version_available: "",
     },
     {
-      name: "nfsen",
-      friendly_name: "NFsen",
-      package_name: "nfsen",
-      message: "",
-      network_interface_changes: true,
-      web_url: "nfsen/",
+      name: "molochwise",
+      friendly_name: "Moloch Wise",
+      package_name: "moloch",
+      message: "Will be installed with Moloch",
+      network_interface_changes: false,
+      web_url: false,
       preset: false,
+      after_approval: false,
       installed: false,
-      installable: true,
+      installable: false,
       enabled: false,
-      toggleable: true,
-      restartable: true,
+      toggleable: false,
       restartable: false,
       status: true,
       loading: false,
-      version_status: true,
-      version_hold: false,
       version_status: false,
       version_installed: "",
       version_available: "",
-      configuration:
-        {
-          sampling_rate: -1000
-        }
     },
     {
       name: "kibana",
@@ -299,7 +294,7 @@ module.exports = function (component) {
       installed: false,
       installable: true,
       enabled: false,
-      toggleable: true,
+      toggleable: false,
       restartable: true,
       status: true,
       loading: false,
@@ -333,7 +328,7 @@ module.exports = function (component) {
       name: "vpn",
       friendly_name: "OpenVPN",
       package_name: "openvpn",
-      message: "",
+      message: "Can be enabled after registration process",
       network_interface_changes: false,
       web_url: false,
       preset: true,
@@ -343,7 +338,7 @@ module.exports = function (component) {
       enabled: false,
       toggleable: true,
       restartable: true,
-      status: false,
+      status: true,
       loading: false,
       version_status: true,
       version_hold: false,
@@ -360,8 +355,6 @@ module.exports = function (component) {
    */
   component.initialize = async function () {
     hell.o("start", "initialize", "info");
-    component.local_connection = axios.create({});
-    hell.o("local axios created", "initialize", "info");
 
     try {
 
@@ -638,6 +631,7 @@ module.exports = function (component) {
           case "s4a-detector":
           case "molochviewer":
           case "molochcapture":
+          case "molochwise":
             if (input.name == "vpn") service_name = "'openvpn@detector'";
 
             hell.o("run systemctl", "checkStatusSystemctl", "info");
@@ -708,7 +702,8 @@ module.exports = function (component) {
         let last_message;
         try {
           hell.o(["try health url", input.health_url], "checkStatusFromHealthUrl", "info");
-          let result = await component.local_connection.get(input.health_url);
+          let opts = input.hasOwnProperty("health_url_ca") ? {httpsAgent: new https.Agent({ca: input.health_url_ca})} : {};
+          let result = await axios.get(input.health_url, opts);
           if (!result || !result.data) throw new Error("no response from health url");
 
           if (result.status) {
@@ -1154,6 +1149,10 @@ module.exports = function (component) {
                 installed: false,
                 enabled: false
               });
+              update_result = await component.update({name: 'molochwise'}, {
+                installed: false,
+                enabled: false
+              });
             }
 
             if (comp.name == "moloch" && (comp.installed || comp.enabled)) {
@@ -1163,6 +1162,10 @@ module.exports = function (component) {
                 enabled: true
               });
               update_result = await component.update({name: 'molochviewer'}, {
+                installed: true,
+                enabled: true
+              });
+              update_result = await component.update({name: 'molochwise'}, {
                 installed: true,
                 enabled: true
               });

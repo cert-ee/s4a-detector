@@ -1,6 +1,6 @@
 {
   "name": "s4a-detector-lb_server",
-  "version": "0.2.290",
+  "version": "0.2.298",
   "description": "s4a detector loopback server",
   "license": "MIT",
   "private": true,
@@ -18,7 +18,7 @@
     "posttest": "npm run lint && npm audit"
   },
   "dependencies": {
-    "axios": "0.19.2",
+    "axios": "0.21.1",
     "bunyan-mongodb-logger": "1.0.0",
     "chalk": "4.0.0",
     "compression": "^1.7.4",
@@ -26,15 +26,16 @@
     "elasticsearch": "16.7.1",
     "helmet": "3.22.0",
     "i18n-node": "2.1.5",
-    "loopback": "3.27.0",
+    "loopback": "3.28.0",
     "loopback-boot": "3.3.1",
     "loopback-connector-mongodb": "5.2.3",
     "mongodb": "3.5.8",
     "mustache": "4.0.1",
     "node-machine-id": "1.1.12",
-    "nodemailer": "6.4.8",
+    "nodemailer": "6.4.16",
     "passport": "0.4.1",
     "shelljs": "0.8.4",
+    "shell-escape": "0.2.0",
     "ssl-utils": "1.0.0",
     "strong-error-handler": "3.4.0",
     "sudo": "1.0.3"

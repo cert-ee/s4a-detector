@@ -36,9 +36,6 @@ export default {
                 {text: this.$t('settings.listening'), align: 'center', sortable: false}
             ],
             interface_loading: false,
-            nfsen: {},
-            nfsenSamplingRate: -1000,
-            nfsen_loading: false,
             nginx: {},
             nginx_loading: false,
             nginxConfDialog: false,
@@ -63,10 +60,6 @@ export default {
             }
 
             return false;
-        },
-
-        samplingRateChanged() {
-            return this.nfsen.configuration && this.nfsen.configuration.sampling_rate != this.nfsenSamplingRate;
         }
     },
 
@@ -165,20 +158,6 @@ export default {
                 this.$store.dispatch('handleError', err);
             } finally {
                 this.salt_loading = false;
-            }
-        },
-
-        async applyNfsenChanges() {
-            this.nfsen_loading = true;
-
-            try {
-                await this.$axios.patch('components/nfsen', {configuration: {sampling_rate: this.nfsenSamplingRate}});
-                await this.$axios.post('components/stateApply', {name: 'nfsen', state: 'restart'});
-                this.nfsen.configuration.sampling_rate = this.nfsenSamplingRate;
-            } catch (err) {
-                this.$store.dispatch('handleError', err);
-            } finally {
-                this.nfsen_loading = false;
             }
         },
 
@@ -299,18 +278,15 @@ export default {
 
     async asyncData({store, app: {$axios}}) {
         try {
-            let [{data: settings}, {data: interfaces}, {data: nfsen}, {data: nginx}, {data: moloch}] = await Promise.all([
+            let [{data: settings}, {data: interfaces}, {data: nginx}, {data: moloch}] = await Promise.all([
                 $axios.get('settings/settingid'), $axios.get('network_interfaces/list'),
-                $axios.get('components/nfsen'), $axios.get('components/nginx'), $axios.get('components/moloch')
+                $axios.get('components/nginx'), $axios.get('components/moloch')
             ]);
 
-            const nfsenSamplingRate = nfsen.configuration && nfsen.configuration.sampling_rate;
             return {
                 settings,
                 interfaces,
                 origInterfaces: interfaces.map(i => ({...i})),
-                nfsen,
-                nfsenSamplingRate,
                 nginx,
                 moloch
             };

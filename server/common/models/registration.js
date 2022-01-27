@@ -1,6 +1,5 @@
 'use strict';
 const machineId = require('node-machine-id');
-const shelljs = require('shelljs');
 const fs = require('fs');
 const hell = new (require(__dirname + "/helper.js"))({module_name: "registration"});
 

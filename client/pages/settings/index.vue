@@ -164,6 +164,7 @@
                   </v-flex>
                 </v-layout>
 
+                <div v-if="moloch.installed">
                 <v-card-title primary-title>
                   <div class="headline">{{ $t('settings.moloch_settings') }}</div>
                 </v-card-title>
@@ -245,7 +246,6 @@
                     </v-flex>
                   </v-layout>
 
-
                   <v-dialog v-model="arrayEditorDialog.open" width="50%" lazy>
                     <v-card>
                       <v-card-text>
@@ -280,6 +280,7 @@
 
 
                 </template>
+                </div>
 
                 <template v-if="salt_loading">
                   <v-layout row wrap>
@@ -326,23 +327,6 @@
                     </p>
                   </div>
                 </transition>
-                <div v-if="nfsen.installed">
-                  <v-subheader>NFsen {{ $t('settings.sampling_rate') }}</v-subheader>
-                  <v-divider></v-divider>
-                  <v-layout row wrap>
-                    <v-flex xs6>
-                      <v-text-field type="number" v-model="nfsenSamplingRate"></v-text-field>
-                    </v-flex>
-                    <v-flex xs6>
-                      <transition name="fade">
-                        <v-btn v-if="samplingRateChanged" color="primary"
-                               :loading="nfsen_loading" @click="applyNfsenChanges">
-                          {{ $t('settings.apply_changes') }}
-                        </v-btn>
-                      </transition>
-                    </v-flex>
-                  </v-layout>
-                </div>
 
                 <v-subheader>SMTP server settings</v-subheader>
                 <v-divider></v-divider>

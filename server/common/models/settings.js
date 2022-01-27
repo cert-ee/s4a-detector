@@ -180,6 +180,7 @@ module.exports = function (settings) {
           path_moloch_yara_ini: PATH_BASE + "moloch/yara.ini",
           path_moloch_wise_ini: PATH_BASE + "moloch/wise.ini",
           path_moloch_wise_ip: PATH_BASE + "moloch/wise_ip/",
+          path_moloch_wise_ja3: PATH_BASE + "moloch/wise_ja3/",
           path_moloch_wise_url: PATH_BASE + "moloch/wise_url/",
           path_moloch_wise_domain: PATH_BASE + "moloch/wise_domain/"
         };
@@ -249,6 +250,7 @@ module.exports = function (settings) {
           path_moloch_yara_ini: result.path_moloch_yara_ini,
           path_moloch_wise_ini: result.path_moloch_wise_ini,
           path_moloch_wise_ip: result.path_moloch_wise_ip,
+          path_moloch_wise_ja3: result.path_moloch_wise_ja3,
           path_moloch_wise_url: result.path_moloch_wise_url,
           path_moloch_wise_domain: result.path_moloch_wise_domain
         };
