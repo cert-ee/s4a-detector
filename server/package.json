@@ -18,7 +18,7 @@
     "posttest": "npm run lint && npm audit"
   },
   "dependencies": {
-    "axios": "0.21.1",
+    "axios": "0.21.2",
     "bunyan-mongodb-logger": "1.0.0",
     "chalk": "4.0.0",
     "compression": "^1.7.4",
