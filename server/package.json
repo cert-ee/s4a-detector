@@ -34,7 +34,7 @@
     "node-machine-id": "1.1.12",
     "nodemailer": "6.6.1",
     "passport": "0.4.1",
-    "shelljs": "0.8.4",
+    "shelljs": "0.8.5",
     "shell-escape": "0.2.0",
     "ssl-utils": "1.0.0",
     "strong-error-handler": "3.4.0",
