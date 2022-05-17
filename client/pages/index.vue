@@ -191,7 +191,7 @@
           </v-flex>
           <v-flex xs6 sm4 lg3>
             <a :href="components.find(c => c.name === 'moloch').web_url" target="_blank" style="text-decoration: none;">
-              <dashboard-card icon="widgets" title="Moloch" link>
+              <dashboard-card icon="widgets" title="Arkime" link>
                 <div class="headline">
                   <span v-if="!components.find(c => c.name === 'moloch').installed" class="deep-orange--text">
                     {{ $t('components.not_installed') }}

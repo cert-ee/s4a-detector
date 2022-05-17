@@ -146,7 +146,7 @@
     "smtp_server_username": "Username",
     "smtp_server_password": "Password",
     "smtp_server_from": "Sender address",
-    "moloch_settings": "Moloch Settings",
+    "moloch_settings": "Arkime Settings",
     "moloch_drop_tls_enabled": "Drop TLS",
     "moloch_yara_enabled": "Yara service",
     "moloch_wise_enabled": "Wise service",
