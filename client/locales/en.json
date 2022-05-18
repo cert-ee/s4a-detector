@@ -43,6 +43,7 @@
     "general": "General",
     "components": "Components",
     "component_updates_available": "updates available for components",
+    "monitoring": "Monitoring",
     "alerts": "Alerts",
     "registration_status": "Registration Status",
     "registration": {
