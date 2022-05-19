@@ -172,9 +172,14 @@
           <no-ssr>
             <v-flex v-if="$vuetify.breakpoint.smAndUp" sm4 lg6></v-flex>
           </no-ssr>
+
+          <v-flex xs12 class="mt-3">
+            <div class="headline">{{ $t('dashboard.monitoring') }}</div>
+          </v-flex>
+
           <v-flex xs6 sm4 lg3>
             <a :href="components.find(c => c.name === 'kibana').web_url" target="_blank" style="text-decoration: none;">
-              <dashboard-card icon="widgets" title="Kibana" link>
+              <dashboard-card icon="widgets" title="Threats" link>
                 <div class="headline">
                   <span v-if="!components.find(c => c.name === 'kibana').installed" class="deep-orange--text">
                     {{ $t('components.not_installed') }}
@@ -191,7 +196,7 @@
           </v-flex>
           <v-flex xs6 sm4 lg3>
             <a :href="components.find(c => c.name === 'moloch').web_url" target="_blank" style="text-decoration: none;">
-              <dashboard-card icon="widgets" title="Moloch" link>
+              <dashboard-card icon="widgets" title="Traffic" link>
                 <div class="headline">
                   <span v-if="!components.find(c => c.name === 'moloch').installed" class="deep-orange--text">
                     {{ $t('components.not_installed') }}
@@ -208,7 +213,7 @@
           </v-flex>
           <v-flex xs6 sm4 lg3>
             <a :href="components.find(c => c.name === 'netdata').web_url" target="_blank" style="text-decoration: none;">
-              <dashboard-card icon="widgets" title="Netdata" link>
+              <dashboard-card icon="widgets" title="Hardware" link>
                 <div class="headline">
                   <span v-if="!components.find(c => c.name === 'netdata').installed" class="deep-orange--text">
                     {{ $t('components.not_installed') }}

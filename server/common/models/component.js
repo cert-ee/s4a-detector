@@ -180,7 +180,6 @@ module.exports = function (component) {
       message: "",
       network_interface_changes: false,
       web_url: "netdata/",
-      health_url: "http://localhost:19999/api/v1/chart/?chart=netdata.response_time",
       preset: true,
       after_approval: false,
       installed: false,
@@ -197,7 +196,7 @@ module.exports = function (component) {
     },
     {
       name: "moloch",
-      friendly_name: "Moloch",
+      friendly_name: "Arkime",
       package_name: "moloch",
       message: "",
       network_interface_changes: true,
@@ -226,7 +225,7 @@ module.exports = function (component) {
     },
     {
       name: "molochcapture",
-      friendly_name: "Moloch Capture",
+      friendly_name: "Arkime Capture",
       package_name: "moloch",
       message: "Will be installed with Moloch",
       network_interface_changes: false,
@@ -246,7 +245,7 @@ module.exports = function (component) {
     },
     {
       name: "molochviewer",
-      friendly_name: "Moloch Viewer",
+      friendly_name: "Arkime Viewer",
       package_name: "moloch",
       message: "Will be installed with Moloch",
       network_interface_changes: false,
@@ -266,7 +265,7 @@ module.exports = function (component) {
     },
     {
       name: "molochwise",
-      friendly_name: "Moloch Wise",
+      friendly_name: "Arkime Wise",
       package_name: "moloch",
       message: "Will be installed with Moloch",
       network_interface_changes: false,
@@ -632,6 +631,7 @@ module.exports = function (component) {
           case "molochviewer":
           case "molochcapture":
           case "molochwise":
+          case "netdata":
             if (input.name == "vpn") service_name = "'openvpn@detector'";
 
             hell.o("run systemctl", "checkStatusSystemctl", "info");
@@ -1180,8 +1180,6 @@ module.exports = function (component) {
 
             //for testing errors in the frontend
             let log_err = "";
-            if (comp.name == "netdata") log_err = comp.name + ": test error for netdata... ";
-
             let output = {logs: comp.name + ": OK LOGS " + new Date(), logs_error: log_err, exit_code: 0};
 
             setTimeout(function () {
