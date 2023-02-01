@@ -293,12 +293,12 @@ module.exports = function (report) {
           }
         };
 
+        elastic_params.body.size = 5000;
+
         if (!settings.alerts_severity_all) {
           //hell.o("settings.alerts_severity_all == false", "checkAlerts", "info");
           elastic_params.body.query.bool.must.push({term: {"alert.severity": 1}});
         }
-
-        elastic_params.body.size = 100;
 
         hell.o("elastic call", "checkAlerts", "info");
         hell.o(JSON.stringify(elastic_params), "checkAlerts", "info");
@@ -414,21 +414,30 @@ module.exports = function (report) {
          send to central
          */
         hell.o("post to central: " + alert_count_to_send, "alertsRoutine", "info");
-        let central_input = {alerts: alerts_checked.alerts};
         let post_to_central;
 
-        try {
-          post_to_central = await report.app.models.central.connector().post("/report/alerts", central_input);
-        } catch (err) {
-          hell.o("post to central failed", "alertsRoutine", "error");
+        let central_input_chunks = [];
+        let chunk_size = 100;
+        for (let i = 0; i < alerts_checked.alerts.length; i += chunk_size) {
+            let chunk = alerts_checked.alerts.slice(i, i + chunk_size);
+            central_input_chunks.push(chunk);
+        }
 
-          let out = "Central API down [ " + err.message + " ]";
-          if (err.response && err.response.data
-            && err.response.data.error && err.response.data.error.message) {
-            out = err.response.data.error.message;
-          }
+        for (let i = 0; i < central_input_chunks.length; i++) {
+            let central_input = {alerts: central_input_chunks[i]};
+            try {
+            post_to_central = await report.app.models.central.connector().post("/report/alerts", central_input);
+            } catch (err) {
+            hell.o("post to central failed", "alertsRoutine", "error");
 
-          throw new Error(out);
+            let out = "Central API down [ " + err.message + " ]";
+            if (err.response && err.response.data
+                && err.response.data.error && err.response.data.error.message) {
+                out = err.response.data.error.message;
+            }
+
+            throw new Error(out);
+            }
         }
 
         hell.o("going to check alarm pointer: " + alerts_checked.alerts_pointer, "alertsRoutine", "info");
