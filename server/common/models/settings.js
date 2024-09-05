@@ -17,7 +17,7 @@ module.exports = function (settings) {
    * @returns {Promise}
    */
   settings.updateSetting = function (name, value, options, httpReq, cb) {
-    hell.o(["update setting", "start name: " + name + " value: " + value], "updateSetting", "info");
+    hell.o(["update setting", `start name: ${name} value: ${value}`], "updateSetting", "info");
 
     if (httpReq !== undefined) {
       // console.log( httpReq );
@@ -35,7 +35,7 @@ module.exports = function (settings) {
 
         //hell.o(["current", setts], "updateSetting", "info");
 
-        if (!setts.includes(name)) throw new Error("illegal setting: " + name);
+        if (!setts.includes(name)) throw new Error(`illegal setting: ${name}`);
         if (sett[name] == value) return cb({name: "Error", status: 400, message: "no_changes"});
 
         /*
@@ -164,9 +164,9 @@ module.exports = function (settings) {
 
       if (!PATH_BASE) throw new Error("env missing: PATH_BASE");
 
-      let exists = await fs.existsSync(PATH_BASE);
+      let exists = fs.existsSync(PATH_BASE);
       if (!exists) {
-        throw new Error("path does not exist: " + PATH_BASE);
+        throw new Error(`path does not exist: ${PATH_BASE}`);
       }
 
       if (found_settings.path_content_base !== PATH_BASE) {
@@ -174,15 +174,15 @@ module.exports = function (settings) {
 
         let update_paths = {
           path_content_base: PATH_BASE,
-          path_suricata_content: PATH_BASE + "suricata/",
-          path_moloch_content: PATH_BASE + "moloch/",
-          path_moloch_yara: PATH_BASE + "moloch/yara/",
-          path_moloch_yara_ini: PATH_BASE + "moloch/yara.ini",
-          path_moloch_wise_ini: PATH_BASE + "moloch/wise.ini",
-          path_moloch_wise_ip: PATH_BASE + "moloch/wise_ip/",
-          path_moloch_wise_ja3: PATH_BASE + "moloch/wise_ja3/",
-          path_moloch_wise_url: PATH_BASE + "moloch/wise_url/",
-          path_moloch_wise_domain: PATH_BASE + "moloch/wise_domain/"
+          path_suricata_content: `${PATH_BASE}suricata/`,
+          path_moloch_content: `${PATH_BASE}moloch/`,
+          path_moloch_yara: `${PATH_BASE}moloch/yara/`,
+          path_moloch_yara_ini: `${PATH_BASE}moloch/yara.ini`,
+          path_moloch_wise_ini: `${PATH_BASE}moloch/wise.ini`,
+          path_moloch_wise_ip: `${PATH_BASE}moloch/wise_ip/`,
+          path_moloch_wise_ja3: `${PATH_BASE}moloch/wise_ja3/`,
+          path_moloch_wise_url: `${PATH_BASE}moloch/wise_url/`,
+          path_moloch_wise_domain: `${PATH_BASE}moloch/wise_domain/`,
         };
 
         await settings.update({id: found_settings.id}, update_paths);

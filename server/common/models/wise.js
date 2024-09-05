@@ -61,7 +61,7 @@ module.exports = function (wise) {
           hell.o(["central input ", central_input], "checkRoutine", "info");
           central_result = await wise.app.models.central.connector().post("/report/wise", central_input);
         } catch (err) {
-          let out = "Central API down [ " + err.message + " ]";
+          let out = `Central API down [ ${err.message} ]`;
           if (err.response && err.response.data
             && err.response.data.error && err.response.data.error.message) {
             out = err.response.data.error.message;
@@ -109,7 +109,6 @@ module.exports = function (wise) {
     hell.o("start", "saveContents", "info");
 
     try {
-
       //to remove unused in the end of the check
       let current_list = await wise.find();
       let current_wise_list = [];
@@ -137,13 +136,13 @@ module.exports = function (wise) {
           hell.o(current_wise_list, "saveContents", "info");
           hell.o("current", "saveContents", "info");
           hell.o(current, "saveContents", "info");
-          current_wise_list = current_wise_list.filter((value, index, arr) => value !== feed.name);
+          current_wise_list = current_wise_list.filter(value => value !== feed.name);
         }
 
-        let content_path = settings["path_moloch_" + feed.type];
+        let content_path = settings[`path_moloch_${feed.type}`];
         let output = {
           folder: content_path + feed.name + "/",
-          local_path: content_path + "/" + feed.name + "/" + feed.filename
+          local_path: `${content_path}/${feed.name}/${feed.filename}`,
         };
 
         hell.o([feed.name, "check folders"], "saveContents", "info");
@@ -204,10 +203,9 @@ module.exports = function (wise) {
         hell.o("changes detected, apply new conf", "saveContents", "info");
         await wise.generateAndApply();
         await wise.app.models.central.lastSeen(null, "wise", true);
-      } else
-      {
+      } else {
         hell.o("no changes", "saveContents", "info");
-      }
+      };
 
       hell.o("done", "saveContents", "info");
       return true;

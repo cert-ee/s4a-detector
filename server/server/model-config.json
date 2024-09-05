@@ -113,6 +113,10 @@
     "dataSource": "db",
     "public": true
   },
+  "feed": {
+    "dataSource": "db",
+    "public": true
+  },
   "boot": {
     "dataSource": "db",
     "public": true

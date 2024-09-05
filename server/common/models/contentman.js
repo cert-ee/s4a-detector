@@ -106,7 +106,7 @@ module.exports = function (contentman) {
   //     let stats, exists, counter = 0;
   //
   //     if (files.length == 0) {
-  //       throw new Error("no files to remove " + folder);
+  //       throw new Error(`no files to remove ${folder}`);
   //     }
   //
   //     hell.o([files.length, " files found to remove"], "removeFilesR", "info");
@@ -175,7 +175,7 @@ module.exports = function (contentman) {
 
       if (create_file === undefined) create_file = true;
 
-      let file_exists = await fs.existsSync(path_to_check);
+      let file_exists = fs.existsSync(path_to_check);
       if (file_exists) {
         hell.o("done", "pathCheck", "info");
         return true;
@@ -191,21 +191,21 @@ module.exports = function (contentman) {
       var filename = splitted.slice(splitted.length, 1);
 
       let current_folder = "";
-      for (const fd in folders) {
+      for (const fd of folders) {
 
-        current_folder = current_folder + "/" + folders[fd];
-        let check_folder = await fs.existsSync(current_folder);
+        current_folder = `${current_folder}/${fd}`;
+        let check_folder = fs.existsSync(current_folder);
 
         hell.o(["check folder", current_folder], "pathCheck", "info");
         if (!check_folder) {
-          let make_folder = await fs.mkdirSync(current_folder);
+          fs.mkdirSync(current_folder);
           hell.o(["make folder", current_folder], "pathCheck", "info");
         }
       }
 
       if (!file_exists) {
         hell.o(["make empty file", path_to_check], "pathCheck", "info");
-        await fs.writeFileSync(path_to_check, "");
+        fs.writeFileSync(path_to_check, "");
       }
       hell.o("done", "pathCheck", "info");
       return true;

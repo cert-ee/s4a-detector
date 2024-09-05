@@ -1,44 +1,31 @@
 {
-  "name": "tag",
-  "plural": "tags",
+  "name": "feed",
+  "plural": "feeds",
   "base": "PersistedModel",
-  "idInjection": true,
-  "options": {
-    "validateUpsert": true
-  },
   "properties": {
     "name": {
       "type": "string",
-      "required": true,
-      "index": true,
-      "description": "Tag name"
+      "description": "Feed name",
+      "required": true
     },
-    "description": {
+    "location": {
       "type": "string",
-      "required": true,
-      "description": "Tag description"
+      "description": "Feed folder path",
+      "required": false,
+      "default": ""
+    },
+    "filename": {
+      "type": "string",
+      "description": "Feed filename",
+      "required": false,
+      "default": ""
     }
   },
   "validations": [],
   "relations": {
-    "detectors": {
+    "tags": {
       "type": "hasAndBelongsToMany",
-      "model": "detector",
-      "foreignKey": ""
-    },
-    "feeds": {
-      "type": "hasAndBelongsToMany",
-      "model": "feed",
-      "foreignKey": ""
-    },
-    "rules": {
-      "type": "hasAndBelongsToMany",
-      "model": "rule",
-      "foreignKey": ""
-    },
-    "rulesets": {
-      "type": "hasAndBelongsToMany",
-      "model": "ruleset",
+      "model": "tag",
       "foreignKey": ""
     }
   },
@@ -47,7 +34,7 @@
       "accessType": "*",
       "principalType": "ROLE",
       "principalId": "$everyone",
-      "permission": "ALLOW"
+      "permission": "DENY"
     },
     {
       "accessType": "*",
@@ -70,3 +57,4 @@
   ],
   "methods": {}
 }
+  

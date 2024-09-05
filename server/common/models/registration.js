@@ -38,7 +38,7 @@ module.exports = function (registration) {
           organization_name: organization_name,
           contact_phone: contact_phone,
           contact_email: contact_email,
-          machine_id: machine_id + "_" + Math.floor(new Date()),
+          machine_id: `${machine_id}_${Math.floor(new Date())}`,
           registration_status: "Started"
         };
 
@@ -68,7 +68,7 @@ module.exports = function (registration) {
           hell.o(["central response", central_result.data], "initiate", "info");
         } catch (err) {
 
-          let out = "Central API down [ " + err.message + " ]";
+          let out = `Central API down [ ${err.message} ]`;
           if (err.response && err.response.data
             && err.response.data.error && err.response.data.error.message) {
             out = err.response.data.error.message;
@@ -140,7 +140,7 @@ module.exports = function (registration) {
 
       if (process.env.NODE_ENV == "dev") {
         hell.o("DEV mode, return dummy", "createCSR", "warn");
-        success("CSR DEMO " + new Date());
+        success(`CSR DEMO ${new Date()}`);
         return;
       }
 
@@ -173,7 +173,7 @@ module.exports = function (registration) {
 
       if (process.env.NODE_ENV == "dev") {
         hell.o("DEV mode, return dummy", "signedCsrSave", "warn");
-        success("CSR DEMO " + new Date());
+        success(`CSR DEMO ${new Date()}`);
         return;
       }
 
@@ -211,7 +211,7 @@ module.exports = function (registration) {
             complete_registration = await registration.app.models.central.connector().get("/registration/completeRegistrationRejected");
             hell.o(["central response", complete_registration.data], "registrationRejected", "info");
           } catch (err) {
-            let out = "Central API down [ " + err.message + " ]";
+            let out = `Central API down [ ${err.message} ]`;
             if (err.response && err.response.data
               && err.response.data.error && err.response.data.error.message) {
               out = err.response.data.error.message;
@@ -273,7 +273,7 @@ module.exports = function (registration) {
             complete_registration = await registration.app.models.central.connector().get("/registration/completeRegistration");
             hell.o(["central response", complete_registration.data], "registrationApproved", "info");
           } catch (err) {
-            let out = "Central API down [ " + err.message + " ]";
+            let out = `Central API down [ ${err.message} ]`;
             if (err.response && err.response.data
               && err.response.data.error && err.response.data.error.message) {
               out = err.response.data.error.message;
@@ -316,9 +316,8 @@ module.exports = function (registration) {
 
 
           hell.o("initial components check run", "registrationApproved", "info");
-          let check_components = registration.app.models.component.checkRoutine(null, function () {
+          registration.app.models.component.checkRoutine(null, function () {
             {
-
               hell.o("initial components done", "registrationApproved", "info");
             }
           });
@@ -392,7 +391,7 @@ module.exports = function (registration) {
           new_token = await registration.app.models.central.connector().get("/registration/rollToken");
           hell.o(["central result", new_token.data], "renewToken", "info");
         } catch (err) {
-          let out = "Central API down [ " + err.message + " ]";
+          let out = `Central API down [ ${err.message} ]`;
           if (err.response && err.response.data
             && err.response.data.error && err.response.data.error.message) {
             out = err.response.data.error.message;

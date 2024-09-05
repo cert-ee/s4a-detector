@@ -12,7 +12,7 @@ module.exports = function (rule) {
    * @param cb
    */
   rule.rules_routine_active = false;
-  rule.checkRoutine = function (params, cb) {
+  rule.checkRoutine = async function (params) {
     hell.o("start", "checkRoutine", "info");
     if (params !== undefined) {
       hell.o(params, "checkRoutine", "info");
@@ -20,236 +20,123 @@ module.exports = function (rule) {
 
     if (!rule.app.models.central.CENTRAL_ACTIVATED) {
       hell.o("central is not activated yet, return", "checkRoutine", "warn");
-      return cb({name: "Error", status: 400, message: "not_approved"});
+      return {name: "Error", status: 400, message: "not_approved"};
     }
     if (rule.rules_routine_active) {
       hell.o("is already running, busy", "checkRoutine", "warn");
-      return cb({name: "Error", status: 400, message: "worker_busy"});
+      return {name: "Error", status: 400, message: "worker_busy"};
     }
 
     rule.rules_routine_active = true;
 
-    (async function () {
-      try {
+    try {
+      let settings = await rule.app.models.settings.findOne();
+      let central_info = await rule.app.models.central.findOne();
 
-        let settings = await rule.app.models.settings.findOne();
-        let central_info = await rule.app.models.central.findOne();
+      //console.log(`last_update_rules from db: ${central_info.last_rules_update}` );
+      //let central_input = {last_update: "TIMESTAMP"};
+      let rules_test = await rule.find({limit: 10});
 
-        // console.log( "last_update_rules from db: " + central_info.last_rules_update );
-        //let central_input = {last_update: "TIMESTAMP"};
-        let rules_test = await rule.find({limit: 10});
+      let central_input = {last_rules_update: "full"};
+      if (central_info.last_rules_update !== undefined && rules_test.length == 10 && (
+        params === undefined || params === null || params.full_check !== true)) {
 
-        let central_input = {last_rules_update: "full"};
-        if (central_info.last_rules_update !== undefined && rules_test.length == 10 && (
-          params === undefined || params === null || params.full_check !== true)) {
-
-          central_input = {last_rules_update: central_info.last_rules_update};
-        }
-
-        //after boot always perform full sync
-        if (!rule.app.models.boot.tasks.rules_full_sync) {
-          rule.app.models.boot.tasks.rules_full_sync = true;
-          central_input = {last_rules_update: "full"};
-        }
-
-        //central_input = {last_rules_update: "full"}; //initiate full sync on demand
-
-        let central_result;
-        try {
-          hell.o(["central input ", central_input], "checkRoutine", "info");
-          central_result = await rule.app.models.central.connector().post("/report/rules", central_input);
-        } catch (err) {
-          let out = "Central API down [ " + err.message + " ]";
-          if (err.response && err.response.data
-            && err.response.data.error && err.response.data.error.message) {
-            out = err.response.data.error.message;
-          }
-
-          throw new Error(out);
-        }
-
-        // console.log( central_result.data.rules );
-
-        let new_rule_count = central_result.data.rules.length;
-        hell.o(["new rules count", new_rule_count], "checkRoutine", "info");
-
-        if (new_rule_count == 0) {
-          hell.o("no new rules", "checkRoutine", "info");
-          rule.app.models.central.lastSeen(null, "rules", true);
-          rule.rules_routine_active = false;
-
-          if (cb) return cb(null, {message: "ok"});
-          return true;
-        }
-
-        if (settings.auto_rules == false) {
-          hell.o("new rules available, but automatic download disabled", "checkRoutine", "info");
-          rule.app.models.central.update({id: "centralid"}, {rules_new_available: new_rule_count});
-          rule.app.models.central.lastSeen(null, "rules", true);
-          rule.rules_routine_active = false;
-          if (cb) return cb(null, {message: "ok"});
-          return true;
-        }
-
-        /**
-         * LOOP NEW RULES
-         */
-        let current_rule, sid, enabled, revision, found, inserted, updated, rule_info, latest_change_central = false;
-        for (let i = 0, l = new_rule_count; i < l; i++) {
-
-          if (i % 250 === 0) { //just to show activity in the logs for full sync
-            hell.o("looping new rules " + i + " / " + new_rule_count, "checkRoutine", "info");
-          }
-
-          rule_info = central_result.data.rules[i];
-          sid = rule_info.sid;
-          enabled = rule_info.enabled;
-          revision = parseInt(rule_info.revision);
-
-          /*
-          remember latest change time for next update polling
-           */
-          if (!latest_change_central) {
-            latest_change_central = rule_info.modified_time;
-          } else {
-            if (rule_info.modified_time > latest_change_central) {
-              latest_change_central = rule_info.modified_time;
-            }
-          }
-
-
-          let update_input, update_result, tag_rule, ruleset, rs_tags, draft_input;
-          let rule_found = await rule.findOne({where: {sid: sid}});
-
-          //create ruleset if new
-          [ruleset] = await rule.app.models.ruleset.findOrCreate(
-            {where: {name: rule_info.ruleset}, include: ['tags']}, {name: rule_info.ruleset});
-          rs_tags = ruleset.tags ? ruleset.tags : [];
-          //hell.o([current_rule.sid, "" + current_rule.ruleset ], "checkRoutine", "info");
-
-          //create classtype if new
-          if (rule_info.classtype !== "" || rule_info.classtype !== undefined) {
-            let classtype_found = await rule.app.models.rule_classtype.findOrCreate(
-              {where: {name: rule_info.classtype}}, {name: rule_info.classtype}
-            );
-          }
-
-          /*
-           * IF RULESET HAS FORCE DISABLED
-           */
-          if (ruleset.force_disabled === true || rule_found && rule_found.force_disabled) {
-            enabled = false;
-            rule_info.enabled = false;
-          }
-
-          /*
-          NEW RULE, CREATE
-           */
-          if (!rule_found) {
-            hell.o([sid, "no rule found, create"], "checkRuleLine", "info");
-            if (!ruleset.skip_review) {
-              rule_info.enabled = false;
-            }
-
-            let rule_create = await rule.create(rule_info);
-            if (!rule_create) throw new Error("failed to create rule");
-
-            //add tags if needed
-            if (rs_tags.length > 0) {
-              for (let i = 0, l = rs_tags.length; i < l; i++) {
-                tag_rule = await rule_create.tags.add(rs_tags[i]);
-                if (!tag_rule) throw new Error(sid + " failed to add new tag");
-              }
-            }
-
-            //if automatically is disable for ruleset, but rule should be enabled, add to drafts
-            if (!ruleset.skip_review && enabled) {
-              hell.o([sid, "create draft"], "checkRuleLine", "info");
-              draft_input = [{id: rule_create.id, enabled: true}];
-              rule.app.models.rule_draft.more(draft_input, null, function () {
-                hell.o([sid, "draft created"], "checkRuleLine", "info");
-              });
-            }
-
-            continue;
-          }
-
-          /*
-          IF REVISION OLDER
-           */
-          if (rule_found.revision > revision) {
-            continue;
-          }
-
-          /*
-          SAME REVISION, CHECK IF ENABLED IS STILL UNCHANGED
-           */
-          if (rule_found.revision == revision) { //if same revision, only enable/disable changes for now
-            if (rule_found.enabled == enabled || rule_found.force_disabled && !enabled) {
-              // hell.o([sid, "no changes"], "checkRuleLine", "info");
-              continue;
-            }
-          }
-
-          /*
-          SKIP REVIEW - AUTOMATIC UPDATE ALLOWED FOR RULESET
-           */
-          if (ruleset.skip_review) {
-            hell.o([sid, "new revision update"], "checkRuleLine", "info");
-            // hell.o([sid, rule_info], "checkRuleLine", "info");
-            update_result = await rule.update({id: rule_found.id}, rule_info);
-            if (!update_result) throw new Error(sid + " failed to update rule");
-            hell.o([sid, "update ok"], "checkRuleLine", "info");
-            continue;
-          }
-
-          /*
-          AUTOMATIC UPDATES NOT ALLOWED FOR RULESET, DRAFT IT
-           */
-          if (rule_found.revision == revision && rule_found.enabled != enabled) {
-            //toggle enabled
-            hell.o([sid, "enable change " + enabled], "checkRuleLine", "info");
-            draft_input = [{id: rule_found.id, enabled: enabled}];
-
-          } else { //must new revision
-
-            delete rule_info.modified_time;
-            rule_info.id = rule_found.id;
-            draft_input = [rule_info];
-          }
-          hell.o([sid, "create draft"], "checkRuleLine", "info");
-
-          await rule.app.models.rule_draft.more(draft_input, null, function () {
-            hell.o([sid, "draft created"], "checkRuleLine", "info");
-            //return success(true);
-          });
-
-        } //for loop
-
-        hell.o("loop done, go to apply new rules", "checkRoutine", "info");
-        await rule.applyNewRules();
-
-        let central_changes = {last_rules_update: latest_change_central, last_rules_check: new Date()};
-        let change_last_update_time = await rule.app.models.central.update({id: "centralid"}, central_changes);
-        hell.o(["latest change in central", latest_change_central], "checkRoutine", "info");
-        hell.o(["New rules count: ", new_rule_count], "checkRoutine", "info");
-
-        rule.app.models.central.lastSeen(null, "rules", true);
-
-        hell.o("done", "checkRoutine", "info");
-        rule.rules_routine_active = false;
-        if (cb) return cb(null, {message: "ok"});
-        return true;
-      } catch (err) {
-        hell.o(err, "checkRoutine", "error");
-        rule.app.models.central.lastSeen(null, "rules", false);
-        rule.rules_routine_active = false;
-        if (cb) return cb({name: "error", status: 400, message: err.message});
-        return false;
+        central_input = {last_rules_update: central_info.last_rules_update};
       }
 
-    })(); // async
+      //after boot always perform full sync
+      if (!rule.app.models.boot.tasks.rules_full_sync) {
+        rule.app.models.boot.tasks.rules_full_sync = true;
+        central_input = {last_rules_update: "full"};
+      }
 
+      //central_input = {last_rules_update: "full"}; //initiate full sync on demand
+
+      let central_result;
+      try {
+        hell.o(["central input ", central_input], "checkRoutine", "info");
+        central_result = await rule.app.models.central.connector().post("/report/rules", central_input);
+      } catch (err) {
+        let out = `Central API down [ ${err.message} ]`;
+        if (err.response && err.response.data
+          && err.response.data.error && err.response.data.error.message) {
+          out = err.response.data.error.message;
+        }
+
+        throw new Error(out);
+      }
+
+      // console.log( central_result.data.rules );
+
+      let feeds_length = central_result.data.feeds.length;
+      hell.o(["new feed count", feeds_length], "checkRoutine", "info");
+
+      if (feeds_length === 0) {
+        hell.o("no new feeds", "checkRoutine", "info");
+        rule.app.models.central.lastSeen(null, "rules", true);
+        rule.rules_routine_active = false;
+
+        return {message: "ok"};
+      }
+
+      if (settings.auto_rules == false) {
+        hell.o("new rules available, but automatic download disabled", "checkRoutine", "info");
+        rule.app.models.central.update({id: "centralid"}, {rules_new_available: feeds_length});
+        rule.app.models.central.lastSeen(null, "rules", true);
+        rule.rules_routine_active = false;
+        return {message: "ok"};
+      }
+
+      /**
+       * LOOP NEW RULES
+       */
+
+      hell.o(["got feeds", central_result.data.feeds], 'checkRoutine', 'info');
+
+      let feeds = await Promise.all(central_result.data.feeds
+        .map(feed => feed.name.replace(/\//g, '_'))
+        .map(feed_name => rule.app.models.feed.findOrCreate({where: {name: feed_name}}, {name: feed_name, location: settings.path_suricata_content, filename: `${feed_name}.tar.gz`}))
+      );
+
+      for (let [feed] of feeds) {
+        hell.o(`fetching feed ${feed.name}`, 'checkRoutine', 'info');
+        let response = await rule.app.models.central.connector().post("/report/feedFetch", {feed_name: feed.name, Accept: 'application/octet-stream'}, {responseType: 'arraybuffer'});
+        let path = feed.location + feed.filename;
+        let tmp_path = path + '.tmp';
+        await rule.app.models.contentman.pathCheck(tmp_path);
+        await fs.promises.writeFile(tmp_path, response.data);
+        await fs.promises.rename(tmp_path, path);
+        hell.o(`wrote feed file for ${feed.name}`, 'checkRoutine', 'info');
+      };
+
+      hell.o("fetching disable SIDs file", 'checkRoutine', 'info');
+      let response = await rule.app.models.central.connector().post("/report/sidFetch", {Accept: 'application/octet-stream'}, {responseType: 'arraybuffer'});
+      hell.o("fetched disable SIDs file", 'checkRoutine', 'info');
+      let path = settings.path_suricata_content + 'disabled_rule_sids.txt';
+      let tmp_path = path + '.tmp';
+      await rule.app.models.contentman.pathCheck(tmp_path);
+      await fs.promises.writeFile(tmp_path, response.data);
+      await fs.promises.rename(tmp_path, path);
+
+      /*await Promise.all(feeds.map(async ([feed]) => {
+        hell.o(`fetching feed ${JSON.stringify(feed)}`, 'checkRoutine', 'info');
+        let response = await rule.app.models.central.connector().post("/report/feedFetch", {feed_name: feed.name}, {responseType: 'arraybuffer'});
+        let path = feed.location + feed.filename;
+        await fs.promises.writeFile(path, response.data);
+        hell.o(`wrote feed file for ${feed.name}`, 'checkRoutine', 'info');
+      }));*/
+      
+
+      hell.o("done", "checkRoutine", "info");
+      rule.app.models.central.lastSeen(null, "rules", true);
+      rule.rules_routine_active = false;
+      return {message: "ok"};
+    } catch (err) {
+      hell.o(err, "checkRoutine", "error");
+      rule.app.models.central.lastSeen(null, "rules", false);
+      rule.rules_routine_active = false;
+      throw {name: "error", status: 400, message: err.message};
+    }
   };
 
   rule.remoteMethod('checkRoutine', {

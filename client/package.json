@@ -1,6 +1,6 @@
 {
   "name": "s4a-detector-client",
-  "version": "0.2.301",
+  "version": "0.3.0",
   "description": "s4a detector",
   "license": "MIT",
   "private": true,
@@ -24,6 +24,7 @@
     "highlight.js": "^10.4.1",
     "material-design-icons-iconfont": "5.0.1",
     "nuxt": "2.15.8",
+    "stylus-loader": "3.0.2",
     "typeface-roboto": "0.0.75",
     "vue-highlight-component": "1.0.0",
     "vue-i18n": "8.18.1",
@@ -40,7 +41,6 @@
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-promise": "4.2.1",
     "eslint-plugin-standard": "4.0.1",
-    "stylus": "0.54.7",
-    "stylus-loader": "3.0.2"
+    "stylus": "0.54.7"
   }
 }

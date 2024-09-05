@@ -32,7 +32,7 @@ module.exports = function (notify) {
       }
 
       if (!notifications || notifications === undefined || notifications.length == 0 || notifications == "") {
-        hell.o("count: " + notifications.length, "check notifications", "info")
+        hell.o(`count: ${notifications.length}`, "check notifications", "info")
 
         // Example alerts
         let input_data = [
@@ -215,7 +215,7 @@ module.exports = function (notify) {
         }
 
         let entry_ptr = input.alerts_pointer;
-        hell.o("pointer " + entry_ptr, "checkAlerts", "info");
+        hell.o(`pointer ${entry_ptr}`, "checkAlerts", "info");
 
         let elastic_params = {index: "*", body: {}};
 
@@ -226,7 +226,7 @@ module.exports = function (notify) {
           let d = new Date();
           d.setMonth(d.getMonth() - 1);
           entry_ptr = d.toISOString();
-          hell.o("alerts pointer now" + entry_ptr, "checkAlerts", "info");
+          hell.o(`alerts pointer now${entry_ptr}`, "checkAlerts", "info");
         }
 
         // elastic_params.body = JSON.parse(input.query);
@@ -243,7 +243,7 @@ module.exports = function (notify) {
         // testing
         elastic_params.body.query.bool.must.push({"term": {"event_type": "alert"}});
         // only results we haven't notified yet
-        elastic_params.body.query.bool.must.push({"range": {"timestamp": {"gt": "" + entry_ptr}}});
+        elastic_params.body.query.bool.must.push({"range": {"timestamp": {"gt": `${entry_ptr}`}}});
 
         if (!elastic_params.body.size) {
           elastic_params.body.size = 100;
@@ -283,7 +283,7 @@ module.exports = function (notify) {
 
           if (counter == 0) hits = [];
 
-          hell.o("done: " + counter, "checkAlerts", "info");
+          hell.o(`done: ${counter}`, "checkAlerts", "info");
           success({alerts_pointer: entry_ptr, alerts: hits, aggregation_match: aggregation_match, aggregations: aggregations});
 
         }).catch(function (e) {
@@ -311,7 +311,7 @@ module.exports = function (notify) {
    * @param cb
    */
   notify.toggleEnable = function (notify_name, enabled, cb) {
-    hell.o(["start " + notify_name, "enabled " + enabled], "toggleEnable", "info");
+    hell.o([`start ${notify_name}`, `enabled ${enabled}`], "toggleEnable", "info");
 
     (async function () {
       try {
@@ -381,24 +381,24 @@ module.exports = function (notify) {
         let notifying = await notify.find({where: {"enabled": true}});
         let settings = await notify.app.models.settings.findOne();
 
-        for (let ntfy_id = 0; ntfy_id < notifying.length; ntfy_id++) {
+        //for (let ntfy_id = 0; ntfy_id < notifying.length; ntfy_id++) {
+        for (let ntfy of notifying) {
+          hell.o(`Notify #${ntfy_id}`, "notifyRoutine", "info");
 
-          hell.o("Notify #" + ntfy_id, "notifyRoutine", "info");
-
-          notify.current_notify = notifying[ntfy_id];
+          notify.current_notify = ntfy;
 
           hell.o("check for alerts to notify", "notifyRoutine", "info");
-          let alerts_checked = await notify.checkAlerts(notifying[ntfy_id]);
+          let alerts_checked = await notify.checkAlerts(ntfy);
           if (!alerts_checked) throw new Error("load_failed");
 
           let alert_count_to_send = alerts_checked.alerts.length;
           let aggregation_match = alerts_checked.aggregation_match;
           if (alert_count_to_send == 0 && !aggregation_match) { //nothing to send
-            hell.o("done, no alerts to notify, ptr: " + notifying[ntfy_id].alerts_pointer, "notifyRoutine", "info");
+            hell.o(`done, no alerts to notify, ptr: ${ntfy.alerts_pointer}`, "notifyRoutine", "info");
             continue;
           }
-          hell.o("notify alerts: " + alert_count_to_send, "notifyRoutine", "info");
-          hell.o("notify aggregation match: " + aggregation_match, "notifyRoutine", "info");
+          hell.o(`notify alerts: ${alert_count_to_send}`, "notifyRoutine", "info");
+          hell.o(`notify aggregation match: ${aggregation_match}`, "notifyRoutine", "info");
           let notify_input = {alerts: alerts_checked.alerts};
           let send_notfications;
 
@@ -411,34 +411,28 @@ module.exports = function (notify) {
 
             if (alerts_checked.aggregations) {
               // aggregation alarm
-              Object.keys(alerts_checked.aggregations).forEach(function (key) {
-                for (let j = 0, b_length = alerts_checked.aggregations[key].buckets.length; j < b_length; j++) {
-                  let agg_result = alerts_checked.aggregations[key].buckets[j];
-                  // TODO: This here is just for testing, what should be in those results?
-                  message_text += "key: " + agg_result.key + "\t" + "count: " + agg_result.doc_count + "\n---\n";
-                }
-              });
+              for (let agg of Object.values(alerts_checked.aggregations)) {
+                for (let agg_result of agg.buckets) {
+                  message_text += `key: ${agg_result.key}\tcount: ${agg_result.doc_count}\n---\n`;
+                };
+              };
             } else {
                 // regular alarm
-                for (let i = 0, l = notify_input.alerts.length; i < l; i++) {
-                  let alert = notify_input.alerts[i];
- 
-                  message_text += "category: " + alert._source.alert.category + "\n"
-                    + "signature: " + alert._source.alert.signature + "\n"
-                    + alert._source.src_ip + ":" + alert._source.src_port
-                    + " -> "
-                    + alert._source.dest_ip + ":" + alert._source.dest_port + "\n"
-                    + "---\n";
+                for (let alert of notify_input.alerts) {
+                  message_text += `category: ${alert._source.alert.category}\n`
+                    + `signature: ${alert._source.alert.signature}\n`
+                    + `${alert._source.src_ip}:${alert._source.src_port} -> ${alert._source.dest_ip}:${alert._source.dest_port}\n`
+                    + `---\n`;
                 }
             }
             
             let message = {
               from: settings['smtp_server_from'],
-              to: notifying[ntfy_id].email,
-              subject: notifying[ntfy_id].subject,
+              to: ntfy.email,
+              subject: ntfy.subject,
               text: message_text
             }
-            hell.o("subject: " + notifying[ntfy_id].subject, "notifyRoutine", "info");
+            hell.o(`subject: ${ntfy.subject}`, "notifyRoutine", "info");
             send_notfications = await notify.nm_client.sendMail(message);
             hell.o(["sendMail result", send_notfications], "notifyRoutine", "info");
 
@@ -446,9 +440,9 @@ module.exports = function (notify) {
             if (aggregation_match)
               alerts_checked.alerts_pointer = new Date().toISOString();
 
-            hell.o("going to check alarm pointer: " + alerts_checked.alerts_pointer, "notifyRoutine", "info");
+            hell.o(`going to check alarm pointer: ${alerts_checked.alerts_pointer}`, "notifyRoutine", "info");
             if (alerts_checked.alerts_pointer !== undefined && Date.parse(alerts_checked.alerts_pointer)) { //if date format
-              hell.o("update alarm pointer: " + alerts_checked.alerts_pointer, "notifyRoutine", "info");
+              hell.o(`update alarm pointer: ${alerts_checked.alerts_pointer}`, "notifyRoutine", "info");
 
               notify_input = {
                 alerts_pointer: alerts_checked.alerts_pointer,
@@ -456,16 +450,16 @@ module.exports = function (notify) {
                 last_logs: send_notfications
               };
 
-              let updated_pointer = await notify.update({id: notifying[ntfy_id].id}, notify_input);
+              let updated_pointer = await notify.update({id: ntfy.id}, notify_input);
               if (!updated_pointer) throw new Error("notify_pointer_save_failed");
             } else {
-              hell.o("malformed notify alarm pointer: " + alerts_checked.alerts_pointer, "notifyRoutine", "error");
+              hell.o(`malformed notify alarm pointer: ${alerts_checked.alerts_pointer}`, "notifyRoutine", "error");
             }
 
           } catch (err) {
-            hell.o("notify failed: " + err.message, "notifyRoutine", "error");
+            hell.o(`notify failed: ${err.message}`, "notifyRoutine", "error");
 
-            // let out = "Notification failed [ " + err.message + " ]";
+            // let out = `Notification failed [ ${err.message} ]`;
             // if (err.response && err.response.data
             //   && err.response.data.error && err.response.data.error.message) {
             //   out = err.response.data.error.message;

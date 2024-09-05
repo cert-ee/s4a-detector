@@ -28,7 +28,7 @@ module.exports = function (ruleset) {
       for (const rs of default_rulesets) {
         hell.o(["check ruleset", rs.name], "initialize", "info");
         create_result = await ruleset.findOrCreate({where: rs}, rs);
-        if (!create_result) throw new Error("failed to create ruleset " + rs.name);
+        if (!create_result) throw new Error(`failed to create ruleset ${rs.name}`);
       }
       return true;
     } catch (err) {
@@ -47,7 +47,7 @@ module.exports = function (ruleset) {
    * @param cb
    */
   ruleset.toggleAll = function (ruleset_name, enabled, options, cb) {
-    hell.o(["start " + ruleset_name, "enabled " + enabled], "toggleAll", "info");
+    hell.o([`start ${ruleset_name}`, `enabled ${enabled}`], "toggleAll", "info");
 
     (async function () {
       try {
@@ -96,7 +96,7 @@ module.exports = function (ruleset) {
    */
   ruleset.tagAll = function (ruleset_name, tag_id, enabled, options, cb) {
 
-    hell.o([ruleset_name + " start", ruleset_name + " " + " tag: " + tag_id + " enabled: " + enabled], "tagAll", "info");
+    hell.o([`${ruleset_name} start`, `${ruleset_name}  tag: ${tag_id} enabled: ${enabled}`], "tagAll", "info");
 
     (async function () {
       try {
@@ -110,15 +110,15 @@ module.exports = function (ruleset) {
 
         hell.o([ruleset_name, "find tag"], "tagAll", "info");
         let tag_exists = await tag.findById(tag_id);
-        if (!tag_exists) throw new Error(ruleset_name + " could not find tag: " + tag_id);
+        if (!tag_exists) throw new Error(`${ruleset_name} could not find tag: ${tag_id}`);
 
         if (enabled) {
           hell.o([ruleset_name, "add tag to ruleset"], "tagAll", "info");
           let ruleset_tag = await rs.tags.add(tag_exists);
           let rules = await rule.find({where: {ruleset: ruleset_name}});
 
-          for (let i = 0, l = rules.length; i < l; i++) {
-            rules[i].tags.add(tag_exists);
+          for (let rule of rules) {
+            rule.tags.add(tag_exists);
           }
         }
 
@@ -127,8 +127,8 @@ module.exports = function (ruleset) {
           let ruleset_tag = await rs.tags.remove(tag_exists);
           let rules = await rule.find({where: {ruleset: ruleset_name}});
 
-          for (let i = 0, l = rules.length; i < l; i++) {
-            rules[i].tags.remove(tag_exists);
+          for (let rule of rules) {
+            rule.tags.remove(tag_exists);
           }
         }
 

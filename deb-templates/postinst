@@ -209,14 +209,14 @@ cat > /etc/logrotate.d/s4a-detector <<EOF
 
 EOF
 
-source /etc/default/s4a-detector
-mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.remove({"_id" : "nfsen"});'
-mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id" : "moloch"},{ $set: { "health_url" : "http://localhost:9200/_cluster/health" }});'
-mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id": "netdata"},{ $unset: { health_url:1 }});'
-mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id": "moloch"},{ $set: { friendly_name: "Arkime" } } );'
-mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id": "molochcapture"},{ $set: { friendly_name: "Arkime Capture" } } );'
-mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id": "molochviewer"},{ $set: { friendly_name: "Arkime Viewer" } } );'
-mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id": "molochwise"},{ $set: { friendly_name: "Arkime Wise" } } );'
+#source /etc/default/s4a-detector
+#mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.remove({"_id" : "nfsen"});'
+#mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id" : "moloch"},{ $set: { "health_url" : "http://localhost:9200/_cluster/health" }});'
+#mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id": "netdata"},{ $unset: { health_url:1 }});'
+#mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id": "moloch"},{ $set: { friendly_name: "Arkime" } } );'
+#mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id": "molochcapture"},{ $set: { friendly_name: "Arkime Capture" } } );'
+#mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id": "molochviewer"},{ $set: { friendly_name: "Arkime Viewer" } } );'
+#mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id": "molochwise"},{ $set: { friendly_name: "Arkime Wise" } } );'
 
 if [[ "$init_type" != 'none' ]]; then
   start_service '{{ node_deb_package_name }}'

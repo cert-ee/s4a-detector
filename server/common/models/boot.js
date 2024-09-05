@@ -34,8 +34,7 @@ module.exports = function (boot) {
         hell.o("index check done", "initialize", "info");
       });
 
-      let versions_load = util.promisify(boot.app.models.system_info.version);
-      let versions = await versions_load();
+      let versions = await boot.app.models.system_info.version();
       let installer_version = parseInt(versions.main.replace(/[^0-9]/g, ''));
       hell.o(["this product package version: ", installer_version], "boot", "info");
 
@@ -160,13 +159,6 @@ module.exports = function (boot) {
             };
             await boot.app.models.component.update({name: compo.name}, compo_update);
           }
-          hell.o("---", "boot", "info");
-        }
-
-        if (database_installer_version <= 2214) {
-          something_to_update = true;
-          hell.o("update elastic enabled param", "boot", "info");
-          await boot.app.models.component.update({name: "elastic"}, {enabled: true});
           hell.o("---", "boot", "info");
         }
 

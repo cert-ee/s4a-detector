@@ -61,7 +61,7 @@ module.exports = function (yara) {
           hell.o(["central input ", central_input], "checkRoutine", "info");
           central_result = await yara.app.models.central.connector().post("/report/yara", central_input);
         } catch (err) {
-          let out = "Central API down [ " + err.message + " ]";
+          let out = `Central API down [ ${err.message} ]`;
           if (err.response && err.response.data
             && err.response.data.error && err.response.data.error.message) {
             out = err.response.data.error.message;
@@ -141,10 +141,10 @@ module.exports = function (yara) {
           });
         }
 
-        content_path = settings["path_moloch_" + feed.type];
+        content_path = settings[`path_moloch_${feed.type}`];
         output = {
           folder: content_path + feed.name + "/",
-          local_path: content_path + "/" + feed.name + "/" + feed.filename
+          local_path: `${content_path}/${feed.name}/${feed.filename}`
         };
 
         hell.o([feed.name, "check folders"], "saveContents", "info");

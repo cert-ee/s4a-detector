@@ -127,7 +127,7 @@ module.exports = function (central) {
     hell.o("start", "lastSeen", "info");
 
     try {
-
+      let now = new Date();
       let central_input = {};
 
       if (central_status !== undefined && central_status !== null) {
@@ -135,7 +135,7 @@ module.exports = function (central) {
 
         central_input = {
           central_status: central_status,
-          "last_central_check": new Date()
+          "last_central_check": now,
         };
       }
 
@@ -146,13 +146,13 @@ module.exports = function (central) {
       alerts_status, last_alerts_check, last_alerts_update
        */
       if (type !== undefined && ["alerts", "central", "components", "rules", "wise", "yara"].includes(type)) {
-        central_input["last_" + type + "_check"] = new Date();
-        hell.o(["last_" + type + "_check", "lastSeen", new Date()], "info");
+        central_input[`last_${type}_check`] = now;
+        hell.o([`last_${type}_check`, "lastSeen", now], "info");
 
         if (type_result !== undefined) {
-          central_input[type + "_status"] = type_result;
-          central_input["last_" + type + "_update"] = new Date();
-          hell.o(["last_" + type + "_update", type_result], "lastSeen", "info");
+          central_input[`${type}_status`] = type_result;
+          central_input[`last_${type}_update`] = now;
+          hell.o([`last_${type}_update`, type_result], "lastSeen", "info");
         }
       }
 
