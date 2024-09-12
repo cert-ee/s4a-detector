@@ -95,7 +95,7 @@ module.exports = function (rule) {
 
       let feeds = await Promise.all(central_result.data.feeds
         .map(feed => feed.name.replace(/\//g, '_'))
-        .map(feed_name => rule.app.models.feed.findOrCreate({where: {name: feed_name}}, {name: feed_name, location: settings.path_suricata_content, filename: `${feed_name}.tar.gz`}))
+        .map(feed_name => rule.app.models.feed.findOrCreate({where: {name: feed_name}}, {name: feed_name, location: settings.path_suricata_content + 'rules/', filename: `${feed_name}.tar.gz`}))
       );
 
       for (let [feed] of feeds) {
