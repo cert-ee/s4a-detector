@@ -112,7 +112,7 @@ module.exports = function (rule) {
       hell.o("fetching disable SIDs file", 'checkRoutine', 'info');
       let response = await rule.app.models.central.connector().post("/report/sidFetch", {Accept: 'application/octet-stream'}, {responseType: 'arraybuffer'});
       hell.o("fetched disable SIDs file", 'checkRoutine', 'info');
-      let path = settings.path_suricata_content + 'disabled_rule_sids.txt';
+      let path = settings.path_suricata_content + 'rules_disabled.txt';
       let tmp_path = path + '.tmp';
       await rule.app.models.contentman.pathCheck(tmp_path);
       await fs.promises.writeFile(tmp_path, response.data);
@@ -125,12 +125,20 @@ module.exports = function (rule) {
         await fs.promises.writeFile(path, response.data);
         hell.o(`wrote feed file for ${feed.name}`, 'checkRoutine', 'info');
       }));*/
-      
 
       hell.o("done", "checkRoutine", "info");
       rule.app.models.central.lastSeen(null, "rules", true);
       rule.rules_routine_active = false;
+//      return {message: "ok"};
+
+      hell.o("reload suricata rules file", "applyNewRules", "info");
+      let salt_result = await rule.app.models.component.stateApply("suricata", "reload");
+      hell.o(["salt result", salt_result], "applyNewRules", "info");
+      if (!salt_result || salt_result.exit_code != 0) throw new Error("component_restart_failed");
+
+      hell.o("done", "applyNewRules", "info");
       return {message: "ok"};
+
     } catch (err) {
       hell.o(err, "checkRoutine", "error");
       rule.app.models.central.lastSeen(null, "rules", false);
