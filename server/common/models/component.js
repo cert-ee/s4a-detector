@@ -634,7 +634,7 @@ module.exports = function (component) {
           case "molochcapture":
           case "molochwise":
           case "netdata":
-            if (input.name == "vpn") service_name = "'openvpn@detector'";
+            if (input.name == "vpn") service_name = "openvpn@detector";
 
             hell.o("run systemctl", "checkStatusSystemctl", "info");
             output = await component.shelljsCall(["/bin/systemctl", "status", service_name]);
