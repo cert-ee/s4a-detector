@@ -1,6 +1,7 @@
 'use strict';
 const machineId = require('node-machine-id');
 const elasticsearch = require('elasticsearch');
+const fs = require("fs").promises;
 const hell = new (require(__dirname + "/helper.js"))({module_name: "report"});
 
 module.exports = function (report) {
@@ -69,7 +70,13 @@ module.exports = function (report) {
         let component_fields = ["name", "friendly_name", "package_name", "status", "message", "version_status", "version_installed",
           "version_available", "version_hold"];
         let component_statuses = await report.app.models.component.find({fields: component_fields});
+        let settings = await report.app.models.settings.findOne();
+        let filePath = settings.path_suricata_content + 'rules_status.json';
 
+        const fileData = await fs.readFile(filePath, 'utf8');
+        const jsonData = JSON.parse(fileData);
+
+        /*
         let rules_count = await report.app.models.rule.count();
         let rules_count_enabled = await report.app.models.rule.find({
           where: {enabled: true},
@@ -83,13 +90,14 @@ module.exports = function (report) {
             fields: ["id"]
           }
         });
+        */
 
         let output = {};
         output.components = component_statuses;
         output.rules = {
-          rules_count: rules_count,
-          rules_count_enabled: rules_count_enabled.length,
-          rules_count_custom: rules_count_custom.length,
+          rules_count: jsonData.rules_count,
+          rules_count_enabled: jsonData.rules_count_enabled,
+          rules_count_custom: jsonData.rules_count_custom,
         };
 
         // console.log("output", output);

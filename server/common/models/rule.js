@@ -66,7 +66,7 @@ module.exports = function (rule) {
         throw new Error(out);
       }
 
-      // console.log( central_result.data.rules );
+      //console.log( central_result.data.feeds.name );
 
       let feeds_length = central_result.data.feeds.length;
       hell.o(["new feed count", feeds_length], "checkRoutine", "info");
@@ -93,10 +93,37 @@ module.exports = function (rule) {
 
       hell.o(["got feeds", central_result.data.feeds], 'checkRoutine', 'info');
 
-      let feeds = await Promise.all(central_result.data.feeds
-        .map(feed => feed.name.replace(/\//g, '_'))
-        .map(feed_name => rule.app.models.feed.findOrCreate({where: {name: feed_name}}, {name: feed_name, location: settings.path_suricata_content + 'rules/', filename: `${feed_name}.tar.gz`}))
-      );
+      let fetched_feed_names = central_result.data.feeds.map(feed => feed.name.replace(/\//g, '_'));
+
+      let existing_feeds = await rule.app.models.feed.find({});
+
+      let outdated_feeds = existing_feeds.filter(feed => !fetched_feed_names.includes(feed.name));
+
+      for (let outdated_feed of outdated_feeds) {
+        hell.o(`removing outdated feed ${outdated_feed.name}`, 'checkRoutine', 'info');
+    
+        // Delete feed file
+        let feed_path = outdated_feed.location + outdated_feed.filename;
+        try {
+            await fs.promises.unlink(feed_path);
+            hell.o(`deleted file for outdated feed: ${feed_path}`, 'checkRoutine', 'info');
+        } catch (err) {
+            hell.o(`error deleting file for feed ${outdated_feed.name}: ${err.message}`, 'checkRoutine', 'error');
+        }
+    
+        // Remove from the database
+        await rule.app.models.feed.destroyById(outdated_feed.id);
+        hell.o(`deleted outdated feed: ${outdated_feed.name} from the database`, 'checkRoutine', 'info');
+    }
+
+    hell.o(["new feed list:", fetched_feed_names], 'checkRoutine', 'info');
+
+      let feeds = await Promise.all(fetched_feed_names
+        .map(feed_name => rule.app.models.feed.findOrCreate(
+            { where: { name: feed_name } },
+            { name: feed_name, location: settings.path_suricata_content + 'rules/', filename: `${feed_name}.tar.gz` }
+        ))
+    );
 
       for (let [feed] of feeds) {
         hell.o(`fetching feed ${feed.name}`, 'checkRoutine', 'info');
