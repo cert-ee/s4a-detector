@@ -19,6 +19,12 @@
       "description": "Feed filename",
       "required": false,
       "default": ""
+    },
+    "checksum": {
+      "type": "string",
+      "required": true,
+      "description": "Suricata checksum",
+      "default": "default"
     }
   },
   "validations": [],

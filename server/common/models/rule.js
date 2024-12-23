@@ -93,39 +93,82 @@ module.exports = function (rule) {
 
       hell.o(["got feeds", central_result.data.feeds], 'checkRoutine', 'info');
 
-      let fetched_feed_names = central_result.data.feeds.map(feed => feed.name.replace(/\//g, '_'));
-
+      // Map the fetched feeds
+      let processed_feeds = central_result.data.feeds.map(feed => {
+        return {
+          feed_name: feed.name.replace(/\//g, '_'),
+          checksum: feed.checksum
+        };
+      });
+      
       let existing_feeds = await rule.app.models.feed.find({});
-
+      
+      let fetched_feed_names = processed_feeds.map(f => f.feed_name);
+      
+      // Identify outdated feeds
       let outdated_feeds = existing_feeds.filter(feed => !fetched_feed_names.includes(feed.name));
-
+      
+      // Remove outdated feeds and their files
       for (let outdated_feed of outdated_feeds) {
         hell.o(`removing outdated feed ${outdated_feed.name}`, 'checkRoutine', 'info');
-    
-        // Delete feed file
+      
         let feed_path = outdated_feed.location + outdated_feed.filename;
         try {
-            await fs.promises.unlink(feed_path);
-            hell.o(`deleted file for outdated feed: ${feed_path}`, 'checkRoutine', 'info');
+          await fs.promises.unlink(feed_path);
+          hell.o(`deleted file for outdated feed: ${feed_path}`, 'checkRoutine', 'info');
         } catch (err) {
-            hell.o(`error deleting file for feed ${outdated_feed.name}: ${err.message}`, 'checkRoutine', 'error');
+          hell.o(`error deleting file for feed ${outdated_feed.name}: ${err.message}`, 'checkRoutine', 'error');
         }
-    
-        // Remove from the database
+      
         await rule.app.models.feed.destroyById(outdated_feed.id);
         hell.o(`deleted outdated feed: ${outdated_feed.name} from the database`, 'checkRoutine', 'info');
-    }
+      }
+      
+      hell.o(["new feed list:", fetched_feed_names], 'checkRoutine', 'info');
+      
+      // Find or create feeds with checksum included
+      let feeds = await Promise.all(
+        processed_feeds.map(f => {
+          return rule.app.models.feed.findOrCreate(
+            { where: { name: f.feed_name } },
+            {
+              name: f.feed_name,
+              location: settings.path_suricata_content + 'rules/',
+              filename: `${f.feed_name}.tar.gz`,
+              checksum: f.checksum
+            }
+          );
+        })
+      );
 
-    hell.o(["new feed list:", fetched_feed_names], 'checkRoutine', 'info');
-
-      let feeds = await Promise.all(fetched_feed_names
-        .map(feed_name => rule.app.models.feed.findOrCreate(
-            { where: { name: feed_name } },
-            { name: feed_name, location: settings.path_suricata_content + 'rules/', filename: `${feed_name}.tar.gz` }
-        ))
-    );
+      let hasFeedChanged = false;
 
       for (let [feed] of feeds) {
+
+        // Find the corresponding processed feed to get the new checksum
+        let pf = processed_feeds.find(f => f.feed_name === feed.name);
+
+        // Compare the existing and new checksums
+        if (feed.checksum && feed.checksum === pf.checksum) {
+          const filePath = feed.location + feed.filename;
+          let fileExists = true;
+          
+          try {
+            await fs.promises.access(filePath);
+          } catch (err) {
+            fileExists = false;
+          }
+      
+          if (fileExists) {
+            hell.o([feed.name, 'checksum unchanged and file exists, skipping download'], 'checkRoutine', 'info');
+            continue;
+          } else {
+            hell.o([feed.name, 'checksum unchanged but file missing, re-downloading'], 'checkRoutine', 'info');
+          }
+        }
+
+        hasFeedChanged = true;
+        
         hell.o(`fetching feed ${feed.name}`, 'checkRoutine', 'info');
         let response = await rule.app.models.central.connector().post("/report/feedFetch", {feed_name: feed.name, Accept: 'application/octet-stream'}, {responseType: 'arraybuffer'});
         let path = feed.location + feed.filename;
@@ -134,16 +177,43 @@ module.exports = function (rule) {
         await fs.promises.writeFile(tmp_path, response.data);
         await fs.promises.rename(tmp_path, path);
         hell.o(`wrote feed file for ${feed.name}`, 'checkRoutine', 'info');
+
+        // Update the checksum in the database if changed
+        if (feed.checksum !== pf.checksum) {
+          await rule.app.models.feed.updateAll({ id: feed.id }, { checksum: pf.checksum });
+          hell.o([feed.name, 'checksum updated'], 'checkRoutine', 'info');
+        }
       };
 
-      hell.o("fetching disable SIDs file", 'checkRoutine', 'info');
-      let response = await rule.app.models.central.connector().post("/report/sidFetch", {Accept: 'application/octet-stream'}, {responseType: 'arraybuffer'});
-      hell.o("fetched disable SIDs file", 'checkRoutine', 'info');
-      let path = settings.path_suricata_content + 'rules_disabled.txt';
-      let tmp_path = path + '.tmp';
-      await rule.app.models.contentman.pathCheck(tmp_path);
-      await fs.promises.writeFile(tmp_path, response.data);
-      await fs.promises.rename(tmp_path, path);
+      if (hasFeedChanged) {
+        hell.o("fetching disable SIDs file", 'checkRoutine', 'info');
+        let response = await rule.app.models.central.connector().post("/report/sidFetch", {Accept: 'application/octet-stream'}, {responseType: 'arraybuffer'});
+        hell.o("fetched disable SIDs file", 'checkRoutine', 'info');
+        let path = settings.path_suricata_content + 'rules_disabled.txt';
+        let tmp_path = path + '.tmp';
+        await rule.app.models.contentman.pathCheck(tmp_path);
+        await fs.promises.writeFile(tmp_path, response.data);
+        await fs.promises.rename(tmp_path, path);
+
+
+        hell.o("done", "checkRoutine", "info");
+        rule.app.models.central.lastSeen(null, "rules", true);
+        rule.rules_routine_active = false;
+  //      return {message: "ok"};
+  
+        hell.o("reload suricata rules file", "applyNewRules", "info");
+        let salt_result = await rule.app.models.component.stateApply("suricata", "reload");
+        hell.o(["salt result", salt_result], "applyNewRules", "info");
+        if (!salt_result || salt_result.exit_code != 0) throw new Error("component_restart_failed");
+  
+        hell.o("done", "applyNewRules", "info");
+        return {message: "ok"};
+      }
+      else {
+        hell.o("No feeds were updated, skipped disabled rules writing and reloading salt state", "checkRoutine", "info");
+        rule.rules_routine_active = false;
+        return {message: "ok"};
+      }
 
       /*await Promise.all(feeds.map(async ([feed]) => {
         hell.o(`fetching feed ${JSON.stringify(feed)}`, 'checkRoutine', 'info');
@@ -152,19 +222,6 @@ module.exports = function (rule) {
         await fs.promises.writeFile(path, response.data);
         hell.o(`wrote feed file for ${feed.name}`, 'checkRoutine', 'info');
       }));*/
-
-      hell.o("done", "checkRoutine", "info");
-      rule.app.models.central.lastSeen(null, "rules", true);
-      rule.rules_routine_active = false;
-//      return {message: "ok"};
-
-      hell.o("reload suricata rules file", "applyNewRules", "info");
-      let salt_result = await rule.app.models.component.stateApply("suricata", "reload");
-      hell.o(["salt result", salt_result], "applyNewRules", "info");
-      if (!salt_result || salt_result.exit_code != 0) throw new Error("component_restart_failed");
-
-      hell.o("done", "applyNewRules", "info");
-      return {message: "ok"};
 
     } catch (err) {
       hell.o(err, "checkRoutine", "error");
