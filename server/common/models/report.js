@@ -76,6 +76,7 @@ module.exports = function (report) {
         const fileData = await fs.readFile(filePath, 'utf8');
         const jsonData = JSON.parse(fileData);
 
+
         /*
         let rules_count = await report.app.models.rule.count();
         let rules_count_enabled = await report.app.models.rule.find({
@@ -90,6 +91,14 @@ module.exports = function (report) {
             fields: ["id"]
           }
         });
+
+        let output = {};
+        output.components = component_statuses;
+        output.rules = {
+          rules_count: rules_count,
+          rules_count_enabled: rules_count_enabled.length,
+          rules_count_custom: rules_count_custom.length,
+        };
         */
 
         let output = {};
@@ -99,6 +108,7 @@ module.exports = function (report) {
           rules_count_enabled: jsonData.rules_count_enabled,
           rules_count_custom: jsonData.rules_count_custom,
         };
+
 
         // console.log("output", output);
 
