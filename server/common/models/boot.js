@@ -82,6 +82,14 @@ module.exports = function (boot) {
           hell.o("---", "boot", "info");
         }
 
+        if (database_installer_version < 3000) {
+          something_to_update = true;
+          hell.o("remove old rules", "boot", "info");
+          await boot.app.models.rule.destroyAll();
+
+          hell.o("---", "boot", "info");
+        }
+
         if (database_installer_version <= 2158) {
           something_to_update = true;
           hell.o("remove current notify entries", "boot", "info");

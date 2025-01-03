@@ -1,6 +1,6 @@
 {
   "name": "s4a-detector-lb_server",
-  "version": "0.3.8",
+  "version": "0.3.008",
   "description": "s4a detector loopback server",
   "license": "MIT",
   "private": true,
