@@ -40,7 +40,7 @@ export default {
             nginx_loading: false,
             nginxConfDialog: false,
             passwordVisible: false,
-            moloch: {},
+            arkime: {},
             salt_loading: false,
             arrayEditorDialog: {
                 open: false,
@@ -97,9 +97,9 @@ export default {
         openArrayEditor(parameter_name) {
             // console.log("open array editor");
             // console.log(parameter_name);
-            // console.log( this.moloch.configuration.exclude_ips );
+            // console.log( this.arkime.configuration.exclude_ips );
 
-            this.arrayEditorDialog.list = this.moloch.configuration.exclude_ips;
+            this.arrayEditorDialog.list = this.arkime.configuration.exclude_ips;
             this.arrayEditorDialog.title = parameter_name;
             this.arrayEditorDialog.parameter_name = "exclude_ips";
             this.arrayEditorDialog.open = true;
@@ -120,7 +120,7 @@ export default {
                 console.log("list");
                 console.log(this.arrayEditorDialog.list);
 
-                this.moloch.configuration.exclude_ips = this.arrayEditorDialog.list;
+                this.arkime.configuration.exclude_ips = this.arrayEditorDialog.list;
 
                 this.arrayEditorDialog.open = false;
                 this.arrayEditorDialog = {
@@ -130,7 +130,7 @@ export default {
                     list: []
                 };
 
-                await this.applyMolochChanges();
+                await this.applyArkimeChanges();
 
                 this.$store.commit('showSnackbar', {type: 'success', text: this.$t('saved')});
             } catch (err) {
@@ -139,21 +139,21 @@ export default {
 
         },
 
-        async applyMolochChanges() {
+        async applyArkimeChanges() {
             this.salt_loading = true;
 
-            let moloch_configuration = {
+            let arkime_configuration = {
                 configuration: {
-                    yara_enabled: this.moloch.configuration.yara_enabled,
-                    wise_enabled: this.moloch.configuration.wise_enabled,
-                    exclude_ips: this.moloch.configuration.exclude_ips,
-                    drop_tls: this.moloch.configuration.drop_tls
+                    yara_enabled: this.arkime.configuration.yara_enabled,
+                    wise_enabled: this.arkime.configuration.wise_enabled,
+                    exclude_ips: this.arkime.configuration.exclude_ips,
+                    drop_tls: this.arkime.configuration.drop_tls
                 }
             };
 
             try {
-                await this.$axios.patch('components/moloch', moloch_configuration);
-                await this.$axios.post('components/stateApply', {name: 'moloch', state: 'restart'});
+                await this.$axios.patch('components/arkime', arkime_configuration);
+                await this.$axios.post('components/stateApply', {name: 'arkime', state: 'restart'});
             } catch (err) {
                 this.$store.dispatch('handleError', err);
             } finally {
@@ -278,9 +278,9 @@ export default {
 
     async asyncData({store, app: {$axios}}) {
         try {
-            let [{data: settings}, {data: interfaces}, {data: nginx}, {data: moloch}] = await Promise.all([
+            let [{data: settings}, {data: interfaces}, {data: nginx}, {data: arkime}] = await Promise.all([
                 $axios.get('settings/settingid'), $axios.get('network_interfaces/list'),
-                $axios.get('components/nginx'), $axios.get('components/moloch')
+                $axios.get('components/nginx'), $axios.get('components/arkime')
             ]);
 
             return {
@@ -288,7 +288,7 @@ export default {
                 interfaces,
                 origInterfaces: interfaces.map(i => ({...i})),
                 nginx,
-                moloch
+                arkime
             };
         } catch (err) {
             if (err.response && err.response.status === 401) {

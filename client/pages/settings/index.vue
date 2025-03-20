@@ -164,27 +164,27 @@
                   </v-flex>
                 </v-layout>
 
-                <div v-if="moloch.installed">
+                <div v-if="arkime.installed">
                 <v-card-title primary-title>
-                  <div class="headline">{{ $t('settings.moloch_settings') }}</div>
+                  <div class="headline">{{ $t('settings.arkime_settings') }}</div>
                 </v-card-title>
 
                 <template v-if="!salt_loading">
 
 
-                  <v-subheader>{{ $t('settings.moloch_drop_tls_enabled') }}</v-subheader>
+                  <v-subheader>{{ $t('settings.arkime_drop_tls_enabled') }}</v-subheader>
                   <v-divider></v-divider>
                   <v-layout row wrap>
                     <v-flex xs6>
-                      <v-radio-group v-model="moloch.configuration.drop_tls"
-                                     @change="applyMolochChanges"
+                      <v-radio-group v-model="arkime.configuration.drop_tls"
+                                     @change="applyArkimeChanges"
                       >
                         <v-radio color="primary" :label="$t('enabled')" :value="true"></v-radio>
                       </v-radio-group>
                     </v-flex>
                     <v-flex xs6>
-                      <v-radio-group v-model="moloch.configuration.drop_tls"
-                                     @change="applyMolochChanges"
+                      <v-radio-group v-model="arkime.configuration.drop_tls"
+                                     @change="applyArkimeChanges"
                       >
                         <v-radio color="primary" :label="$t('disabled')"
                                  :value="false"></v-radio>
@@ -193,19 +193,19 @@
                     </v-flex>
                   </v-layout>
 
-                  <v-subheader>{{ $t('settings.moloch_yara_enabled') }}</v-subheader>
+                  <v-subheader>{{ $t('settings.arkime_yara_enabled') }}</v-subheader>
                   <v-divider></v-divider>
                   <v-layout row wrap>
                     <v-flex xs6>
-                      <v-radio-group v-model="moloch.configuration.yara_enabled"
-                                     @change="applyMolochChanges"
+                      <v-radio-group v-model="arkime.configuration.yara_enabled"
+                                     @change="applyArkimeChanges"
                       >
                         <v-radio color="primary" :label="$t('enabled')" :value="true"></v-radio>
                       </v-radio-group>
                     </v-flex>
                     <v-flex xs6>
-                      <v-radio-group v-model="moloch.configuration.yara_enabled"
-                                     @change="applyMolochChanges"
+                      <v-radio-group v-model="arkime.configuration.yara_enabled"
+                                     @change="applyArkimeChanges"
                       >
                         <v-radio color="primary" :label="$t('disabled')"
                                  :value="false"></v-radio>
@@ -214,19 +214,19 @@
                     </v-flex>
                   </v-layout>
 
-                  <v-subheader>{{ $t('settings.moloch_wise_enabled') }}</v-subheader>
+                  <v-subheader>{{ $t('settings.arkime_wise_enabled') }}</v-subheader>
                   <v-divider></v-divider>
                   <v-layout row wrap>
                     <v-flex xs6>
-                      <v-radio-group v-model="moloch.configuration.wise_enabled"
-                                     @change="applyMolochChanges"
+                      <v-radio-group v-model="arkime.configuration.wise_enabled"
+                                     @change="applyArkimeChanges"
                       >
                         <v-radio color="primary" :label="$t('enabled')" :value="true"></v-radio>
                       </v-radio-group>
                     </v-flex>
                     <v-flex xs6>
-                      <v-radio-group v-model="moloch.configuration.wise_enabled"
-                                     @change="applyMolochChanges"
+                      <v-radio-group v-model="arkime.configuration.wise_enabled"
+                                     @change="applyArkimeChanges"
                       >
                         <v-radio color="primary" :label="$t('disabled')"
                                  :value="false"></v-radio>
@@ -235,12 +235,12 @@
                     </v-flex>
                   </v-layout>
 
-                  <v-subheader>{{ $t('settings.moloch_exclude_ips') }}</v-subheader>
+                  <v-subheader>{{ $t('settings.arkime_exclude_ips') }}</v-subheader>
                   <v-divider></v-divider>
                   <v-layout row wrap>
                     <v-flex xs2>
                       <v-btn type="button" color="primary"
-                             @click="openArrayEditor( $t('settings.moloch_exclude_ips') )">
+                             @click="openArrayEditor( $t('settings.arkime_exclude_ips') )">
                         edit
                       </v-btn>
                     </v-flex>

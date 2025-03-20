@@ -70,8 +70,8 @@ module.exports = function (boot) {
             {name: "update_version", friendly_name: "App version", description: "", data: installer_version}
           );
 
-          hell.o("add default moloch configuration", "boot", "info");
-          await boot.app.models.component.update({name: 'moloch'}, {
+          hell.o("add default arkime configuration", "boot", "info");
+          await boot.app.models.component.update({name: 'arkime'}, {
             configuration:
               {
                 yara_enabled: false,
@@ -95,8 +95,8 @@ module.exports = function (boot) {
           hell.o("remove current notify entries", "boot", "info");
           await boot.app.models.notify.destroyAll();
 
-          hell.o("add default moloch configuration", "boot", "info");
-          await boot.app.models.component.update({name: 'moloch'}, {
+          hell.o("add default arkime configuration", "boot", "info");
+          await boot.app.models.component.update({name: 'arkime'}, {
             configuration:
               {
                 yara_enabled: false,
@@ -125,14 +125,14 @@ module.exports = function (boot) {
           let update_paths = {
             path_content_base: PATH_BASE,
             path_suricata_content: PATH_BASE + "suricata/",
-            path_moloch_content: PATH_BASE + "moloch/",
-            path_moloch_yara: PATH_BASE + "moloch/yara/",
-            path_moloch_yara_ini: PATH_BASE + "moloch/yara.ini",
-            path_moloch_wise_ini: PATH_BASE + "moloch/wise.ini",
-            path_moloch_wise_ip: PATH_BASE + "moloch/wise_ip/",
-            path_moloch_wise_ja3: PATH_BASE + "moloch/wise_ja3/",
-            path_moloch_wise_url: PATH_BASE + "moloch/wise_url/",
-            path_moloch_wise_domain: PATH_BASE + "moloch/wise_domain/"
+            path_moloch_content: PATH_BASE + "arkime/",
+            path_moloch_yara: PATH_BASE + "arkime/yara/",
+            path_moloch_yara_ini: PATH_BASE + "arkime/yara.ini",
+            path_moloch_wise_ini: PATH_BASE + "arkime/wise.ini",
+            path_moloch_wise_ip: PATH_BASE + "arkime/wise_ip/",
+            path_moloch_wise_ja3: PATH_BASE + "arkime/wise_ja3/",
+            path_moloch_wise_url: PATH_BASE + "arkime/wise_url/",
+            path_moloch_wise_domain: PATH_BASE + "arkime/wise_domain/"
           };
 
           await boot.app.models.settings.update({id: current_settings.id}, update_paths);

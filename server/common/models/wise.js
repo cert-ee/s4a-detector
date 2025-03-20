@@ -48,8 +48,8 @@ module.exports = function (wise) {
     (async function () {
       try {
 
-        let moloch = await wise.app.models.component.findOne({where: {name: 'moloch'}});
-        if (!moloch.configuration.wise_enabled || !moloch.enabled) {
+        let arkime = await wise.app.models.component.findOne({where: {name: 'arkime'}});
+        if (!arkime.configuration.wise_enabled || !arkime.enabled) {
           hell.o("wise disabled, done", "checkRoutine", "info");
           cb(null, {message: "disabled"});
           return true;
@@ -222,7 +222,7 @@ module.exports = function (wise) {
    * GENERATE AND APPLY
    *
    * create new wise.ini
-   * reload moloch
+   * reload arkime
    *
    */
   wise.generateAndApply = async function () {
@@ -255,8 +255,8 @@ module.exports = function (wise) {
       hell.o("save new ini file", "generateAndApply", "info");
       await fs.writeFile(settings["path_moloch_wise_ini"], wise_ini);
 
-      hell.o("restart moloch to reload rules file", "generateAndApply", "info");
-      let salt_result = await wise.app.models.component.stateApply("molochwise", "restart");
+      hell.o("restart arkime to reload rules file", "generateAndApply", "info");
+      let salt_result = await wise.app.models.component.stateApply("arkimewise", "restart");
       hell.o(["salt result", salt_result], "generateAndApply", "info");
       if (!salt_result || salt_result.exit_code != 0) throw new Error("component_restart_failed");
 

@@ -103,7 +103,7 @@ module.exports = function (user) {
   /**
    * CREATE USER
    *
-   * add to moloch
+   * add to arkime
    *
    * @param username
    * @param options
@@ -123,7 +123,7 @@ module.exports = function (user) {
         let user_create = await user.create({username: username});
         if (!user_create) throw new Error("failed to create user");
 
-        let comp = await user.app.models.component.findOne({where: {name: "moloch", installed: true, enabled: true}})
+        let comp = await user.app.models.component.findOne({where: {name: "arkime", installed: true, enabled: true}})
         if (comp && process.env.NODE_ENV != "dev") {
           user.local_connection.post(`http://localhost:9200/arkime_users/_doc/${username}`,
             {
@@ -165,15 +165,15 @@ module.exports = function (user) {
   });
 
   /**
-   * EDIT MOLOCH USER
+   * EDIT arkime USER
    *
    * @param username
    * @param input
    * @param cb
    */
-  user.editMolochUser = function (username, active, rolename, cb) {
-    hell.o("start", "editMolochUser", "info");
-    hell.o(username, "editMolochUser", "info");
+  user.editarkimeUser = function (username, active, rolename, cb) {
+    hell.o("start", "editarkimeUser", "info");
+    hell.o(username, "editarkimeUser", "info");
 
     (async function () {
       try {
@@ -182,40 +182,40 @@ module.exports = function (user) {
         let user_find = await user.findOne({where: {username: username}});
         if (!user_find) throw new Error("no_data");
 
-        let comp = await user.app.models.component.findOne({where: {name: "moloch", installed: true, enabled: true}});
+        let comp = await user.app.models.component.findOne({where: {name: "arkime", installed: true, enabled: true}});
 
         if (comp && process.env.NODE_ENV != "dev") {
 
-          let moloch_input = false;
+          let arkime_input = false;
           if (active) {
             if (rolename == "admin") {
-              moloch_input = {createEnabled: true, enabled: true}
+              arkime_input = {createEnabled: true, enabled: true}
             }
             if (rolename == "read") {
-              moloch_input = {enabled: true}
+              arkime_input = {enabled: true}
             }
           } else {
             if (rolename == "admin") {
-              moloch_input = {createEnabled: false}
+              arkime_input = {createEnabled: false}
             }
             if (rolename == "read") {
-              moloch_input = {enabled: false}
+              arkime_input = {enabled: false}
             }
           }
-          if (moloch_input !== false) {
-            moloch_input = {doc: moloch_input};
+          if (arkime_input !== false) {
+            arkime_input = {doc: arkime_input};
           }
-          hell.o(["moloch input:", moloch_input], "editMolochUser", "info");
-          let moloch_update = await user.local_connection.post(`http://localhost:9200/arkime_users/_doc/${username}/_update/`, moloch_input);
+          hell.o(["arkime input:", arkime_input], "editArkimeUser", "info");
+          let arkime_update = await user.local_connection.post(`http://localhost:9200/arkime_users/_doc/${username}/_update/`, arkime_input);
           user.local_connection = "";
         }
 
         user_find = await user.findOne({where: {username: username}});
 
-        hell.o("done", "editMolochUser", "info");
+        hell.o("done", "editArkimeUser", "info");
         cb(null, user_find);
       } catch (err) {
-        hell.o(err, "editMolochUser", "error");
+        hell.o(err, "editArkimeUser", "error");
         cb({name: "Error", status: 400, message: err.message});
       }
 
@@ -224,14 +224,14 @@ module.exports = function (user) {
   };
 
 
-  user.remoteMethod('editMolochUser', {
+  user.remoteMethod('editArkimeUser', {
     accepts: [
       {arg: 'username', type: 'string', required: true},
       {arg: 'active', type: 'boolean', required: true},
       {arg: 'rolename', type: 'string', required: true},
     ],
     returns: {type: 'object', root: true},
-    http: {path: '/editMolochUser', verb: 'post', status: 200}
+    http: {path: '/editArkimeUser', verb: 'post', status: 200}
   });
 
   user.observe('before delete', function (ctx, next) {
@@ -258,13 +258,13 @@ module.exports = function (user) {
           next();
         });
 
-        let comp = await user.app.models.component.findOne({where: {name: "moloch", installed: true, enabled: true}})
+        let comp = await user.app.models.component.findOne({where: {name: "arkime", installed: true, enabled: true}})
         if (comp && process.env.NODE_ENV != "dev") {
-          hell.o("delete from moloch start", "deleteUser", "info");
+          hell.o("delete from arkime start", "deleteUser", "info");
           user.local_connection = axios.create({});
           user.local_connection.delete(`http://localhost:9200/arkime_users/_doc/${user_find.username}`);
           user.local_connection = "";
-          hell.o("delete from moloch done", "deleteUser", "info");
+          hell.o("delete from arkime done", "deleteUser", "info");
         }
 
       } catch (err) {

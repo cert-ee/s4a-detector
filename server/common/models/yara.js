@@ -47,8 +47,8 @@ module.exports = function (yara) {
 
     (async function () {
       try {
-        let moloch = await yara.app.models.component.findOne({where: {name: 'moloch'}});
-        if (!moloch.configuration.yara_enabled || !moloch.enabled) {
+        let arkime = await yara.app.models.component.findOne({where: {name: 'arkime'}});
+        if (!arkime.configuration.yara_enabled || !arkime.enabled) {
           hell.o("yara disabled, done", "checkRoutine", "info");
           cb(null, {message: "disabled"});
           return true;
@@ -204,7 +204,7 @@ module.exports = function (yara) {
    * GENERATE AND APPLY
    *
    * create new yara.ini
-   * reload moloch
+   * reload arkime
    *
    */
   yara.generateAndApply = async function () {
@@ -227,8 +227,8 @@ module.exports = function (yara) {
       hell.o("save new ini file", "generateAndApply", "info");
       await fs.writeFile(settings["path_moloch_yara_ini"], yara_ini);
 
-      hell.o("restart moloch to reload rules file", "generateAndApply", "info");
-      let salt_result = await yara.app.models.component.stateApply("moloch", "restart");
+      hell.o("restart arkime to reload rules file", "generateAndApply", "info");
+      let salt_result = await yara.app.models.component.stateApply("arkime", "restart");
       hell.o(["salt result", salt_result], "generateAndApply", "info");
       if (!salt_result || salt_result.exit_code != 0) throw new Error("component_restart_failed");
 

@@ -175,14 +175,14 @@ module.exports = function (settings) {
         let update_paths = {
           path_content_base: PATH_BASE,
           path_suricata_content: `${PATH_BASE}suricata/`,
-          path_moloch_content: `${PATH_BASE}moloch/`,
-          path_moloch_yara: `${PATH_BASE}moloch/yara/`,
-          path_moloch_yara_ini: `${PATH_BASE}moloch/yara.ini`,
-          path_moloch_wise_ini: `${PATH_BASE}moloch/wise.ini`,
-          path_moloch_wise_ip: `${PATH_BASE}moloch/wise_ip/`,
-          path_moloch_wise_ja3: `${PATH_BASE}moloch/wise_ja3/`,
-          path_moloch_wise_url: `${PATH_BASE}moloch/wise_url/`,
-          path_moloch_wise_domain: `${PATH_BASE}moloch/wise_domain/`,
+          path_moloch_content: `${PATH_BASE}arkime/`,
+          path_moloch_yara: `${PATH_BASE}arkime/yara/`,
+          path_moloch_yara_ini: `${PATH_BASE}arkime/yara.ini`,
+          path_moloch_wise_ini: `${PATH_BASE}arkime/wise.ini`,
+          path_moloch_wise_ip: `${PATH_BASE}arkime/wise_ip/`,
+          path_moloch_wise_ja3: `${PATH_BASE}arkime/wise_ja3/`,
+          path_moloch_wise_url: `${PATH_BASE}arkime/wise_url/`,
+          path_moloch_wise_domain: `${PATH_BASE}arkime/wise_domain/`,
         };
 
         await settings.update({id: found_settings.id}, update_paths);

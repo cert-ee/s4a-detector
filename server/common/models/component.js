@@ -196,12 +196,12 @@ module.exports = function (component) {
       version_available: ""
     },
     {
-      name: "moloch",
+      name: "arkime",
       friendly_name: "Arkime",
-      package_name: "moloch",
+      package_name: "arkime",
       message: "",
       network_interface_changes: true,
-      web_url: "moloch/",
+      web_url: "arkime/",
       health_url: "http://localhost:9200/_cluster/health",
       preset: false,
       after_approval: false,
@@ -225,10 +225,10 @@ module.exports = function (component) {
         }
     },
     {
-      name: "molochcapture",
+      name: "arkimecapture",
       friendly_name: "Arkime Capture",
-      package_name: "moloch",
-      message: "Will be installed with Moloch",
+      package_name: "arkime",
+      message: "Will be installed with arkime",
       network_interface_changes: false,
       web_url: false,
       preset: false,
@@ -245,10 +245,10 @@ module.exports = function (component) {
       version_available: "",
     },
     {
-      name: "molochviewer",
+      name: "arkimeviewer",
       friendly_name: "Arkime Viewer",
-      package_name: "moloch",
-      message: "Will be installed with Moloch",
+      package_name: "arkime",
+      message: "Will be installed with arkime",
       network_interface_changes: false,
       web_url: false,
       preset: false,
@@ -265,10 +265,10 @@ module.exports = function (component) {
       version_available: "",
     },
     {
-      name: "molochwise",
+      name: "arkimewise",
       friendly_name: "Arkime Wise",
-      package_name: "moloch",
-      message: "Will be installed with Moloch",
+      package_name: "arkime",
+      message: "Will be installed with arkime",
       network_interface_changes: false,
       web_url: false,
       preset: false,
@@ -371,8 +371,8 @@ module.exports = function (component) {
         // lets call this part "update script", if new version has extra details"
         // console.log(component_found);
 
-        //MOLOCH CHANGES IF MISSING
-        if (component_found.name === 'moloch') {
+        //arkime CHANGES IF MISSING
+        if (component_found.name === 'arkime') {
           if ('configuration' in component_found === false) {
             component_found.configuration = {};
           }
@@ -630,9 +630,9 @@ module.exports = function (component) {
           case "vpn":
           case "telegraf":
           case "s4a-detector":
-          case "molochviewer":
-          case "molochcapture":
-          case "molochwise":
+          case "arkimeviewer":
+          case "arkimecapture":
+          case "arkimewise":
           case "netdata":
             if (input.name == "vpn") service_name = "openvpn@detector";
 
@@ -1139,33 +1139,33 @@ module.exports = function (component) {
               });
             }
 
-            if (comp.name == "moloch" && (!comp.installed || !comp.enabled)) {
-              hell.o([`${name} ${state}`, "moloch disabled, do the same for molochcapture and molochviewer"], "stateApply", "info");
-              update_result = await component.update({name: 'molochcapture'}, {
+            if (comp.name == "arkime" && (!comp.installed || !comp.enabled)) {
+              hell.o([`${name} ${state}`, "arkime disabled, do the same for arkimecapture and arkimeviewer"], "stateApply", "info");
+              update_result = await component.update({name: 'arkimecapture'}, {
                 installed: false,
                 enabled: false
               });
-              update_result = await component.update({name: 'molochviewer'}, {
+              update_result = await component.update({name: 'arkimeviewer'}, {
                 installed: false,
                 enabled: false
               });
-              update_result = await component.update({name: 'molochwise'}, {
+              update_result = await component.update({name: 'arkimewise'}, {
                 installed: false,
                 enabled: false
               });
             }
 
-            if (comp.name == "moloch" && (comp.installed || comp.enabled)) {
-              hell.o([`${name} ${state}`, "moloch enabled, do the same for molochcapture and molochviewer"], "stateApply", "info");
-              update_result = await component.update({name: 'molochcapture'}, {
+            if (comp.name == "arkime" && (comp.installed || comp.enabled)) {
+              hell.o([`${name} ${state}`, "arkime enabled, do the same for arkimecapture and arkimeviewer"], "stateApply", "info");
+              update_result = await component.update({name: 'arkimecapture'}, {
                 installed: true,
                 enabled: true
               });
-              update_result = await component.update({name: 'molochviewer'}, {
+              update_result = await component.update({name: 'arkimeviewer'}, {
                 installed: true,
                 enabled: true
               });
-              update_result = await component.update({name: 'molochwise'}, {
+              update_result = await component.update({name: 'arkimewise'}, {
                 installed: true,
                 enabled: true
               });
