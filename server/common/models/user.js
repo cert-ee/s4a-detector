@@ -171,57 +171,91 @@ module.exports = function (user) {
    * @param input
    * @param cb
    */
-  user.editarkimeUser = function (username, active, rolename, cb) {
-    hell.o("start", "editarkimeUser", "info");
-    hell.o(username, "editarkimeUser", "info");
-
+  user.editArkimeUser = function (username, active, rolename, cb) {
+    hell.o("start", "editArkimeUser", "info");
+    hell.o(username, "editArkimeUser", "info");
+  
     (async function () {
       try {
-        user.local_connection = axios.create({});
-
-        let user_find = await user.findOne({where: {username: username}});
+        user.local_connection = axios.create({
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+  
+        const user_find = await user.findOne({ where: { username } });
         if (!user_find) throw new Error("no_data");
-
-        let comp = await user.app.models.component.findOne({where: {name: "arkime", installed: true, enabled: true}});
-
-        if (comp && process.env.NODE_ENV != "dev") {
-
-          let arkime_input = false;
+  
+        const comp = await user.app.models.component.findOne({
+          where: { name: "arkime", installed: true, enabled: true }
+        });
+  
+        if (comp && process.env.NODE_ENV !== "dev") {
+          let arkime_input = null;
+  
           if (active) {
-            if (rolename == "admin") {
-              arkime_input = {createEnabled: true, enabled: true}
-            }
-            if (rolename == "read") {
-              arkime_input = {enabled: true}
+            if (rolename === "admin") {
+              arkime_input = { createEnabled: true, enabled: true };
+            } else if (rolename === "read") {
+              arkime_input = { enabled: true };
             }
           } else {
-            if (rolename == "admin") {
-              arkime_input = {createEnabled: false}
-            }
-            if (rolename == "read") {
-              arkime_input = {enabled: false}
+            const Role = user.app.models.Role;
+            const roleMappings = await user.app.models.roleMapping.find({
+              where: { principalId: user_find.id }
+            });
+  
+            const roleNames = await Promise.all(
+              roleMappings.map(async rm => {
+                const role = await Role.findById(rm.roleId);
+                return role && role.name;
+              })
+            );
+  
+            const remainingRoles = roleNames.filter(name => name !== rolename);
+            const hasOtherRoles = remainingRoles.length > 0;
+  
+            if (rolename === "admin") {
+              arkime_input = { createEnabled: false };
+              if (!hasOtherRoles) {
+                arkime_input.enabled = false;
+              }
+            } else if (rolename === "read") {
+              if (!hasOtherRoles) {
+                arkime_input = { enabled: false };
+              }
             }
           }
-          if (arkime_input !== false) {
-            arkime_input = {doc: arkime_input};
+  
+          if (arkime_input) {
+            const esPayload = { doc: arkime_input };
+            hell.o(["arkime input:", esPayload], "editArkimeUser", "info");
+  
+            await user.local_connection.post(
+              `http://localhost:9200/arkime_users/_update/${encodeURIComponent(username)}`,
+              esPayload
+            );
+          } else {
+            hell.o("No arkime_input generated (skipped update)", "editArkimeUser", "info");
           }
-          hell.o(["arkime input:", arkime_input], "editArkimeUser", "info");
-          let arkime_update = await user.local_connection.post(`http://localhost:9200/arkime_users/_doc/${username}/_update/`, arkime_input);
-          user.local_connection = "";
         }
-
-        user_find = await user.findOne({where: {username: username}});
-
+  
+        const updated_user = await user.findOne({ where: { username } });
+  
         hell.o("done", "editArkimeUser", "info");
-        cb(null, user_find);
+        cb(null, updated_user);
+  
       } catch (err) {
-        hell.o(err, "editArkimeUser", "error");
-        cb({name: "Error", status: 400, message: err.message});
-      }
-
+        const msg = (err && err.response && err.response.data && err.response.data.error && err.response.data.error.reason)
+          || (err && err.message)
+          || 'Unknown error';
+      
+        hell.o(msg, "editArkimeUser", "error");
+        cb({ name: "Error", status: 400, message: msg });
+      }      
+  
     })(); // async
-
-  };
+  };  
 
 
   user.remoteMethod('editArkimeUser', {
