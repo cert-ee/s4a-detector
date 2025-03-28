@@ -141,7 +141,7 @@ module.exports = function (yara) {
           });
         }
 
-        content_path = settings[`path_moloch_${feed.type}`];
+        content_path = settings[`path_arkime_${feed.type}`];
         output = {
           folder: content_path + feed.name + "/",
           local_path: `${content_path}/${feed.name}/${feed.filename}`
@@ -225,7 +225,7 @@ module.exports = function (yara) {
       let settings = await yara.app.models.settings.findOne();
 
       hell.o("save new ini file", "generateAndApply", "info");
-      await fs.writeFile(settings["path_moloch_yara_ini"], yara_ini);
+      await fs.writeFile(settings["path_arkime_yara_ini"], yara_ini);
 
       hell.o("restart arkime to reload rules file", "generateAndApply", "info");
       let salt_result = await yara.app.models.component.stateApply("arkime", "restart");

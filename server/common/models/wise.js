@@ -139,7 +139,7 @@ module.exports = function (wise) {
           current_wise_list = current_wise_list.filter(value => value !== feed.name);
         }
 
-        let content_path = settings[`path_moloch_${feed.type}`];
+        let content_path = settings[`path_arkime_${feed.type}`];
         let output = {
           folder: content_path + feed.name + "/",
           local_path: `${content_path}/${feed.name}/${feed.filename}`,
@@ -253,7 +253,7 @@ module.exports = function (wise) {
       let settings = await wise.app.models.settings.findOne();
 
       hell.o("save new ini file", "generateAndApply", "info");
-      await fs.writeFile(settings["path_moloch_wise_ini"], wise_ini);
+      await fs.writeFile(settings["path_arkime_wise_ini"], wise_ini);
 
       hell.o("restart arkime to reload rules file", "generateAndApply", "info");
       let salt_result = await wise.app.models.component.stateApply("arkimewise", "restart");

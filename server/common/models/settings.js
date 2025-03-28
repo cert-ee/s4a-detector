@@ -175,14 +175,14 @@ module.exports = function (settings) {
         let update_paths = {
           path_content_base: PATH_BASE,
           path_suricata_content: `${PATH_BASE}suricata/`,
-          path_moloch_content: `${PATH_BASE}arkime/`,
-          path_moloch_yara: `${PATH_BASE}arkime/yara/`,
-          path_moloch_yara_ini: `${PATH_BASE}arkime/yara.ini`,
-          path_moloch_wise_ini: `${PATH_BASE}arkime/wise.ini`,
-          path_moloch_wise_ip: `${PATH_BASE}arkime/wise_ip/`,
-          path_moloch_wise_ja3: `${PATH_BASE}arkime/wise_ja3/`,
-          path_moloch_wise_url: `${PATH_BASE}arkime/wise_url/`,
-          path_moloch_wise_domain: `${PATH_BASE}arkime/wise_domain/`,
+          path_arkime_content: `${PATH_BASE}arkime/`,
+          path_arkime_yara: `${PATH_BASE}arkime/yara/`,
+          path_arkime_yara_ini: `${PATH_BASE}arkime/yara.ini`,
+          path_arkime_wise_ini: `${PATH_BASE}arkime/wise.ini`,
+          path_arkime_wise_ip: `${PATH_BASE}arkime/wise_ip/`,
+          path_arkime_wise_ja3: `${PATH_BASE}arkime/wise_ja3/`,
+          path_arkime_wise_url: `${PATH_BASE}arkime/wise_url/`,
+          path_arkime_wise_domain: `${PATH_BASE}arkime/wise_domain/`,
         };
 
         await settings.update({id: found_settings.id}, update_paths);
@@ -245,14 +245,14 @@ module.exports = function (settings) {
         let output = {
           path_content_base: result.path_content_base,
           path_suricata_content: result.path_suricata_content,
-          path_moloch_content: result.path_moloch_content,
-          path_moloch_yara: result.path_moloch_yara,
-          path_moloch_yara_ini: result.path_moloch_yara_ini,
-          path_moloch_wise_ini: result.path_moloch_wise_ini,
-          path_moloch_wise_ip: result.path_moloch_wise_ip,
-          path_moloch_wise_ja3: result.path_moloch_wise_ja3,
-          path_moloch_wise_url: result.path_moloch_wise_url,
-          path_moloch_wise_domain: result.path_moloch_wise_domain
+          path_arkime_content: result.path_arkime_content,
+          path_arkime_yara: result.path_arkime_yara,
+          path_arkime_yara_ini: result.path_arkime_yara_ini,
+          path_arkime_wise_ini: result.path_arkime_wise_ini,
+          path_arkime_wise_ip: result.path_arkime_wise_ip,
+          path_arkime_wise_ja3: result.path_arkime_wise_ja3,
+          path_arkime_wise_url: result.path_arkime_wise_url,
+          path_arkime_wise_domain: result.path_arkime_wise_domain
         };
 
         cb(null, output);

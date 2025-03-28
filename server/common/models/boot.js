@@ -125,14 +125,14 @@ module.exports = function (boot) {
           let update_paths = {
             path_content_base: PATH_BASE,
             path_suricata_content: PATH_BASE + "suricata/",
-            path_moloch_content: PATH_BASE + "arkime/",
-            path_moloch_yara: PATH_BASE + "arkime/yara/",
-            path_moloch_yara_ini: PATH_BASE + "arkime/yara.ini",
-            path_moloch_wise_ini: PATH_BASE + "arkime/wise.ini",
-            path_moloch_wise_ip: PATH_BASE + "arkime/wise_ip/",
-            path_moloch_wise_ja3: PATH_BASE + "arkime/wise_ja3/",
-            path_moloch_wise_url: PATH_BASE + "arkime/wise_url/",
-            path_moloch_wise_domain: PATH_BASE + "arkime/wise_domain/"
+            path_arkime_content: PATH_BASE + "arkime/",
+            path_arkime_yara: PATH_BASE + "arkime/yara/",
+            path_arkime_yara_ini: PATH_BASE + "arkime/yara.ini",
+            path_arkime_wise_ini: PATH_BASE + "arkime/wise.ini",
+            path_arkime_wise_ip: PATH_BASE + "arkime/wise_ip/",
+            path_arkime_wise_ja3: PATH_BASE + "arkime/wise_ja3/",
+            path_arkime_wise_url: PATH_BASE + "arkime/wise_url/",
+            path_arkime_wise_domain: PATH_BASE + "arkime/wise_domain/"
           };
 
           await boot.app.models.settings.update({id: current_settings.id}, update_paths);
