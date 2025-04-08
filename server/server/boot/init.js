@@ -96,12 +96,16 @@ module.exports = function (app) {
       hell.o("schedule rules checker", "init", "info");
 
       (function interval_rules() {
-        setTimeout(() => {
-          app.models.rule.checkRoutine(null, () => {
-            interval_rules();
-          });
+        setTimeout(async () => {
+          try {
+            await app.models.rule.checkRoutine();
+          } catch (e) {
+            console.error("[ERROR] rule.checkRoutine failed:", e.message);
+          }
+          interval_rules();
         }, app.check_interval_format(settings.job_interval_rules_check, "job_interval_rules_check"));
       })();
+      
 
       /*
       SCHEDULE YARA CHECKING
