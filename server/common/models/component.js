@@ -181,7 +181,7 @@ module.exports = function (component) {
       message: "",
       network_interface_changes: false,
       web_url: "netdata/",
-      preset: true,
+      preset: false,
       after_approval: false,
       installed: false,
       installable: true,
@@ -218,9 +218,9 @@ module.exports = function (component) {
       version_available: "",
       configuration:
         {
-          drop_tls: false,
+          drop_tls: true,
           yara_enabled: false,
-          wise_enabled: false,
+          wise_enabled: true,
           exclude_ips: []
         }
     },
