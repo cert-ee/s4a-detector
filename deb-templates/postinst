@@ -157,10 +157,10 @@ add_user '{{ node_deb_user }}' '' '{{ node_deb_group }}' '{{ node_deb_user }} us
 
 # Autoadd missing env for better compatiblity and user friendlyness
 [[ `grep -c ^PATH_BASE 			 "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_BASE=/srv/s4a-detector/" 						 >> "/etc/default/{{ node_deb_package_name }}"
-[[ `grep -c ^PATH_MOLOCH_YARA_OUT 	 "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_MOLOCH_YARA_OUT=/srv/s4a-detector/moloch/yara/yara.txt" 		 >> "/etc/default/{{ node_deb_package_name }}"
-[[ `grep -c ^PATH_MOLOCH_WISE_IP_OUT 	 "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_MOLOCH_WISE_IP_OUT=/srv/s4a-detector/moloch/wise/wise_ip.txt" 	 >> "/etc/default/{{ node_deb_package_name }}"
-[[ `grep -c ^PATH_MOLOCH_WISE_URL_OUT 	 "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_MOLOCH_WISE_URL_OUT=/srv/s4a-detector/moloch/wise/wise_url.txt" 	 >> "/etc/default/{{ node_deb_package_name }}"
-[[ `grep -c ^PATH_MOLOCH_WISE_DOMAIN_OUT "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_MOLOCH_WISE_DOMAIN_OUT=/srv/s4a-detector/moloch/wise/wise_domain.txt" >> "/etc/default/{{ node_deb_package_name }}"
+[[ `grep -c ^PATH_ARKIME_YARA_OUT 	 "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_ARKIME_YARA_OUT=/srv/s4a-detector/arkime/yara/yara.txt" 		 >> "/etc/default/{{ node_deb_package_name }}"
+[[ `grep -c ^PATH_ARKIME_WISE_IP_OUT 	 "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_ARKIME_WISE_IP_OUT=/srv/s4a-detector/arkime/wise/wise_ip.txt" 	 >> "/etc/default/{{ node_deb_package_name }}"
+[[ `grep -c ^PATH_ARKIME_WISE_URL_OUT 	 "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_ARKIME_WISE_URL_OUT=/srv/s4a-detector/arkime/wise/wise_url.txt" 	 >> "/etc/default/{{ node_deb_package_name }}"
+[[ `grep -c ^PATH_ARKIME_WISE_DOMAIN_OUT "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_ARKIME_WISE_DOMAIN_OUT=/srv/s4a-detector/arkime/wise/wise_domain.txt" >> "/etc/default/{{ node_deb_package_name }}"
 
 source /etc/default/{{ node_deb_package_name }}
 
@@ -168,17 +168,17 @@ mkdir -p $PATH_BASE \
 	'/var/log/{{ node_deb_package_name }}' \
 	'/etc/nginx/' \
 	${PATH_SURICATA_RULES_OUT%/*} \
-	${PATH_MOLOCH_YARA_OUT%/*} \
-	${PATH_MOLOCH_WISE_IP_OUT%/*} \
-	${PATH_MOLOCH_WISE_URL_OUT%/*} \
-	${PATH_MOLOCH_WISE_DOMAIN_OUT%/*}
+	${PATH_ARKIME_YARA_OUT%/*} \
+	${PATH_ARKIME_WISE_IP_OUT%/*} \
+	${PATH_ARKIME_WISE_URL_OUT%/*} \
+	${PATH_ARKIME_WISE_DOMAIN_OUT%/*}
 
 touch /etc/nginx/.htpasswd \
 	$PATH_SURICATA_RULES_OUT \
-	$PATH_MOLOCH_YARA_OUT \
-	$PATH_MOLOCH_WISE_IP_OUT \
-	$PATH_MOLOCH_WISE_URL_OUT \
-	$PATH_MOLOCH_WISE_DOMAIN_OUT
+	$PATH_ARKIME_YARA_OUT \
+	$PATH_ARKIME_WISE_IP_OUT \
+	$PATH_ARKIME_WISE_URL_OUT \
+	$PATH_ARKIME_WISE_DOMAIN_OUT
 
 chown -R '{{ node_deb_user }}:{{ node_deb_group }}' \
 	'/var/log/{{ node_deb_package_name }}' \
@@ -186,10 +186,10 @@ chown -R '{{ node_deb_user }}:{{ node_deb_group }}' \
 	'/etc/nginx/.htpasswd' \
 	$PATH_BASE \
 	$PATH_SURICATA_RULES_OUT \
-	$PATH_MOLOCH_YARA_OUT \
-	$PATH_MOLOCH_WISE_IP_OUT \
-	$PATH_MOLOCH_WISE_URL_OUT \
-	$PATH_MOLOCH_WISE_DOMAIN_OUT
+	$PATH_ARKIME_YARA_OUT \
+	$PATH_ARKIME_WISE_IP_OUT \
+	$PATH_ARKIME_WISE_URL_OUT \
+	$PATH_ARKIME_WISE_DOMAIN_OUT
 
 dependency_install '{{ node_deb_package_name }}'
 create_mongodb_users '{{ node_deb_package_name }}'
