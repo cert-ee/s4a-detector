@@ -383,7 +383,7 @@ module.exports = function (notify) {
 
         //for (let ntfy_id = 0; ntfy_id < notifying.length; ntfy_id++) {
         for (let ntfy of notifying) {
-          hell.o(`Notify #${ntfy_id}`, "notifyRoutine", "info");
+          hell.o(`Notify`, "notifyRoutine", "info");
 
           notify.current_notify = ntfy;
 
