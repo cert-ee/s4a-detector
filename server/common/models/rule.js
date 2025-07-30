@@ -211,6 +211,7 @@ module.exports = function (rule) {
       }
       else {
         hell.o("No feeds were updated, skipped disabled rules writing and reloading salt state", "checkRoutine", "info");
+	rule.app.models.central.lastSeen(null, "rules", true);
         rule.rules_routine_active = false;
         return {message: "ok"};
       }
