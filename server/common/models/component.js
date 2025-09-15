@@ -3,6 +3,7 @@
 const axios = require('axios');
 const https = require('https');
 const shelljs = require('shelljs');
+const shellescape = require('shell-escape');
 const sudo = require('sudo');
 const sslutils = require('ssl-utils');
 const util = require('util');
@@ -180,7 +181,7 @@ module.exports = function (component) {
       message: "",
       network_interface_changes: false,
       web_url: "netdata/",
-      preset: true,
+      preset: false,
       after_approval: false,
       installed: false,
       installable: true,
@@ -195,12 +196,12 @@ module.exports = function (component) {
       version_available: ""
     },
     {
-      name: "moloch",
+      name: "arkime",
       friendly_name: "Arkime",
-      package_name: "moloch",
+      package_name: "arkime",
       message: "",
       network_interface_changes: true,
-      web_url: "moloch/",
+      web_url: "arkime/",
       health_url: "http://localhost:9200/_cluster/health",
       preset: false,
       after_approval: false,
@@ -217,17 +218,17 @@ module.exports = function (component) {
       version_available: "",
       configuration:
         {
-          drop_tls: false,
+          drop_tls: true,
           yara_enabled: false,
-          wise_enabled: false,
+          wise_enabled: true,
           exclude_ips: []
         }
     },
     {
-      name: "molochcapture",
+      name: "arkimecapture",
       friendly_name: "Arkime Capture",
-      package_name: "moloch",
-      message: "Will be installed with Moloch",
+      package_name: "arkime",
+      message: "Will be installed with arkime",
       network_interface_changes: false,
       web_url: false,
       preset: false,
@@ -244,10 +245,10 @@ module.exports = function (component) {
       version_available: "",
     },
     {
-      name: "molochviewer",
+      name: "arkimeviewer",
       friendly_name: "Arkime Viewer",
-      package_name: "moloch",
-      message: "Will be installed with Moloch",
+      package_name: "arkime",
+      message: "Will be installed with arkime",
       network_interface_changes: false,
       web_url: false,
       preset: false,
@@ -264,10 +265,10 @@ module.exports = function (component) {
       version_available: "",
     },
     {
-      name: "molochwise",
+      name: "arkimewise",
       friendly_name: "Arkime Wise",
-      package_name: "moloch",
-      message: "Will be installed with Moloch",
+      package_name: "arkime",
+      message: "Will be installed with arkime",
       network_interface_changes: false,
       web_url: false,
       preset: false,
@@ -362,7 +363,7 @@ module.exports = function (component) {
       let component_found, update_component;
       for (const comp of default_components) {
         component_found = await component.findOrCreate({where: {name: comp.name}}, comp);
-        if (!component_found) throw new Error("failed to create component " + comp.name);
+        if (!component_found) throw new Error(`failed to create component ${comp.name}`);
         component_found = component_found[0];
 
         //loading false to all components
@@ -370,8 +371,8 @@ module.exports = function (component) {
         // lets call this part "update script", if new version has extra details"
         // console.log(component_found);
 
-        //MOLOCH CHANGES IF MISSING
-        if (component_found.name === 'moloch') {
+        //arkime CHANGES IF MISSING
+        if (component_found.name === 'arkime') {
           if ('configuration' in component_found === false) {
             component_found.configuration = {};
           }
@@ -393,7 +394,7 @@ module.exports = function (component) {
           }
 
           if (update_component !== undefined) {
-            hell.o(["update component: " + component_found.name + " defaults: configuration"], "initialize", "info");
+            hell.o([`update component: ${component_found.name} defaults: configuration`], "initialize", "info");
             await component.update({name: comp.name}, update_component);
           }
         }
@@ -404,7 +405,7 @@ module.exports = function (component) {
             update_component = {};
             update_component[params] = comp[params];
             console.log(update_component);
-            hell.o(["update component: " + comp.name + " defaults: " + params, comp[params]], "initialize", "info");
+            hell.o([`update component: ${comp.name} defaults: ${params}`, comp[params]], "initialize", "info");
             await component.update({name: comp.name}, update_component);
           }
         }
@@ -465,7 +466,7 @@ module.exports = function (component) {
           let verifyCertificate = util.promisify(sslutils.verifyCertificate);
           result = await verifyCertificate(ssl_cert, ssl_options);
           if (result.valid !== true || result.verifiedCA !== true) {
-            throw new Error("Certificate not valid: " + result.output);
+            throw new Error(`Certificate not valid: ${result.output}`);
           }
 
           hell.o("verify key", "sslCheck", "info");
@@ -484,7 +485,7 @@ module.exports = function (component) {
           let one_day = 24 * 60 * 60 * 1000;
           let remaining_days = Math.round(remaining_time / one_day);
 
-          let output_message = "SSL expires after days: " + remaining_days;
+          let output_message = `SSL expires after days: ${remaining_days}`;
           if (remaining_days <= 15) {
             throw new Error(output_message);
           }
@@ -577,13 +578,14 @@ module.exports = function (component) {
    * @returns {Promise}
    */
   component.shelljsCall = function (input, cb) {
-    hell.o("start: " + input, "shelljsCall", "info");
+    hell.o(`start: ${input}`, "shelljsCall", "info");
+    let cmd = shellescape(input);
     return new Promise((success, reject) => {
 
       (async function () {
         try {
 
-          shelljs.exec(input, {silent: true}, function (exit_code, stdout, stderr) {
+          shelljs.exec(cmd, {silent: true}, function (exit_code, stdout, stderr) {
             hell.o(["shelljs result ", exit_code], "shelljsCall", "info");
             let status = false, message = stderr;
             if (exit_code == 0) {
@@ -628,14 +630,14 @@ module.exports = function (component) {
           case "vpn":
           case "telegraf":
           case "s4a-detector":
-          case "molochviewer":
-          case "molochcapture":
-          case "molochwise":
+          case "arkimeviewer":
+          case "arkimecapture":
+          case "arkimewise":
           case "netdata":
-            if (input.name == "vpn") service_name = "'openvpn@detector'";
+            if (input.name == "vpn") service_name = "openvpn@detector";
 
             hell.o("run systemctl", "checkStatusSystemctl", "info");
-            output = await component.shelljsCall("/bin/systemctl status " + service_name);
+            output = await component.shelljsCall(["/bin/systemctl", "status", service_name]);
 
             success(output);
 
@@ -643,7 +645,7 @@ module.exports = function (component) {
           case "nginx":
 
             hell.o("run systemctl", "checkStatusSystemctl", "info");
-            output = await component.shelljsCall("/bin/systemctl status " + input.name);
+            output = await component.shelljsCall(["/bin/systemctl", "status", input.name]);
 
             if (!input.ssl_enabled) return success(output);
 
@@ -663,14 +665,14 @@ module.exports = function (component) {
                 hell.o(["sslCheck err:", err], "checkStatusSystemctl", "error");
                 output.status = false;
                 if (err.message !== undefined) {
-                  output.message += " " + err.message;
-                  output.logs += " " + result;
-                  output.logs_error += " " + JSON.stringify(err);
+                  output.message += ` ${err.message}`;
+                  output.logs += ` ${result}`;
+                  output.logs_error += ` ${JSON.stringify(err)}`;
                 }
                 return success(output);
               }
               hell.o(["sslCheck result:", result], "checkStatusSystemctl", "info");
-              output.message += " " + result;
+              output.message += ` ${result}`;
               return success(output);
             });
 
@@ -715,9 +717,9 @@ module.exports = function (component) {
 
           if (input.name == "elastic") {
             if (result.data.status == "green" || result.data.status == "yellow" ) {
-              last_message = last_message + " Elastic status is " + result.data.status ;
+              last_message = last_message + ` Elastic status is ${result.data.status}`;
             } else {
-              throw new Error('Elastic status ' + result.data.status);
+              throw new Error(`Elastic status ${result.data.status}`);
             }
           }
 
@@ -728,13 +730,13 @@ module.exports = function (component) {
 
           last_message = "Check failed ";
           if (err.code !== undefined && err.code) {
-            last_message += "with error " + err.code;
+            last_message += `with error ${err.code}`;
           }
           if (err.errno !== undefined && err.errno) {
-            last_message += " " + err.errno;
+            last_message += ` ${err.errno}`;
           }
           // if (typeof err !== "object") {
-            last_message += " " + err;
+            last_message += ` ${err}`;
           // }
 
           success({status: false, message: last_message, logs: "", logs_error: last_message, exit_code: ""});
@@ -773,7 +775,7 @@ module.exports = function (component) {
       };
 
       // hell.o("/usr/bin/apt-mark showhold", "checkPackageVersions", "info");
-      // let showhold = await component.shelljsCall("/usr/bin/apt-mark showhold");
+      // let showhold = await component.shelljsCall(["/usr/bin/apt-mark", "showhold"]);
       // console.log( showhold );
 
       /*
@@ -815,7 +817,7 @@ module.exports = function (component) {
       /*
       APT-CACHE
        */
-      hell.o("/usr/bin/apt-cache policy " + package_name, "checkPackageVersions", "info");
+      hell.o(`/usr/bin/apt-cache policy ${package_name}`, "checkPackageVersions", "info");
       let child = sudo(['-E', '/usr/bin/apt-cache', 'policy', package_name], options);
 
       child.stdout.on('data', function (data) {
@@ -879,7 +881,7 @@ module.exports = function (component) {
    * @returns {Promise}
    */
   component.checkComponent = function (component_name, cb) {
-    hell.o("start: " + component_name, "checkComponent", "info");
+    hell.o(`start: ${component_name}`, "checkComponent", "info");
     return new Promise((success, reject) => {
 
       (async function () {
@@ -902,7 +904,7 @@ module.exports = function (component) {
             hell.o([comp.name + " OK", check_result.message], "checkComponent", "info");
           } else {
             if (check_result.message == "") {
-              check_result.message = " exit code: " + check_result.exit_code;
+              check_result.message = ` exit code: ${check_result.exit_code}`;
             }
             hell.o(["exit code", check_result.exit_code], "checkComponent", "error");
             hell.o([comp.name + " FAIL", check_result.message], "checkComponent", "error");
@@ -989,19 +991,17 @@ module.exports = function (component) {
       try {
 
         let result = await component.find({where: {installed: true, enabled: true}});
-        hell.o("found: " + result.length, "checkRoutine", "info");
+        hell.o(`found: ${result.length}`, "checkRoutine", "info");
         if (!result || result.length == 0) throw new Error("no_data_found");
 
         let comp, check_result;
-        for (let i = 0, l = result.length; i < l; i++) {
-          comp = result[i];
+        for (let comp of result) {
           check_result = await component.checkComponent(comp.name);
         }
 
         // update uninstalled components
         let uninstalled = await component.find({where: {installed: false}});
-        for (let i = 0, l = uninstalled.length; i < l; i++) {
-          comp = uninstalled[i];
+        for (comp of uninstalled) {
           if (!comp.status || !comp.version_status) {
             await component.update({name: comp.name}, {status: true, version_status: true});
           }
@@ -1049,10 +1049,10 @@ module.exports = function (component) {
 
     return new Promise((success, reject) => {
 
-      hell.o([name + " " + state, "start"], "stateApply", "info");
+      hell.o([`${name} ${state}`, "start"], "stateApply", "info");
 
       if (component.state_busy) {
-        hell.o([name + " " + state, "tried to run second salt, busy"], "stateApply", "warn");
+        hell.o([`${name} ${state}`, "tried to run second salt, busy"], "stateApply", "warn");
         if (cb) return cb({name: "Error", status: 400, message: "worker_busy"});
         return reject({message: "installer is buys, please wait "});
       }
@@ -1066,8 +1066,8 @@ module.exports = function (component) {
           //TELEGRAF SPECIFIC, needs approval from central
           if (name == "telegraf") {
             approved_check = await component.app.models.registration.findOne({where: {registration_status: "Approved"}});
-            hell.o([name + " " + state, "approved check"], "stateApply", "info");
-            hell.o([name + " " + state, approved_check], "stateApply", "info");
+            hell.o([`${name} ${state}`, "approved check"], "stateApply", "info");
+            hell.o([`${name} ${state}`, approved_check], "stateApply", "info");
             if (!approved_check) throw new Error("not_approved");
           }
 
@@ -1084,7 +1084,7 @@ module.exports = function (component) {
            * fake salt calls
            */
           if (process.env.NODE_ENV == "dev" || debug == true) {
-            hell.o([name + " " + state, "DEV no actual salt state is called"], "stateApply", "info");
+            hell.o([`${name} ${state}`, "DEV no actual salt state is called"], "stateApply", "info");
 
             switch (state) {
               case "install":
@@ -1116,7 +1116,7 @@ module.exports = function (component) {
             //save to database
             if (state !== "restart" && state !== "reload") {
               update_result = await component.update({name: comp.name}, comp_input);
-              hell.o([name + " " + state, update_result], "stateApply", "info");
+              hell.o([`${name} ${state}`, update_result], "stateApply", "info");
             }
 
             component.state_busy = false;
@@ -1124,7 +1124,7 @@ module.exports = function (component) {
             comp = await component.findOne({where: {name: comp.name}});
 
             if (comp.name == "evebox" && (!comp.installed || !comp.enabled)) {
-              hell.o([name + " " + state, "exebox disabled, do the same for evebox-agent"], "stateApply", "info");
+              hell.o([`${name} ${state}`, "exebox disabled, do the same for evebox-agent"], "stateApply", "info");
               update_result = await component.update({name: 'evebox-agent'}, {
                 installed: false,
                 enabled: false
@@ -1132,55 +1132,55 @@ module.exports = function (component) {
             }
 
             if (comp.name == "evebox" && comp.installed && comp.enabled) {
-              hell.o([name + " " + state, "exebox enabled, do the same for evebox-agent"], "stateApply", "info");
+              hell.o([`${name} ${state}`, "exebox enabled, do the same for evebox-agent"], "stateApply", "info");
               update_result = await component.update({name: 'evebox-agent'}, {
                 installed: true,
                 enabled: true
               });
             }
 
-            if (comp.name == "moloch" && (!comp.installed || !comp.enabled)) {
-              hell.o([name + " " + state, "moloch disabled, do the same for molochcapture and molochviewer"], "stateApply", "info");
-              update_result = await component.update({name: 'molochcapture'}, {
+            if (comp.name == "arkime" && (!comp.installed || !comp.enabled)) {
+              hell.o([`${name} ${state}`, "arkime disabled, do the same for arkimecapture and arkimeviewer"], "stateApply", "info");
+              update_result = await component.update({name: 'arkimecapture'}, {
                 installed: false,
                 enabled: false
               });
-              update_result = await component.update({name: 'molochviewer'}, {
+              update_result = await component.update({name: 'arkimeviewer'}, {
                 installed: false,
                 enabled: false
               });
-              update_result = await component.update({name: 'molochwise'}, {
+              update_result = await component.update({name: 'arkimewise'}, {
                 installed: false,
                 enabled: false
               });
             }
 
-            if (comp.name == "moloch" && (comp.installed || comp.enabled)) {
-              hell.o([name + " " + state, "moloch enabled, do the same for molochcapture and molochviewer"], "stateApply", "info");
-              update_result = await component.update({name: 'molochcapture'}, {
+            if (comp.name == "arkime" && (comp.installed || comp.enabled)) {
+              hell.o([`${name} ${state}`, "arkime enabled, do the same for arkimecapture and arkimeviewer"], "stateApply", "info");
+              update_result = await component.update({name: 'arkimecapture'}, {
                 installed: true,
                 enabled: true
               });
-              update_result = await component.update({name: 'molochviewer'}, {
+              update_result = await component.update({name: 'arkimeviewer'}, {
                 installed: true,
                 enabled: true
               });
-              update_result = await component.update({name: 'molochwise'}, {
+              update_result = await component.update({name: 'arkimewise'}, {
                 installed: true,
                 enabled: true
               });
             }
 
             if (comp.installed && comp.enabled) {
-              hell.o([name + " " + state, "perform component check"], "stateApply", "info");
+              hell.o([`${name} ${state}`, "perform component check"], "stateApply", "info");
               await component.checkComponent(comp.name);
             }
 
-            hell.o([name + " " + state, "return dummy data"], "stateApply", "info");
+            hell.o([`${name} ${state}`, "return dummy data"], "stateApply", "info");
 
             //for testing errors in the frontend
             let log_err = "";
-            let output = {logs: comp.name + ": OK LOGS " + new Date(), logs_error: log_err, exit_code: 0};
+            let output = {logs: `${comp.name}: OK LOGS ${new Date()}`, logs_error: log_err, exit_code: 0};
 
             setTimeout(function () {
               component.state_busy = false;
@@ -1245,9 +1245,7 @@ module.exports = function (component) {
           }
 
           if (state !== "restart" && state !== "reload") {
-            hell.o([name + " " + state, "update db for component enabled: " +
-            comp_input.enabled + " installed: " +
-            comp_input.installed], "stateApply", "info");
+            hell.o([`${name} ${state}`, `update db for component enabled: ${comp_input.enabled} installed: ${comp_input.installed}`], "stateApply", "info");
             update_result = await component.update({name: comp.name}, comp_input);
             if (!update_result) throw new Error("component_install_save_failed");
           }
@@ -1257,7 +1255,7 @@ module.exports = function (component) {
           comp = await component.findOne({where: {name: comp.name}});
 
           if (comp.name == "evebox" && (!comp.installed || !comp.enabled)) {
-            hell.o([name + " " + state, "exebox disabled, do the same for evebox-agent"], "stateApply", "info");
+            hell.o([`${name} ${state}`, "exebox disabled, do the same for evebox-agent"], "stateApply", "info");
             update_result = await component.update({name: 'evebox-agent'}, {
               installed: false,
               enabled: false
@@ -1265,7 +1263,7 @@ module.exports = function (component) {
           }
 
           if (comp.name == "evebox" && comp.installed && comp.enabled) {
-            hell.o([name + " " + state, "exebox enabled, do the same for evebox-agent"], "stateApply", "info");
+            hell.o([`${name} ${state}`, "exebox enabled, do the same for evebox-agent"], "stateApply", "info");
             update_result = await component.update({name: 'evebox-agent'}, {
               installed: true,
               enabled: true
@@ -1273,11 +1271,11 @@ module.exports = function (component) {
           }
 
           if (comp.installed && comp.enabled) {
-            hell.o([name + " " + state, "perform component check"], "stateApply", "info");
+            hell.o([`${name} ${state}`, "perform component check"], "stateApply", "info");
             await component.checkComponent(comp.name);
           }
 
-          hell.o([name + " " + state, "done"], "stateApply", "info");
+          hell.o([`${name} ${state}`, "done"], "stateApply", "info");
 
           if (cb) return cb(null, salt_result);
           return success(salt_result);
@@ -1332,7 +1330,7 @@ module.exports = function (component) {
 
           setTimeout(function () {
 
-            hell.o([name + " " + state, "done"], "stateApplyTest", "info");
+            hell.o([`${name} ${state}`, "done"], "stateApplyTest", "info");
             hell.o(["end", new Date()], "stateApplyTest", "info");
 
             let output = {message: "end of test"};

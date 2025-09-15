@@ -147,11 +147,11 @@
     "smtp_server_username": "Username",
     "smtp_server_password": "Password",
     "smtp_server_from": "Sender address",
-    "moloch_settings": "Arkime Settings",
-    "moloch_drop_tls_enabled": "Drop TLS",
-    "moloch_yara_enabled": "Yara service",
-    "moloch_wise_enabled": "Wise service",
-    "moloch_exclude_ips": "Exclude IPs list"
+    "arkime_settings": "Arkime Settings",
+    "arkime_drop_tls_enabled": "Drop TLS",
+    "arkime_yara_enabled": "Yara service",
+    "arkime_wise_enabled": "Wise service",
+    "arkime_exclude_ips": "Exclude IPs list"
   },
   "tags": {
     "add_tag": "Add Tag",

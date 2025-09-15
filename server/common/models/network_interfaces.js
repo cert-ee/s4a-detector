@@ -23,13 +23,13 @@ module.exports = function (network_interfaces) {
 
         let inter, update_input, update_result, components_to_restart, salt_result, debug = false;
 
-        for (let i = 0, l = interfaces.length; i < l; i++) {
+        for (let iface of interfaces) {
 
-          inter = await network_interfaces.findOne({where: {name: interfaces[i].name}});
+          inter = await network_interfaces.findOne({where: {name: iface.name}});
 
           if (!inter) throw new Error("no_data_found");
 
-          update_input = {enabled: interfaces[i].enabled};
+          update_input = {enabled: iface.enabled};
           update_result = await network_interfaces.update({name: inter.name}, update_input);
 
           if (!update_result) throw new Error("save_failed");
@@ -50,9 +50,9 @@ module.exports = function (network_interfaces) {
           debug = true;
         }
 
-        for (let i = 0, l = components_to_restart.length; i < l; i++) {
-          hell.o(["going to restart components_to_restart ", components_to_restart[i].name], "applyChanges", "info");
-          salt_result = await network_interfaces.app.models.component.stateApply(components_to_restart[i].name, "restart", debug);
+        for (comp of components_to_restart) {
+          hell.o(["going to restart components_to_restart ", comp.name], "applyChanges", "info");
+          salt_result = await network_interfaces.app.models.component.stateApply(comp.name, "restart", debug);
           if (!salt_result) throw new Error("network_interfaces_failed_to_restart_components");
         }
 
@@ -119,7 +119,7 @@ module.exports = function (network_interfaces) {
             }
 
           } catch (err) {
-            hell.o("invalid interface", "list", "warning");
+            hell.o("invalid interface", "list", "warn");
           }
         } //for
 
@@ -162,12 +162,7 @@ module.exports = function (network_interfaces) {
         let net_interfaces = await network_interfaces.find({where: {enabled: true}, fields: ["name"]});
         if (!net_interfaces) return cb(null, output);
 
-        let tmp = [];
-        for (let i = 0, l = net_interfaces.length; i < l; i++) {
-          tmp.push(net_interfaces[i].name);
-        }
-
-        output.interfaces = tmp;
+        output.interfaces = net_interfaces.map(iface => iface.name);
 
         hell.o(["done", output ], "listForSalt", "info");
         cb(null, output);

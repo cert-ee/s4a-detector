@@ -15,28 +15,22 @@ module.exports = function (system_info) {
    * @param options
    * @param cb
    */
-  system_info.version = function (cb) {
+  system_info.version = async function () {
     hell.o("start", "version", "info");
+    try {
 
-    (async function () {
-      try {
+      let output = {
+        server: package_server.version,
+        client: package_client.version,
+        main: package_main.version
+      };
 
-        let output = {
-          server: package_server.version,
-          client: package_client.version,
-          main: package_main.version
-        };
-
-        hell.o("done", "version", "info");
-        cb(null, output);
-
-      } catch (err) {
-        hell.o(err, "version", "error");
-        cb({name: "Error", status: 400, err});
-      }
-
-    })(); //async
-
+      hell.o("done", "version", "info");
+      return output;
+    } catch (err) {
+      hell.o(err, "version", "error");
+      throw {name: "Error", status: 400, err};
+    }
   };
 
   system_info.remoteMethod('version', {

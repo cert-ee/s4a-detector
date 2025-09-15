@@ -195,13 +195,13 @@
             </a>
           </v-flex>
           <v-flex xs6 sm4 lg3>
-            <a :href="components.find(c => c.name === 'moloch').web_url" target="_blank" style="text-decoration: none;">
+            <a :href="components.find(c => c.name === 'arkime').web_url" target="_blank" style="text-decoration: none;">
               <dashboard-card icon="widgets" title="Traffic" link>
                 <div class="headline">
-                  <span v-if="!components.find(c => c.name === 'moloch').installed" class="deep-orange--text">
+                  <span v-if="!components.find(c => c.name === 'arkime').installed" class="deep-orange--text">
                     {{ $t('components.not_installed') }}
                   </span>
-                  <span v-else-if="components.find(c => c.name === 'moloch').status" class="success--text">
+                  <span v-else-if="components.find(c => c.name === 'arkime').status" class="success--text">
                     <v-icon class="success--text">check_circle</v-icon> {{ $t('ok') }}
                   </span>
                   <span class="error--text" v-else>

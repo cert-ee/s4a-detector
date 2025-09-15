@@ -60,40 +60,6 @@
           </v-list-tile-content>
         </v-list-tile>
 
-        <v-list-tile to="/rulesets" exact ripple>
-          <v-list-tile-action>
-            <v-icon dark>track_changes</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-content>
-            <v-list-tile-title>{{ $t('menu.rulesets') }}</v-list-tile-title>
-          </v-list-tile-content>
-        </v-list-tile>
-
-        <v-list-group v-if="$store.state.rulesReview" v-model="rulesExpanded" group="/rules" no-action>
-          <v-list-tile slot="activator" to="/rules" exact ripple>
-            <v-list-tile-action>
-              <v-icon dark>track_changes</v-icon>
-            </v-list-tile-action>
-            <v-list-tile-content>
-              <v-list-tile-title>{{ $t('menu.rules') }}</v-list-tile-title>
-            </v-list-tile-content>
-          </v-list-tile>
-          <v-list-tile to="/rules/review" exact ripple>
-            <v-list-tile-content>
-              <v-list-tile-title>{{ $t('menu.rules_review') }}</v-list-tile-title>
-            </v-list-tile-content>
-          </v-list-tile>
-        </v-list-group>
-
-        <v-list-tile v-else to="/rules" exact ripple>
-          <v-list-tile-action>
-            <v-icon dark>track_changes</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-content>
-            <v-list-tile-title>{{ $t('menu.rules') }}</v-list-tile-title>
-          </v-list-tile-content>
-        </v-list-tile>
-
         <v-list-tile v-if="hasAdminRole" to="/users" exact ripple>
           <v-list-tile-action>
             <v-icon dark>people</v-icon>

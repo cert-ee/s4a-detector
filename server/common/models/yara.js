@@ -47,8 +47,8 @@ module.exports = function (yara) {
 
     (async function () {
       try {
-        let moloch = await yara.app.models.component.findOne({where: {name: 'moloch'}});
-        if (!moloch.configuration.yara_enabled || !moloch.enabled) {
+        let arkime = await yara.app.models.component.findOne({where: {name: 'arkime'}});
+        if (!arkime.configuration.yara_enabled || !arkime.enabled) {
           hell.o("yara disabled, done", "checkRoutine", "info");
           cb(null, {message: "disabled"});
           return true;
@@ -61,7 +61,7 @@ module.exports = function (yara) {
           hell.o(["central input ", central_input], "checkRoutine", "info");
           central_result = await yara.app.models.central.connector().post("/report/yara", central_input);
         } catch (err) {
-          let out = "Central API down [ " + err.message + " ]";
+          let out = `Central API down [ ${err.message} ]`;
           if (err.response && err.response.data
             && err.response.data.error && err.response.data.error.message) {
             out = err.response.data.error.message;
@@ -141,10 +141,10 @@ module.exports = function (yara) {
           });
         }
 
-        content_path = settings["path_moloch_" + feed.type];
+        content_path = settings[`path_arkime_${feed.type}`];
         output = {
           folder: content_path + feed.name + "/",
-          local_path: content_path + "/" + feed.name + "/" + feed.filename
+          local_path: `${content_path}/${feed.name}/${feed.filename}`
         };
 
         hell.o([feed.name, "check folders"], "saveContents", "info");
@@ -204,7 +204,7 @@ module.exports = function (yara) {
    * GENERATE AND APPLY
    *
    * create new yara.ini
-   * reload moloch
+   * reload arkime
    *
    */
   yara.generateAndApply = async function () {
@@ -225,10 +225,10 @@ module.exports = function (yara) {
       let settings = await yara.app.models.settings.findOne();
 
       hell.o("save new ini file", "generateAndApply", "info");
-      await fs.writeFile(settings["path_moloch_yara_ini"], yara_ini);
+      await fs.writeFile(settings["path_arkime_yara_ini"], yara_ini);
 
-      hell.o("restart moloch to reload rules file", "generateAndApply", "info");
-      let salt_result = await yara.app.models.component.stateApply("moloch", "restart");
+      hell.o("restart arkime to reload rules file", "generateAndApply", "info");
+      let salt_result = await yara.app.models.component.stateApply("arkime", "restart");
       hell.o(["salt result", salt_result], "generateAndApply", "info");
       if (!salt_result || salt_result.exit_code != 0) throw new Error("component_restart_failed");
 

@@ -1,6 +1,7 @@
 'use strict';
 const machineId = require('node-machine-id');
 const elasticsearch = require('elasticsearch');
+const fs = require("fs").promises;
 const hell = new (require(__dirname + "/helper.js"))({module_name: "report"});
 
 module.exports = function (report) {
@@ -47,7 +48,7 @@ module.exports = function (report) {
   report.status_routine_active = false;
   report.statusRoutine = function (options, cb) {
 
-    hell.o("checking central ( url from env ) : " + process.env.CENTRAL_API_URL, "statusRoutine", "info");
+    hell.o(`checking central ( url from env ) : ${process.env.CENTRAL_API_URL}`, "statusRoutine", "info");
 
     //check if our registration is approved up
     if (!report.app.models.central.CENTRAL_TOKEN || report.app.models.central.CENTRAL_TOKEN == "invalid") {
@@ -69,7 +70,14 @@ module.exports = function (report) {
         let component_fields = ["name", "friendly_name", "package_name", "status", "message", "version_status", "version_installed",
           "version_available", "version_hold"];
         let component_statuses = await report.app.models.component.find({fields: component_fields});
+        let settings = await report.app.models.settings.findOne();
+        let filePath = settings.path_suricata_content + 'rules_status.json';
 
+        const fileData = await fs.readFile(filePath, 'utf8');
+        const jsonData = JSON.parse(fileData);
+
+
+        /*
         let rules_count = await report.app.models.rule.count();
         let rules_count_enabled = await report.app.models.rule.find({
           where: {enabled: true},
@@ -91,6 +99,16 @@ module.exports = function (report) {
           rules_count_enabled: rules_count_enabled.length,
           rules_count_custom: rules_count_custom.length,
         };
+        */
+
+        let output = {};
+        output.components = component_statuses;
+        output.rules = {
+          rules_count: jsonData.rules_count,
+          rules_count_enabled: jsonData.rules_count_enabled,
+          rules_count_custom: jsonData.rules_count_custom,
+        };
+
 
         // console.log("output", output);
 
@@ -99,7 +117,7 @@ module.exports = function (report) {
         try {
           result = await report.app.models.central.connector().post("/report/status", {detector_info: output});
         } catch (err) {
-          let out = "Central API down [ " + err.message + " ]";
+          let out = `Central API down [ ${err.message} ]`;
           if (err.response && err.response.data
             && err.response.data.error && err.response.data.error.message) {
             out = err.response.data.error.message;
@@ -113,12 +131,12 @@ module.exports = function (report) {
         if (result.data && result.data.job_queue && result.data.job_queue.length > 0) {
           hell.o("got some jobs from central", "statusRoutine", "info");
           let job_result, job_queue = result.data.job_queue;
-          for (let i = 0, l = job_queue.length; i < l; i++) {
+          for (let job of job_queue) {
 
             try {
-              job_result = await report.doJob(job_queue[i]);
+              job_result = await report.doJob(job);
             } catch (err) {
-              let out = "Central API down [ " + err.message + " ]";
+              let out = `Central API down [ ${err.message} ]`;
               if (err.response && err.response.data
                 && err.response.data.error && err.response.data.error.message) {
                 out = err.response.data.error.message;
@@ -257,7 +275,7 @@ module.exports = function (report) {
         }
 
         let entry_ptr = input.alerts_pointer;
-        hell.o("pointer " + entry_ptr, "checkAlerts", "info");
+        hell.o(`pointer ${entry_ptr}`, "checkAlerts", "info");
 
         let elastic_params = {index: "suricata*", body: {}};
 
@@ -274,7 +292,7 @@ module.exports = function (report) {
           let d = new Date();
           d.setMonth(d.getMonth() - 1);
           entry_ptr = d.toISOString();
-          hell.o("alerts pointer now" + entry_ptr, "checkAlerts", "info");
+          hell.o(`alerts pointer now${entry_ptr}`, "checkAlerts", "info");
         }
 
         elastic_params.body.query = {
@@ -282,7 +300,7 @@ module.exports = function (report) {
             "must": [
               {
                 range: {
-                  "timestamp": {"gt": "" + entry_ptr}
+                  "timestamp": {"gt": `${entry_ptr}`}
                 }
               }, {
                 "term": {
@@ -293,12 +311,12 @@ module.exports = function (report) {
           }
         };
 
-        elastic_params.body.size = 5000;
-
         if (!settings.alerts_severity_all) {
           //hell.o("settings.alerts_severity_all == false", "checkAlerts", "info");
           elastic_params.body.query.bool.must.push({term: {"alert.severity": 1}});
         }
+
+        elastic_params.body.size = 5000;
 
         hell.o("elastic call", "checkAlerts", "info");
         hell.o(JSON.stringify(elastic_params), "checkAlerts", "info");
@@ -318,7 +336,7 @@ module.exports = function (report) {
               hits[id]._source['src_ip'] = "0.0.0.0";
               hits[id]._source['dest_ip'] = "0.0.0.0";
             }
-            //console.log("alerts: " + id );
+            //console.log(`alerts: ${id}`);
             //console.log( hits[id] );
             //console.log( result['timestamp'] );
             if (result['timestamp'] !== undefined && Date.parse(result['timestamp'])) { //if date format
@@ -329,7 +347,7 @@ module.exports = function (report) {
 
           if (counter == 0) hits = [];
 
-          hell.o("done: " + counter, "checkAlerts", "info");
+          hell.o(`done: ${counter}`, "checkAlerts", "info");
           success({alerts_pointer: entry_ptr, alerts: hits});
 
         }).catch(function (e) {
@@ -413,7 +431,8 @@ module.exports = function (report) {
         /**
          send to central
          */
-        hell.o("post to central: " + alert_count_to_send, "alertsRoutine", "info");
+        hell.o(`post to central: ${alert_count_to_send}`, "alertsRoutine", "info");
+        let central_input = {alerts: alerts_checked.alerts};
         let post_to_central;
 
         let central_input_chunks = [];
@@ -440,11 +459,11 @@ module.exports = function (report) {
             }
         }
 
-        hell.o("going to check alarm pointer: " + alerts_checked.alerts_pointer, "alertsRoutine", "info");
+        hell.o(`going to check alarm pointer: ${alerts_checked.alerts_pointer}`, "alertsRoutine", "info");
         if (alerts_checked.alerts_pointer !== undefined && Date.parse(alerts_checked.alerts_pointer)) { //if date format
-          hell.o("update alarm pointer: " + alerts_checked.alerts_pointer, "alertsRoutine", "info");
-          hell.o("update alerts sent: " + (reporting.alerts_sent_today + alert_count_to_send), "alertsRoutine", "info");
-          hell.o("update alerts sent today: " + (reporting.alerts_sent_today + alert_count_to_send), "alertsRoutine", "info");
+          hell.o(`update alarm pointer: ${alerts_checked.alerts_pointer}`, "alertsRoutine", "info");
+          hell.o(`update alerts sent: ${(reporting.alerts_sent_today + alert_count_to_send)}`, "alertsRoutine", "info");
+          hell.o(`update alerts sent today: ${(reporting.alerts_sent_today + alert_count_to_send)}`, "alertsRoutine", "info");
 
           reporting_input = {
             alerts_pointer: alerts_checked.alerts_pointer,
@@ -455,7 +474,7 @@ module.exports = function (report) {
           let updated_pointer = await report.update({id: "reportid"}, reporting_input);
           if (!updated_pointer) throw new Error("alerts_pointer_save_failed");
         } else {
-          hell.o("malformed alarm pointer: " + alerts_checked.alerts_pointer, "alertsRoutine", "error");
+          hell.o(`malformed alarm pointer: ${alerts_checked.alerts_pointer}`, "alertsRoutine", "error");
         }
 
         report.alerts_routine_active = false;
@@ -520,7 +539,7 @@ module.exports = function (report) {
           post_to_central = await report.app.models.central.connector().post("/report/alertsManual", central_input);
         } catch (err) {
 
-          let out = "Central API down [ " + err.message + " ]";
+          let out = `Central API down [ ${err.message} ]`;
           if (err.response && err.response.data
             && err.response.data.error && err.response.data.error.message) {
             out = err.response.data.error.message;
@@ -608,7 +627,7 @@ module.exports = function (report) {
         try {
           post_to_central = await report.app.models.central.connector().post("/report/feedback", feedback_input);
         } catch (err) {
-          let out = "Central API down [ " + err.message + " ]";
+          let out = `Central API down [ ${err.message} ]`;
           if (err.response && err.response.data
             && err.response.data.error && err.response.data.error.message) {
             out = err.response.data.error.message;

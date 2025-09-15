@@ -59,10 +59,10 @@ export default {
                     return;
                 }
 
-                let comp = await this.$axios.$get(`components/moloch`);
+                let comp = await this.$axios.$get(`components/arkime`);
                 if (comp.installed && comp.enabled) {
                     let params = {active: active, rolename: role.name, username: this.user.username};
-                    await this.$axios.post("users/editMolochUser", params);
+                    await this.$axios.post("users/editArkimeUser", params);
                 }
 
                 if (active) {

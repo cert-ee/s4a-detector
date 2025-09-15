@@ -62,7 +62,7 @@
       "permission": "ALLOW"
     },
     {
-      "property": "editMolochUser",
+      "property": "editArkimeUser",
       "accessType": "*",
       "principalType": "ROLE",
       "principalId": "admin",

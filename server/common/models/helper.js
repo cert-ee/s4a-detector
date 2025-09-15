@@ -58,8 +58,8 @@ let helper = function (params) {
 
     if (override_level !== undefined || print_level < method) return; //silence
 
-    let cl = self.method_map[method], cl_chalked = "[" + cl + "]";
-    let called = "[" + module_name + "." + fn_name + "]";
+    let cl = self.method_map[method], cl_chalked = `[${cl}]`;
+    let called = `[${module_name}.${fn_name}]`;
 
     if (input instanceof Error || method == "error") {
       if( print_level == 6 ){
@@ -71,13 +71,17 @@ let helper = function (params) {
     }
 
     if (cl == "warn") {
-      cl_chalked = chalk.yellow("[" + cl + "]");
+      cl_chalked = chalk.yellow(`[${cl}]`);
       called = chalk.yellow(called);
     }
 
     if (cl == "error") {
-      cl_chalked = chalk.red("[" + cl + "]");
+      cl_chalked = chalk.red(`[${cl}]`);
       called = chalk.red(called);
+    }
+
+    if(console[cl] === undefined) {
+      throw new Error(`invalid console[cl] value for cl=${cl}`);
     }
 
     if (!Array.isArray(input)) {
@@ -90,8 +94,8 @@ let helper = function (params) {
       return;
     }
 
-    for (let i = 0, l = input.length; i < l; i++) {
-      console[cl](cl_chalked, called, input[i]);
+    for (let inp of input) {
+      console[cl](cl_chalked, called, inp);
     }
 
   };

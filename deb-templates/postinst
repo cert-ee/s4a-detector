@@ -120,7 +120,7 @@ create_mongodb_users() {
   echo "Create MongoDB users..."
   if [ ! -e /root/.mongodb.passwd ] ; then
 
-	 if [ `mongo --quiet --eval "quit()" >/dev/null; echo $?` -gt 0 ] ; then
+	 if [ `mongosh --quiet --eval "quit()" >/dev/null; echo $?` -gt 0 ] ; then
 	  	echo "CRITICAL: Can't connect to MongoDB !!!"
 		exit 1
 	fi
@@ -128,7 +128,7 @@ create_mongodb_users() {
 	echo " * root..."
 	mongodb_pass=$( pwgen 12 1 )
 	echo -e "MONGODB_USER=root\nMONGODB_PASS=$mongodb_pass\n" > /root/.mongodb.passwd
-	mongo admin --eval "db.createUser({user: 'root',pwd: '"$mongodb_pass"', roles: [ 'root' ] })"
+	mongosh admin --eval "db.createUser({user: 'root',pwd: '"$mongodb_pass"', roles: [ 'root' ] })"
 	if [ `grep -c ^security.authorization /etc/mongod.conf` == 0 ] ; then
 	        echo "security.authorization: enabled" >> /etc/mongod.conf
 	fi
@@ -138,13 +138,13 @@ create_mongodb_users() {
   . /root/.mongodb.passwd
 
   app_db_pass=$( pwgen 12 1 )
-  user_found=$( mongo --quiet --authenticationDatabase admin -u $MONGODB_USER -p $MONGODB_PASS $service_name --eval "user=db.getUsers( { filter: { user: '$service_name'} }); if (user[0]) print(user[0].user);" )
+  user_found=$( mongosh --quiet --json relaxed --authenticationDatabase admin -u $MONGODB_USER -p $MONGODB_PASS $service_name --eval "user=db.getUsers( { filter: { user: '$service_name'} });" | jq -r .users[].user )
   if [ $user_found != "[ ]" ] ; then
         echo " * $service_name - reset password ..."
-	mongo --quiet --authenticationDatabase admin -u $MONGODB_USER -p $MONGODB_PASS $service_name --eval "db.changeUserPassword(\"$service_name\", \"$app_db_pass\")"
+	mongosh --quiet --authenticationDatabase admin -u $MONGODB_USER -p $MONGODB_PASS $service_name --eval "db.changeUserPassword(\"$service_name\", \"$app_db_pass\")"
   else
         echo " * $service_name - create user ..."
-	mongo --quiet --authenticationDatabase admin -u $MONGODB_USER -p $MONGODB_PASS $service_name --eval "db.createUser({ user: \"$service_name\", pwd: \"$app_db_pass\", roles: [ \"readWrite\" ] })"
+	mongosh --quiet --authenticationDatabase admin -u $MONGODB_USER -p $MONGODB_PASS $service_name --eval "db.createUser({ user: \"$service_name\", pwd: \"$app_db_pass\", roles: [ \"readWrite\" ] })"
   fi
 
   # Update app configuration
@@ -157,10 +157,10 @@ add_user '{{ node_deb_user }}' '' '{{ node_deb_group }}' '{{ node_deb_user }} us
 
 # Autoadd missing env for better compatiblity and user friendlyness
 [[ `grep -c ^PATH_BASE 			 "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_BASE=/srv/s4a-detector/" 						 >> "/etc/default/{{ node_deb_package_name }}"
-[[ `grep -c ^PATH_MOLOCH_YARA_OUT 	 "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_MOLOCH_YARA_OUT=/srv/s4a-detector/moloch/yara/yara.txt" 		 >> "/etc/default/{{ node_deb_package_name }}"
-[[ `grep -c ^PATH_MOLOCH_WISE_IP_OUT 	 "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_MOLOCH_WISE_IP_OUT=/srv/s4a-detector/moloch/wise/wise_ip.txt" 	 >> "/etc/default/{{ node_deb_package_name }}"
-[[ `grep -c ^PATH_MOLOCH_WISE_URL_OUT 	 "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_MOLOCH_WISE_URL_OUT=/srv/s4a-detector/moloch/wise/wise_url.txt" 	 >> "/etc/default/{{ node_deb_package_name }}"
-[[ `grep -c ^PATH_MOLOCH_WISE_DOMAIN_OUT "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_MOLOCH_WISE_DOMAIN_OUT=/srv/s4a-detector/moloch/wise/wise_domain.txt" >> "/etc/default/{{ node_deb_package_name }}"
+[[ `grep -c ^PATH_ARKIME_YARA_OUT 	 "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_ARKIME_YARA_OUT=/srv/s4a-detector/arkime/yara/yara.txt" 		 >> "/etc/default/{{ node_deb_package_name }}"
+[[ `grep -c ^PATH_ARKIME_WISE_IP_OUT 	 "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_ARKIME_WISE_IP_OUT=/srv/s4a-detector/arkime/wise/wise_ip.txt" 	 >> "/etc/default/{{ node_deb_package_name }}"
+[[ `grep -c ^PATH_ARKIME_WISE_URL_OUT 	 "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_ARKIME_WISE_URL_OUT=/srv/s4a-detector/arkime/wise/wise_url.txt" 	 >> "/etc/default/{{ node_deb_package_name }}"
+[[ `grep -c ^PATH_ARKIME_WISE_DOMAIN_OUT "/etc/default/{{ node_deb_package_name }}"` == 0 ]] && echo "PATH_ARKIME_WISE_DOMAIN_OUT=/srv/s4a-detector/arkime/wise/wise_domain.txt" >> "/etc/default/{{ node_deb_package_name }}"
 
 source /etc/default/{{ node_deb_package_name }}
 
@@ -168,17 +168,17 @@ mkdir -p $PATH_BASE \
 	'/var/log/{{ node_deb_package_name }}' \
 	'/etc/nginx/' \
 	${PATH_SURICATA_RULES_OUT%/*} \
-	${PATH_MOLOCH_YARA_OUT%/*} \
-	${PATH_MOLOCH_WISE_IP_OUT%/*} \
-	${PATH_MOLOCH_WISE_URL_OUT%/*} \
-	${PATH_MOLOCH_WISE_DOMAIN_OUT%/*}
+	${PATH_ARKIME_YARA_OUT%/*} \
+	${PATH_ARKIME_WISE_IP_OUT%/*} \
+	${PATH_ARKIME_WISE_URL_OUT%/*} \
+	${PATH_ARKIME_WISE_DOMAIN_OUT%/*}
 
 touch /etc/nginx/.htpasswd \
 	$PATH_SURICATA_RULES_OUT \
-	$PATH_MOLOCH_YARA_OUT \
-	$PATH_MOLOCH_WISE_IP_OUT \
-	$PATH_MOLOCH_WISE_URL_OUT \
-	$PATH_MOLOCH_WISE_DOMAIN_OUT
+	$PATH_ARKIME_YARA_OUT \
+	$PATH_ARKIME_WISE_IP_OUT \
+	$PATH_ARKIME_WISE_URL_OUT \
+	$PATH_ARKIME_WISE_DOMAIN_OUT
 
 chown -R '{{ node_deb_user }}:{{ node_deb_group }}' \
 	'/var/log/{{ node_deb_package_name }}' \
@@ -186,10 +186,10 @@ chown -R '{{ node_deb_user }}:{{ node_deb_group }}' \
 	'/etc/nginx/.htpasswd' \
 	$PATH_BASE \
 	$PATH_SURICATA_RULES_OUT \
-	$PATH_MOLOCH_YARA_OUT \
-	$PATH_MOLOCH_WISE_IP_OUT \
-	$PATH_MOLOCH_WISE_URL_OUT \
-	$PATH_MOLOCH_WISE_DOMAIN_OUT
+	$PATH_ARKIME_YARA_OUT \
+	$PATH_ARKIME_WISE_IP_OUT \
+	$PATH_ARKIME_WISE_URL_OUT \
+	$PATH_ARKIME_WISE_DOMAIN_OUT
 
 dependency_install '{{ node_deb_package_name }}'
 create_mongodb_users '{{ node_deb_package_name }}'
@@ -208,15 +208,6 @@ cat > /etc/logrotate.d/s4a-detector <<EOF
 }
 
 EOF
-
-source /etc/default/s4a-detector
-mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.remove({"_id" : "nfsen"});'
-mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id" : "moloch"},{ $set: { "health_url" : "http://localhost:9200/_cluster/health" }});'
-mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id": "netdata"},{ $unset: { health_url:1 }});'
-mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id": "moloch"},{ $set: { friendly_name: "Arkime" } } );'
-mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id": "molochcapture"},{ $set: { friendly_name: "Arkime Capture" } } );'
-mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id": "molochviewer"},{ $set: { friendly_name: "Arkime Viewer" } } );'
-mongo --quiet $MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval 'db.component.update({ "_id": "molochwise"},{ $set: { friendly_name: "Arkime Wise" } } );'
 
 if [[ "$init_type" != 'none' ]]; then
   start_service '{{ node_deb_package_name }}'

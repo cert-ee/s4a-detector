@@ -27,7 +27,7 @@ module.exports = function (salt) {
           if (!states.includes(state)) throw new Error("load_failed");
 
           if (!['install', 'restart'].includes(state)) {
-            state_name = state_name + "_" + state;
+            state_name = `${state_name}_${state}`;
           }
 
           salt.output = {exit_code: false, logs: "", logs_error: ""};

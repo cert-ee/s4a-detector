@@ -138,8 +138,8 @@ module.exports = function (rule_draft) {
            */
           if (!draft && original[field_to_update] == current[field_to_update]) {
             hell.o([original.sid, "no draft: original and update same, return"], "more", "info");
-            // console.log( original.sid + " " + original[field_to_update]);
-            // console.log( original.sid + " " + current[field_to_update]);
+            // console.log(`${original.sid} ${original[field_to_update]}`);
+            // console.log(`${original.sid} ${current[field_to_update]}`);
             continue;
           }
 
@@ -148,8 +148,8 @@ module.exports = function (rule_draft) {
            */
           if (draft !== false && draft[field_to_update] == current[field_to_update]) {
             hell.o([original.sid, "original and draft same, return"], "more", "info");
-            // console.log( original.sid + " " + draft[field_to_update]);
-            // console.log( original.sid + " " + current[field_to_update]);
+            //console.log(`${original.sid} ${draft[field_to_update]}`);
+            //console.log(`${original.sid} ${current[field_to_update]}`);
             continue;
           }
 
@@ -170,7 +170,7 @@ module.exports = function (rule_draft) {
 
           }
 
-          hell.o([original.sid, " try to find ruleId: " + current.id], "more", "info");
+          hell.o([original.sid, ` try to find ruleId: ${current.id}`], "more", "info");
 
           draft = await rule_draft.findOne({where: {ruleId: current.id}});
           if (!draft) throw new Error(original.sid + " failed to find draft ");
@@ -235,13 +235,13 @@ module.exports = function (rule_draft) {
           UPDATE DRAFT
            */
           if (field_to_update != "tags_changes" && draft[field_to_update] != current[field_to_update]) {
-            hell.o([original.sid, " draft make change: " + draft.sid], "more", "info");
+            hell.o([original.sid, ` draft make change: ${draft.sid}`], "more", "info");
 
             update_input = {};
             update_input[field_to_update] = current[field_to_update];
 
             update_result = await rule_draft.update({id: draft.id}, update_input);
-            if (!update_result) throw new Error(original.sid + " failed update field " + field_to_update + " for draft " + draft.sid);
+            if (!update_result) throw new Error(`${original.sid} failed update field ${field_to_update} for draft ${draft.sid}`);
 
           }
 
@@ -254,10 +254,10 @@ module.exports = function (rule_draft) {
           let matcher = ["sid", "enabled", "force_disabled", "revision", "classtype", "severity", "message", "rule_data"];
           update_input = [];
           hell.o([original.sid, "match values again"], "more", "info");
-          for (let i = 0, l = matcher.length; i < l; i++) {
-            if (draft[matcher[i]] != original[matcher[i]]) {
-              hell.o([original.sid, "not matching: " + matcher[i]], "more", "info");
-              update_input.push(matcher[i]);
+          for (let matcher_i of matcher) {
+            if (draft[matcher_i] != original[matcher_i]) {
+              hell.o([original.sid, `not matching: ${matcher_i}`], "more", "info");
+              update_input.push(matcher_i);
             }
           }
 
@@ -265,7 +265,7 @@ module.exports = function (rule_draft) {
             hell.o([original.sid, "update draft changes_fields"], "more", "info");
             hell.o([original.sid, update_input], "more", "info");
             update_result = await rule_draft.update({id: draft.id}, {changes_fields: update_input});
-            if (!update_result) throw new Error(original.sid + " failed update changes_fields for draft " + draft.sid);
+            if (!update_result) throw new Error(`${original.sid} failed update changes_fields for draft ${draft.sid}`);
           }
 
           if (update_input.length == 0 && draft.tags_changes.length == 0) {
@@ -273,7 +273,7 @@ module.exports = function (rule_draft) {
             hell.o([original.sid, "draft is same as original, remove"], "more", "info");
             //changes result back to original, remove from draft
             let delete_draft = await rule_draft.destroyById(draft.id); //
-            if (!delete_draft) throw new Error(original.sid + " failed to remove draft " + draft.sid);
+            if (!delete_draft) throw new Error(`${original.sid} failed to remove draft ${draft.sid}`);
 
           }
 
@@ -355,9 +355,8 @@ module.exports = function (rule_draft) {
         hell.o("find drafts", "publish", "info");
         let drafts = await rule_draft.find({});
 
-        let draft, draft_tags, published_rule, published_input, update_result, tag_exists, tag_found, tag_update_result;
         for (let i = 0, l = drafts.length; i < l; i++) {
-          draft = drafts[i];
+          let draft = drafts[i];
 
           hell.o([draft.sid, "loop"], "publish", "info");
 
@@ -370,7 +369,7 @@ module.exports = function (rule_draft) {
             let dup_sid = await rule.findOne({where: {sid: draft.sid}});
             if (dup_sid && dup_sid.sid == draft.sid) {
               hell.o([draft.sid, "duplicated SID"], "publish", "info");
-              throw new Error(draft.sid + " duplicate SID for rule draft " + draft.sid);
+              throw new Error(`${draft.sid} duplicate SID for rule draft ${draft.sid}`);
             }
 
             let new_rule_input = {
@@ -387,7 +386,7 @@ module.exports = function (rule_draft) {
             };
 
             hell.o([draft.sid, "create rule"], "publish", "info");
-            update_result = await rule.create(new_rule_input);
+            let update_result = await rule.create(new_rule_input);
             if (!update_result) throw new Error(draft.sid + " failed create new rule");
             draft.ruleId = update_result.id;
           }
@@ -396,9 +395,9 @@ module.exports = function (rule_draft) {
           /*
           GET PUBLISHED RULE
            */
-          hell.o([draft.sid, "published rule " + draft.ruleId], "publish", "info");
-          [published_rule] = await rule.find({where: {id: draft.ruleId}, include: ["tags"]});
-          if (!published_rule) throw new Error(draft.sid + " failed to find rule");
+          hell.o([draft.sid, `published rule ${draft.ruleId}`], "publish", "info");
+          let published_rule = await rule.findOne({where: {id: draft.ruleId}, include: ["tags"]});
+          if (!published_rule) throw new Error(`${draft.sid} failed to find rule`);
 
           if (draft.changes_fields !== undefined && draft.changes_fields.length > 0) {
             let cur_up;
@@ -406,7 +405,7 @@ module.exports = function (rule_draft) {
 
             for (let i = 0, l = draft.changes_fields.length; i < l; i++) {
               cur_up = draft.changes_fields[i];
-              hell.o([draft.sid, "update field " + cur_up], "publish", "info");
+              hell.o([draft.sid, `update field ${cur_up}`], "publish", "info");
               // hell.o([draft.sid, published_rule[cur_up], draft[cur_up] ], "publish", "info");
               update_input[cur_up] = draft[cur_up];
             }
@@ -418,40 +417,40 @@ module.exports = function (rule_draft) {
 
             // hell.o( [ draft.sid, update_input ],"publish","info");
             update_result = await rule.update({id: published_rule.id}, update_input);
-            if (!update_result) throw new Error(draft.sid + " failed to update rule " + published_rule.sid);
+            if (!update_result) throw new Error(`${draft.sid} failed to update rule ${published_rule.sid}`);
             hell.o([draft.sid, "updated"], "publish", "info");
           }
 
           /*
             HAS TAGS TO CHANGE?
            */
-          draft_tags = draft.tags_changes;
+          let draft_tags = draft.tags_changes;
           if (draft_tags.length > 0) {
-            hell.o([draft.sid, "tags len " + draft_tags.length], "publish", "info");
+            hell.o([draft.sid, `tags len ${draft_tags.length}`], "publish", "info");
 
             for (let ti = 0, tl = draft_tags.length; ti < tl; ti++) {
 
               if (draft_tags[ti].added === undefined) continue;
 
               hell.o([draft.sid, "find tag"], "publish", "info");
-              tag_exists = await tag.findOne({where: {id: draft_tags[ti].id}});
+              let tag_exists = await tag.findOne({where: {id: draft_tags[ti].id}});
               if (!tag_exists) {
                 hell.o([draft.sid, "failed to find such tag in the tabase"], "publish", "info");
                 hell.o([draft.sid, draft_tags[ti]], "publish", "info");
                 continue;
               }
 
-              tag_found = await published_rule.tags.exists(tag_exists);
+              let tag_found = await published_rule.tags.exists(tag_exists);
 
               //throw new Error("rule_draft.publish tag not found");
               if (draft_tags[ti].added && !tag_found) {
                 hell.o([draft.sid, "try to add tag"], "publish", "info");
                 hell.o([draft.sid, draft_tags[ti]], "publish", "info");
 
-                tag_update_result = await published_rule.tags.add(tag_exists);
+                let tag_update_result = await published_rule.tags.add(tag_exists);
                 hell.o([draft.sid, "tag add result "], "publish", "info");
                 hell.o([draft.sid, tag_update_result], "publish", "info");
-                // if (!tag_update_result) throw new Error("rule_draft.publish tag add failed " + published_rule.sid);
+                //if (!tag_update_result) throw new Error(`rule_draft.publish tag add failed ${published_rule.sid}`);
 
               }
 
@@ -459,10 +458,10 @@ module.exports = function (rule_draft) {
                 hell.o([draft.sid, "try to remove tag"], "publish", "info");
                 hell.o([draft.sid, draft_tags[ti]], "publish", "info");
 
-                tag_update_result = await published_rule.tags.remove(tag_exists);
+                let tag_update_result = await published_rule.tags.remove(tag_exists);
                 hell.o([draft.sid, "tag add result "], "publish", "info");
                 hell.o([draft.sid, tag_update_result], "publish", "info");
-                // if (!tag_update_result) throw new Error("rule_draft.publish tag remove failed " + published_rule.sid);
+                //if (!tag_update_result) throw new Error(`rule_draft.publish tag remove failed ${published_rule.sid}`);
 
               }
 

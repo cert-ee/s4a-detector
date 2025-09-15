@@ -35,7 +35,7 @@ module.exports = function (app) {
       try {
 
         let user = await User.findOrCreate({where: {username: remote_user}}, {username: remote_user});
-        if (!user) throw new Error("Failed to find/create user :" + remote_user);
+        if (!user) throw new Error(`Failed to find/create user :${remote_user}`);
         user = user[0];
 
         let token = await AccessToken.findOne({where: {userId: user.id}});
@@ -44,7 +44,7 @@ module.exports = function (app) {
           token = await user.createAccessToken(-1);
         }
 
-        if (!token) throw new Error("Failed to create access token for user: " + remote_user);
+        if (!token) throw new Error(`Failed to create access token for user: ${remote_user}`);
 
         req.logIn(user, {session: false}, (err) => {
           if (err) return next(err);
