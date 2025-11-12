@@ -344,7 +344,7 @@ degenerator@^3.0.1:
     ast-types "^0.13.2"
     escodegen "^1.8.1"
     esprima "^4.0.0"
-    vm2 "^3.9.3"
+    vm2 "^3.9.19"
 
 depd@~1.1.2:
   version "1.1.2"

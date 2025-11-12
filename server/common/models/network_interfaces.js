@@ -50,7 +50,7 @@ module.exports = function (network_interfaces) {
           debug = true;
         }
 
-        for (comp of components_to_restart) {
+        for (const comp of components_to_restart) {
           hell.o(["going to restart components_to_restart ", comp.name], "applyChanges", "info");
           salt_result = await network_interfaces.app.models.component.stateApply(comp.name, "restart", debug);
           if (!salt_result) throw new Error("network_interfaces_failed_to_restart_components");
