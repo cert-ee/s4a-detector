@@ -137,7 +137,7 @@ module.exports = function (component) {
       message: "",
       network_interface_changes: false,
       web_url: "evebox/",
-      health_url: "http://localhost:5636/api/1/version",
+      health_url: "http://localhost:5636/api/version",
       install_order: 4,
       preset: true,
       after_approval: false,
